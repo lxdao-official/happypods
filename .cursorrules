@@ -1,0 +1,122 @@
+# Happy Pods Project Cursor Rules
+
+## Project Overview
+This is a Next.js project based on the T3 Stack, using TypeScript, tRPC, Prisma, Tailwind CSS, and other modern technologies. The project also includes Web3 functionality with RainbowKit and wagmi.
+
+## Tech Stack
+- **Framework**: Next.js 15 (App Router)
+- **Language**: TypeScript
+- **Database**: PostgreSQL + Prisma ORM
+- **API**: tRPC
+- **Styling**: Tailwind CSS 4
+- **State Management**: TanStack Query (React Query)
+- **Web3**: RainbowKit + wagmi + viem
+- **Code Quality**: ESLint + Prettier
+
+## Code Standards
+
+### TypeScript
+- Use strict TypeScript configuration
+- Prefer type imports: `import type { ... }`
+- Use `Readonly<T>` to wrap props types
+- Avoid using `any`, prefer `unknown` or specific types
+- Use `zod` for runtime type validation
+
+### File Organization
+- Use `~` alias pointing to `src` directory
+- API routes in `src/server/api/routers/`
+- Components in `src/app/_components/` and `src/components/`
+- Web3 configuration in `src/lib/wagmi.ts`
+- Type definitions near related files or in dedicated `types/` directory
+
+### Naming Conventions
+- Components use PascalCase: `PostCard.tsx`
+- Files use kebab-case: `post-card.tsx`
+- Variables and functions use camelCase
+- Constants use UPPER_SNAKE_CASE
+- Types and interfaces use PascalCase
+
+### React Components
+- Use function components and hooks
+- Use `Readonly<{ children: React.ReactNode }>` for props types
+- Prefer `const` declarations for components
+- Use `React.ReactNode` instead of `JSX.Element`
+- Add `'use client'` directive for client-side components
+
+### tRPC Usage
+- Define routes in `src/server/api/routers/`
+- Use `createTRPCRouter` to create routers
+- Register routes in `src/server/api/root.ts`
+- Wrap client with `TRPCReactProvider`
+
+### Prisma Database
+- Define models in `prisma/schema.prisma`
+- Use `@default(now())` and `@updatedAt` for automatic timestamp management
+- Add indexes for frequently queried fields: `@@index([fieldName])`
+- Use `server-only` package to ensure database operations only run on server
+
+### Web3 Development
+- Use RainbowKit for wallet connection UI
+- Configure wagmi in `src/lib/wagmi.ts`
+- Use `useAccount`, `useBalance`, and other wagmi hooks
+- Always handle wallet connection states gracefully
+- Use environment variables for WalletConnect Project ID
+- Support multiple chains (mainnet, testnets)
+
+### Styling Standards
+- Use Tailwind CSS class names
+- Prefer Tailwind utility classes, avoid custom CSS
+- Use `prettier-plugin-tailwindcss` for automatic class sorting
+
+### Code Quality
+- Follow ESLint rules, especially TypeScript-related ones
+- Use Prettier for code formatting
+- Avoid unused variables, use `_` prefix to ignore parameters
+- Use `@typescript-eslint/consistent-type-imports` rule
+
+### Performance Optimization
+- Use Next.js `--turbo` mode for development
+- Properly use React Query caching strategies
+- Use Prisma `select` and `include` to optimize queries
+- Avoid direct database calls in components
+- Use wagmi's built-in caching for Web3 data
+
+### Environment Variables
+- Use `@t3-oss/env-nextjs` for environment variable validation
+- Define environment variable patterns in `src/env.js`
+- Use `zod` for environment variable type validation
+- Include `NEXT_PUBLIC_WALLETCONNECT_PROJECT_ID` for Web3 functionality
+
+### Error Handling
+- Use tRPC error handling mechanisms
+- Throw appropriate errors in API routes
+- Handle error states gracefully on the client
+- Handle Web3 connection errors and network issues
+
+### Testing
+- Write tests for API routes
+- Write unit tests for critical business logic
+- Use TypeScript type checking as part of testing
+- Test Web3 functionality with mock providers
+
+## Development Workflow
+1. Use `pnpm` as package manager
+2. Run `pnpm dev` to start development server (port 3016)
+3. Use `pnpm db:studio` to view database
+4. Use `pnpm format:write` to format code
+5. Use `pnpm lint` to check code quality
+6. Use `pnpm typecheck` for type checking
+
+## Web3 Setup
+1. Get WalletConnect Project ID from https://cloud.walletconnect.com/
+2. Add `NEXT_PUBLIC_WALLETCONNECT_PROJECT_ID` to environment variables
+3. Configure supported chains in `src/lib/wagmi.ts`
+4. Test wallet connections on different networks
+
+## Important Notes
+- Ensure all database migrations are tested
+- Run complete check process before committing code
+- Follow T3 Stack best practices
+- Maintain code simplicity and maintainability
+- Test Web3 functionality on multiple networks
+- Handle wallet disconnection gracefully 
