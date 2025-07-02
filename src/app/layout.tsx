@@ -28,7 +28,7 @@ export default function RootLayout({
         <link rel="icon" href="/favicon.ico" />
       </head>
       <body>
-        <MantineProvider defaultColorScheme="dark">
+        <MantineProvider defaultColorScheme="light">
           <RainbowKitProviderWrapper>
             <TRPCReactProvider>
               <AppLayout>{children}</AppLayout>

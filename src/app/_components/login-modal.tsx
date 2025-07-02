@@ -1,11 +1,12 @@
 "use client";
-import { Button, Modal, Loader, Text, Stack } from "@mantine/core";
+import { Button, Modal, Loader, Text, Stack, Menu } from "@mantine/core";
 import { useDisclosure } from "@mantine/hooks";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useAccount, useConnect, useDisconnect, useSignTypedData } from "wagmi";
 import { injected } from "wagmi/connectors";
+import Link from "next/link";
 import { api } from "~/trpc/react";
-import { storeToken, getUser, logout } from "~/lib/auth-storage";
+import { storeToken, storeUser, getUser, logout } from "~/lib/auth-storage";
 
 // 定义TypedData结构 - 需要与后端保持一致
 const domain = {
@@ -41,8 +42,20 @@ export function LoginModal() {
   // 验证签名
   const verifySignature = api.auth.verifySignature.useMutation({
     onSuccess: (result) => {
+      // 处理用户信息，确保符合StoredUser接口
+      const userInfo = {
+        id: result.user.id,
+        name: result.user.name || `用户 ${result.user.address.slice(0, 6)}...${result.user.address.slice(-4)}`,
+        email: result.user.email || `${result.user.address.toLowerCase()}@wallet.local`,
+        role: result.user.role || "APPLICANT",
+        address: result.user.address,
+      };
+      
       // 存储token和用户信息
       storeToken(result.token);
+      storeUser(userInfo);
+      // 更新本地状态
+      setLoggedInUser(userInfo);
       setIsLoading(false);
       close();
       alert("登录成功！");
@@ -56,6 +69,16 @@ export function LoginModal() {
   // 检查登录状态
   useEffect(() => {
     setLoggedInUser(getUser());
+  }, []);
+
+  // 监听存储变化（跨标签页同步）
+  useEffect(() => {
+    const handleStorageChange = () => {
+      setLoggedInUser(getUser());
+    };
+
+    window.addEventListener('storage', handleStorageChange);
+    return () => window.removeEventListener('storage', handleStorageChange);
   }, []);
 
   // 处理登录流程
@@ -127,7 +150,7 @@ export function LoginModal() {
     logout();
     disconnect();
     setLoggedInUser(null);
-    close();
+    // 不需要close()，因为下拉菜单会自动关闭
     alert("已登出");
   };
 
@@ -140,16 +163,43 @@ export function LoginModal() {
 
   return (
     <div>
-      <Button onClick={open} variant={loggedInUser ? "outline" : "filled"}>
-        {loggedInUser ? `${loggedInUser.name}` : "登录"}
-      </Button>
+      {loggedInUser ? (
+        // 已登录用户显示下拉菜单
+        <Menu shadow="md" width={200}>
+          <Menu.Target>
+            <Button variant="outline" className="flex items-center space-x-2">
+              {loggedInUser.name}
+              <span className="ml-1">▼</span>
+            </Button>
+          </Menu.Target>
+
+          <Menu.Dropdown>
+            <Menu.Label>我的账户</Menu.Label>
+            <Menu.Item component={Link} href="/profile">
+              📋 个人资料
+            </Menu.Item>
+            <Menu.Item component={Link} href="/my-pods">
+              📦 我的 Pods
+            </Menu.Item>
+            <Menu.Divider />
+            <Menu.Item color="red" onClick={handleLogout}>
+              🚪 登出
+            </Menu.Item>
+          </Menu.Dropdown>
+        </Menu>
+      ) : (
+        // 未登录用户显示登录按钮
+        <Button onClick={open} variant="filled">
+          登录
+        </Button>
+      )}
       
       <Modal 
         opened={opened} 
         onClose={() => {
           if (!isLoading) close();
         }}
-        title={loggedInUser ? "用户信息" : "Web3 登录"}
+        title="Web3 登录"
         closeOnClickOutside={!isLoading}
         closeOnEscape={!isLoading}
       >
@@ -162,27 +212,6 @@ export function LoginModal() {
               <Text size="sm" c="dimmed" ta="center">
                 请确保钱包已解锁并按照提示完成操作
               </Text>
-            </Stack>
-          ) : loggedInUser ? (
-            // 已登录状态
-            <Stack gap="md">
-              <div>
-                <Text fw={500}>用户名：</Text>
-                <Text>{loggedInUser.name}</Text>
-              </div>
-              <div>
-                <Text fw={500}>钱包地址：</Text>
-                <Text size="sm" style={{ wordBreak: "break-all" }}>
-                  {loggedInUser.address}
-                </Text>
-              </div>
-              <div>
-                <Text fw={500}>角色：</Text>
-                <Text>{loggedInUser.role}</Text>
-              </div>
-              <Button color="red" onClick={handleLogout} fullWidth>
-                登出
-              </Button>
             </Stack>
           ) : (
             // 未登录状态

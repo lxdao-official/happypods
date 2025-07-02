@@ -1,6 +1,8 @@
 import { createCallerFactory, createTRPCRouter } from "~/server/api/trpc";
 import { userRouter } from "./routers/user";
 import { authRouter } from "./routers/auth";
+import { podRouter } from "./routers/pod";
+import { grantsPoolRouter } from "./routers/grants-pool";
 
 /**
  * This is the primary router for your server.
@@ -10,6 +12,8 @@ import { authRouter } from "./routers/auth";
 export const appRouter = createTRPCRouter({
   user: userRouter,
   auth: authRouter,
+  pod: podRouter,
+  grantsPool: grantsPoolRouter,
 });
 
 // export type definition of API

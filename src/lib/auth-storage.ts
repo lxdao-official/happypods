@@ -18,6 +18,13 @@ export function storeToken(token: string): void {
   }
 }
 
+// 存储用户信息
+export function storeUser(user: StoredUser): void {
+  if (typeof window !== 'undefined') {
+    localStorage.setItem(USER_KEY, JSON.stringify(user));
+  }
+}
+
 // 获取JWT token
 export function getToken(): string | null {
   if (typeof window !== 'undefined') {
