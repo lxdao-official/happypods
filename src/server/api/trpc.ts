@@ -6,11 +6,12 @@
  * TL;DR - This is where all the tRPC server stuff is created and plugged in. The pieces you will
  * need to use are documented accordingly near the end.
  */
-import { initTRPC } from "@trpc/server";
+import { initTRPC, TRPCError } from "@trpc/server";
 import superjson from "superjson";
 import { ZodError } from "zod";
 
 import { db } from "~/server/db";
+import { verifyToken, getTokenFromRequest } from "~/lib/jwt";
 
 /**
  * 1. CONTEXT
@@ -25,8 +26,32 @@ import { db } from "~/server/db";
  * @see https://trpc.io/docs/server/context
  */
 export const createTRPCContext = async (opts: { headers: Headers }) => {
+  // 尝试从headers中获取JWT token
+  const authHeader = opts.headers.get('authorization');
+  const token = getTokenFromRequest(authHeader || undefined);
+  
+  let user = null;
+  if (token) {
+    const payload = verifyToken(token);
+    if (payload) {
+      // 从数据库获取完整的用户信息
+      user = await db.user.findUnique({
+        where: { id: payload.userId },
+        select: {
+          id: true,
+          name: true,
+          email: true,
+          role: true,
+          metadata: true,
+        },
+      });
+    }
+  }
+
   return {
     db,
+    user,
+    token,
     ...opts,
   };
 };
@@ -104,3 +129,28 @@ const timingMiddleware = t.middleware(async ({ next, path }) => {
  * are logged in.
  */
 export const publicProcedure = t.procedure.use(timingMiddleware);
+
+/**
+ * Protected (authenticated) procedure
+ *
+ * If you want a query or mutation to ONLY be accessible to logged in users, use this. It verifies
+ * the session is valid and guarantees `ctx.user` is not null.
+ *
+ * @see https://trpc.io/docs/procedures
+ */
+const authMiddleware = t.middleware(({ next, ctx }) => {
+  if (!ctx.user) {
+    throw new TRPCError({
+      code: 'UNAUTHORIZED',
+      message: '您需要登录才能访问此功能',
+    });
+  }
+  return next({
+    ctx: {
+      ...ctx,
+      user: ctx.user, // 确保user不为null
+    },
+  });
+});
+
+export const protectedProcedure = t.procedure.use(timingMiddleware).use(authMiddleware);
