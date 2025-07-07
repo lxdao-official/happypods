@@ -3,7 +3,7 @@ import { verifyTypedData } from "viem";
 import jwt from 'jsonwebtoken';
 import { createTRPCRouter, publicProcedure } from "~/server/api/trpc";
 
-const JWT_SECRET = process.env.JWT_SECRET || 'your-secret-key-change-in-production';
+const JWT_SECRET = process.env.JWT_SECRET ?? 'your-secret-key-change-in-production';
 
 interface JWTPayload {
   userId: number;
@@ -68,7 +68,8 @@ export const authRouter = createTRPCRouter({
     .mutation(async ({ ctx, input }) => {
       try {
         // 解析消息中的时间戳
-        const timestampMatch = input.message.match(/Timestamp: (\d+)/);
+        const timestampRegex = /Timestamp: (\d+)/;
+        const timestampMatch = timestampRegex.exec(input.message);
         if (!timestampMatch) {
           throw new Error("消息格式无效");
         }
@@ -114,14 +115,11 @@ export const authRouter = createTRPCRouter({
           },
         });
 
-        if (!user) {
-          // 创建新用户
-          user = await ctx.db.user.create({
+        user ??= await ctx.db.user.create({
             data: {
               walletAddress: input.address.toLowerCase(),
             },
           });
-        }
 
         // 生成JWT token
         const token = generateToken({

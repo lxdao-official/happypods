@@ -106,7 +106,7 @@ export default function PodsPage() {
       {/* Pod列表 */}
       {isLoading ? (
         <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {[...Array(6)].map((_, i) => (
+          {Array.from({ length: 6 }, (_, i) => (
             <div key={i} className="bg-white p-6 rounded-lg shadow-md border animate-pulse">
               <div className="h-4 bg-gray-200 rounded mb-4"></div>
               <div className="h-3 bg-gray-200 rounded mb-2"></div>
@@ -151,7 +151,7 @@ export default function PodsPage() {
 
               <div className="space-y-2 text-xs text-gray-500">
                 <div className="flex items-center justify-between">
-                  <span>申请人: {pod.applicant.name || "匿名用户"}</span>
+                  <span>申请人: {pod.applicant.name ?? "匿名用户"}</span>
                   <span>币种: {pod.currency}</span>
                 </div>
                 <div className="flex items-center justify-between">

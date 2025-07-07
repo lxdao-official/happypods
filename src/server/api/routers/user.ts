@@ -4,10 +4,11 @@ import { createTRPCRouter, publicProcedure } from "~/server/api/trpc";
 
 // 定义用户输入校验 schema
 const createUserSchema = z.object({
+  walletAddress: z.string().min(1, "钱包地址不能为空"),
   avatar: z.string().url().optional(),
-  name: z.string().min(1, "用户名称不能为空"),
-  email: z.string().email("请输入有效的邮箱地址"),
-  role: z.enum(["ADMIN", "GP_MOD", "APPLICANT", "VIEWER"]),
+  name: z.string().min(1, "用户名称不能为空").optional(),
+  email: z.string().email("请输入有效的邮箱地址").optional(),
+  role: z.enum(["ADMIN", "GP_MOD", "APPLICANT", "VIEWER"]).optional(),
   description: z.string().optional(),
   links: z.record(z.string()).optional(), // 存储多个链接
 });
@@ -23,6 +24,7 @@ export const userRouter = createTRPCRouter({
     .mutation(async ({ ctx, input }) => {
       return ctx.db.user.create({
         data: {
+          walletAddress: input.walletAddress,
           avatar: input.avatar,
           name: input.name,
           email: input.email,

@@ -110,9 +110,9 @@ export default function MyPodsPage() {
       {/* 用户信息卡片 */}
       <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-6">
         <div className="flex items-center space-x-3">
-          {(currentUser as any).avatar && (
+          {(currentUser as { avatar?: string }).avatar && (
             <img
-              src={(currentUser as any).avatar}
+              src={(currentUser as { avatar?: string }).avatar}
               alt={currentUser.name}
               className="w-12 h-12 rounded-full object-cover"
             />
@@ -131,7 +131,7 @@ export default function MyPodsPage() {
       {/* Pod列表 */}
       {isLoading ? (
         <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {[...Array(6)].map((_, i) => (
+          {Array.from({ length: 6 }, (_, i) => (
             <div key={i} className="bg-white p-6 rounded-lg shadow-md border animate-pulse">
               <div className="h-4 bg-gray-200 rounded mb-4"></div>
               <div className="h-3 bg-gray-200 rounded mb-2"></div>

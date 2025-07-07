@@ -62,7 +62,7 @@ export default function PodDetailPage() {
       <div className="container mx-auto px-4 py-8">
         <div className="text-center">
           <div className="text-red-600 text-lg mb-4">
-            {error?.message || "Pod不存在"}
+            {error?.message ?? "Pod不存在"}
           </div>
           <Link
             href="/pods"
@@ -118,12 +118,12 @@ export default function PodDetailPage() {
                 {pod.applicant.avatar && (
                   <img
                     src={pod.applicant.avatar}
-                    alt={pod.applicant.name || "申请人"}
+                    alt={pod.applicant.name ?? "申请人"}
                     className="w-8 h-8 rounded-full object-cover"
                   />
                 )}
                 <span className="text-gray-700">
-                  {pod.applicant.name || "匿名用户"}
+                  {pod.applicant.name ?? "匿名用户"}
                 </span>
               </div>
             </div>

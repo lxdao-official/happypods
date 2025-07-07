@@ -1,11 +1,16 @@
 import { z } from "zod";
-import { createTRPCRouter, protectedProcedure, publicProcedure } from "~/server/api/trpc";
+import type { Prisma } from "@prisma/client";
+import {
+  createTRPCRouter,
+  protectedProcedure,
+  publicProcedure,
+} from "~/server/api/trpc";
 
 const createGrantsPoolSchema = z.object({
   avatar: z.string().url().optional(),
   name: z.string().min(1, "GP名称不能为空"),
   description: z.string().min(1, "GP描述不能为空"),
-  links: z.any().optional(),
+  links: z.record(z.string()).optional(),
   tags: z.string().optional(),
   rfp: z.any(),
   modInfo: z.any(),
@@ -18,7 +23,7 @@ const updateGrantsPoolSchema = z.object({
   avatar: z.string().url().optional(),
   name: z.string().min(1, "GP名称不能为空").optional(),
   description: z.string().min(1, "GP描述不能为空").optional(),
-  links: z.any().optional(),
+  links: z.record(z.string()).optional(),
   tags: z.string().optional(),
   rfp: z.any().optional(),
   modInfo: z.any().optional(),
@@ -41,8 +46,8 @@ export const grantsPoolRouter = createTRPCRouter({
           avatar: input.avatar,
           tags: input.tags,
           links: input.links,
-          rfp: input.rfp ?? null,
-          modInfo: input.modInfo ?? null,
+          rfp: input.rfp as Prisma.InputJsonValue,
+          modInfo: input.modInfo as Prisma.InputJsonValue,
           ownerId: ctx.user.id,
         },
         include: {
@@ -61,13 +66,15 @@ export const grantsPoolRouter = createTRPCRouter({
   // 获取GrantsPool列表
   getAll: publicProcedure
     .input(
-      z.object({
-        limit: z.number().min(1).max(100).default(50),
-        cursor: z.number().nullish(),
-        search: z.string().optional(),
-        status: z.enum(["ACTIVE", "INACTIVE", "ARCHIVED"]).optional(),
-        chainType: z.enum(["ETHEREUM", "OPTIMISM"]).optional(),
-      }).optional()
+      z
+        .object({
+          limit: z.number().min(1).max(100).default(50),
+          cursor: z.number().nullish(),
+          search: z.string().optional(),
+          status: z.enum(["ACTIVE", "INACTIVE", "ARCHIVED"]).optional(),
+          chainType: z.enum(["ETHEREUM", "OPTIMISM"]).optional(),
+        })
+        .optional(),
     )
     .query(async ({ ctx, input }) => {
       const limit = input?.limit ?? 50;
@@ -148,22 +155,21 @@ export const grantsPoolRouter = createTRPCRouter({
     }),
 
   // 获取当前用户的GrantsPool列表
-  getMyGrantsPools: protectedProcedure
-    .query(async ({ ctx }) => {
-      const grantsPools = await ctx.db.grantsPool.findMany({
-        where: { ownerId: ctx.user.id },
-        orderBy: { createdAt: "desc" },
-        include: {
-          _count: {
-            select: {
-              pods: true,
-            },
+  getMyGrantsPools: protectedProcedure.query(async ({ ctx }) => {
+    const grantsPools = await ctx.db.grantsPool.findMany({
+      where: { ownerId: ctx.user.id },
+      orderBy: { createdAt: "desc" },
+      include: {
+        _count: {
+          select: {
+            pods: true,
           },
         },
-      });
+      },
+    });
 
-      return grantsPools;
-    }),
+    return grantsPools;
+  }),
 
   // 更新GrantsPool
   update: protectedProcedure
@@ -180,13 +186,24 @@ export const grantsPoolRouter = createTRPCRouter({
         throw new Error("GrantsPool不存在");
       }
 
-      if (existingGrantsPool.ownerId !== ctx.user.id && ctx.user.role !== "ADMIN") {
+      if (
+        existingGrantsPool.ownerId !== ctx.user.id &&
+        ctx.user.role !== "ADMIN"
+      ) {
         throw new Error("没有权限修改此GrantsPool");
       }
 
       const updatedGrantsPool = await ctx.db.grantsPool.update({
         where: { id },
-        data: updateData,
+        data: {
+          ...updateData,
+          rfp: updateData.rfp
+            ? (updateData.rfp as Prisma.InputJsonValue)
+            : undefined,
+          modInfo: updateData.modInfo
+            ? (updateData.modInfo as Prisma.InputJsonValue)
+            : undefined,
+        },
         include: {
           owner: {
             select: {
@@ -220,7 +237,10 @@ export const grantsPoolRouter = createTRPCRouter({
         throw new Error("GrantsPool不存在");
       }
 
-      if (existingGrantsPool.ownerId !== ctx.user.id && ctx.user.role !== "ADMIN") {
+      if (
+        existingGrantsPool.ownerId !== ctx.user.id &&
+        ctx.user.role !== "ADMIN"
+      ) {
         throw new Error("没有权限删除此GrantsPool");
       }
 
@@ -236,20 +256,19 @@ export const grantsPoolRouter = createTRPCRouter({
     }),
 
   // 获取活跃的GrantsPool（用于Pod创建时选择）
-  getActiveGrantsPools: publicProcedure
-    .query(async ({ ctx }) => {
-      const grantsPools = await ctx.db.grantsPool.findMany({
-        where: { status: "ACTIVE" },
-        orderBy: { name: "asc" },
-        select: {
-          id: true,
-          name: true,
-          avatar: true,
-          rfp: true,
-          chainType: true,
-        },
-      });
+  getActiveGrantsPools: publicProcedure.query(async ({ ctx }) => {
+    const grantsPools = await ctx.db.grantsPool.findMany({
+      where: { status: "ACTIVE" },
+      orderBy: { name: "asc" },
+      select: {
+        id: true,
+        name: true,
+        avatar: true,
+        rfp: true,
+        chainType: true,
+      },
+    });
 
-      return grantsPools;
-    }),
-}); 
+    return grantsPools;
+  }),
+});

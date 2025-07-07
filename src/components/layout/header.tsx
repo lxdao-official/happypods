@@ -1,6 +1,6 @@
 'use client';
 
-import { Group, Title, Button, Container, Burger, Box, Anchor } from '@mantine/core';
+import { Group, Title, Button, Container, Burger, Box } from '@mantine/core';
 import { useDisclosure } from '@mantine/hooks';
 import { LoginModal } from '~/app/_components/login-modal';
 import NextLink from 'next/link';
