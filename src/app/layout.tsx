@@ -1,16 +1,13 @@
 "use client";
 import "~/styles/globals.css";
 
-import { type Metadata } from "next";
 import { Geist } from "next/font/google";
-import { MantineProvider } from '@mantine/core';
-import '@mantine/core/styles.css';
+import { HeroUIProvider } from "@heroui/react";
 
 import { TRPCReactProvider } from "~/trpc/react";
 import { RainbowKitProviderWrapper } from "~/components/providers/rainbowkit-provider";
 import { AppLayout } from "~/components/layout/app-layout";
-
-
+import { GridBackground } from "~/components/layout/grid-background";
 
 const geist = Geist({
   subsets: ["latin"],
@@ -21,20 +18,21 @@ export default function RootLayout({
   children,
 }: Readonly<{ children: React.ReactNode }>) {
   return (
-    <html lang="en" className={`${geist.variable}`}>
+    <html lang="en" className={`${geist.variable} dark`}>
       <head>
-        <title>Happy Pods</title>
+        <title>HappyPods</title>
         <meta name="description" content="A Web3 application built with T3 Stack" />
         <link rel="icon" href="/favicon.ico" />
       </head>
       <body>
-        <MantineProvider defaultColorScheme="light">
+        <GridBackground />
+        <HeroUIProvider>
           <RainbowKitProviderWrapper>
             <TRPCReactProvider>
               <AppLayout>{children}</AppLayout>
             </TRPCReactProvider>
           </RainbowKitProviderWrapper>
-        </MantineProvider>
+        </HeroUIProvider>
       </body>
     </html>
   );

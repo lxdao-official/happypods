@@ -1,6 +1,5 @@
 "use client";
-import { Button, Modal, Loader, Text, Stack, Menu } from "@mantine/core";
-import { useDisclosure } from "@mantine/hooks";
+import { Button, Modal, Spinner, Dropdown, DropdownTrigger, DropdownMenu, DropdownItem, DropdownSection } from "@heroui/react";
 import { useState, useEffect, useRef } from "react";
 import { useAccount, useConnect, useDisconnect, useSignTypedData } from "wagmi";
 import { injected } from "wagmi/connectors";
@@ -21,6 +20,15 @@ const types = {
     { name: 'timestamp', type: 'uint256' },
   ],
 } as const;
+
+// 自定义 useDisclosure hook
+function useDisclosure(initial = false) {
+  const [opened, setOpened] = useState(initial);
+  const open = () => setOpened(true);
+  const close = () => setOpened(false);
+  const toggle = () => setOpened(!opened);
+  return [opened, { open, close, toggle }] as const;
+}
 
 export function LoginModal() {
   const [opened, { open, close }] = useDisclosure(false);
@@ -150,7 +158,6 @@ export function LoginModal() {
     logout();
     disconnect();
     setLoggedInUser(null);
-    // 不需要close()，因为下拉菜单会自动关闭
     alert("已登出");
   };
 
@@ -165,74 +172,76 @@ export function LoginModal() {
     <div>
       {loggedInUser ? (
         // 已登录用户显示下拉菜单
-        <Menu shadow="md" width={200}>
-          <Menu.Target>
-            <Button variant="outline" className="flex items-center space-x-2">
+        <Dropdown>
+          <DropdownTrigger>
+            <Button variant="bordered" className="flex items-center space-x-2">
               {loggedInUser.name}
               <span className="ml-1">▼</span>
             </Button>
-          </Menu.Target>
+          </DropdownTrigger>
 
-          <Menu.Dropdown>
-            <Menu.Label>我的账户</Menu.Label>
-            <Menu.Item component={Link} href="/profile">
-              📋 个人资料
-            </Menu.Item>
-            <Menu.Item component={Link} href="/my-pods">
-              📦 我的 Pods
-            </Menu.Item>
-            <Menu.Divider />
-            <Menu.Item color="red" onClick={handleLogout}>
-              🚪 登出
-            </Menu.Item>
-          </Menu.Dropdown>
-        </Menu>
+          <DropdownMenu>
+            <DropdownSection title="我的账户">
+              <DropdownItem key="profile" as={Link} href="/profile">
+                📋 个人资料
+              </DropdownItem>
+              <DropdownItem key="pods" as={Link} href="/my-pods">
+                📦 我的 Pods
+              </DropdownItem>
+            </DropdownSection>
+            <DropdownSection>
+              <DropdownItem key="logout" color="danger" onClick={handleLogout}>
+                🚪 登出
+              </DropdownItem>
+            </DropdownSection>
+          </DropdownMenu>
+        </Dropdown>
       ) : (
         // 未登录用户显示登录按钮
-        <Button onClick={open} variant="filled">
+        <Button onClick={open} variant="solid">
           登录
         </Button>
       )}
       
       <Modal 
-        opened={opened} 
+        isOpen={opened} 
         onClose={() => {
           if (!isLoading) close();
         }}
         title="Web3 登录"
-        closeOnClickOutside={!isLoading}
-        closeOnEscape={!isLoading}
+        isDismissable={!isLoading}
+        hideCloseButton={isLoading}
       >
-        <Stack gap="md">
+        <div className="space-y-4">
           {isLoading ? (
             // 加载状态
-            <Stack align="center" gap="md">
-              <Loader size="xl" />
-              <Text ta="center">{loadingMessage}</Text>
-              <Text size="sm" c="dimmed" ta="center">
+            <div className="flex flex-col items-center space-y-4">
+              <Spinner size="lg" />
+              <p className="text-center">{loadingMessage}</p>
+              <p className="text-sm text-muted-foreground text-center">
                 请确保钱包已解锁并按照提示完成操作
-              </Text>
-            </Stack>
+              </p>
+            </div>
           ) : (
             // 未登录状态
-            <Stack gap="md">
-              <Text ta="center">
+            <div className="space-y-4">
+              <p className="text-center">
                 使用您的Web3钱包登录Happy Pods
-              </Text>
-              <Text size="sm" c="dimmed" ta="center">
+              </p>
+              <p className="text-sm text-muted-foreground text-center">
                 我们将要求您签名一条消息来验证钱包所有权，这是安全且免费的。
-              </Text>
-              <Button onClick={handleLogin} fullWidth>
+              </p>
+              <Button onClick={handleLogin} className="w-full">
                 {isConnected ? "签名登录" : "连接钱包"}
               </Button>
               {isConnected && (
-                <Text size="sm" ta="center" c="green">
+                <p className="text-sm text-center text-success">
                   已连接钱包：{address?.slice(0, 6)}...{address?.slice(-4)}
-                </Text>
+                </p>
               )}
-            </Stack>
+            </div>
           )}
-        </Stack>
+        </div>
       </Modal>
     </div>
   );

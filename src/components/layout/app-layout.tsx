@@ -1,6 +1,5 @@
 'use client';
 
-import { Box } from '@mantine/core';
 import { Header } from './header';
 import { Footer } from './footer';
 
@@ -10,12 +9,12 @@ interface AppLayoutProps {
 
 export function AppLayout({ children }: AppLayoutProps) {
   return (
-    <Box style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column' }}>
+    <div className="min-h-screen relative z-[2] flex flex-col text-foreground">
       <Header />
-      <Box component="main" style={{ flex: 1 }}>
+      <main className="flex-1">
         {children}
-      </Box>
+      </main>
       <Footer />
-    </Box>
+    </div>
   );
 } 

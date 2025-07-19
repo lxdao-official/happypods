@@ -1,42 +1,62 @@
 'use client';
 
-import { Group, Title, Button, Container, Burger, Box, Anchor } from '@mantine/core';
-import { useDisclosure } from '@mantine/hooks';
+import { Button, Navbar, NavbarBrand, NavbarContent, NavbarItem, NavbarMenu, NavbarMenuToggle, NavbarMenuItem } from '@heroui/react';
 import { LoginModal } from '~/app/_components/login-modal';
 import NextLink from 'next/link';
 
 export function Header() {
-  const [opened, { toggle }] = useDisclosure(false);
-
   return (
-    <Box component="header" h={60} className="border-b border-gray-200 bg-white">
-      <Container size="lg" h="100%">
-        <Group justify="space-between" h="100%">
-          
+    <Navbar className="border-b border-border bg-background">
+      <NavbarContent>
+        <NavbarMenuToggle className="sm:hidden" />
+        <NavbarBrand>
           <NextLink href="/">
-            <Title order={3} className="text-violet-600 hover:text-violet-700 transition-colors cursor-pointer">
+            <h3 className="text-primary cursor-pointer transition-colors hover:text-primary-foreground">
               Happy Pods
-            </Title>
+            </h3>
           </NextLink>
+        </NavbarBrand>
+      </NavbarContent>
 
-          
-          <Group gap="md" visibleFrom="sm">
-            <NextLink href="/pods">
-              <Button variant="subtle" color="gray">
-                Pods
-              </Button>
-            </NextLink>
-            <NextLink href="/grants-pool">
-              <Button variant="subtle" color="gray">
-                Grants Pool
-              </Button>
-            </NextLink>
-            <LoginModal />
-          </Group>
+      <NavbarContent className="hidden sm:flex gap-4" justify="center">
+        <NavbarItem>
+          <NextLink href="/pods">
+            <Button variant="light" className="text-muted-foreground hover:text-foreground">
+              Pods
+            </Button>
+          </NextLink>
+        </NavbarItem>
+        <NavbarItem>
+          <NextLink href="/grants-pool">
+            <Button variant="light" className="text-muted-foreground hover:text-foreground">
+              Grants Pool
+            </Button>
+          </NextLink>
+        </NavbarItem>
+      </NavbarContent>
 
-          <Burger opened={opened} onClick={toggle} hiddenFrom="sm" size="sm" />
-        </Group>
-      </Container>
-    </Box>
+      <NavbarContent justify="end">
+        <NavbarItem>
+          <LoginModal />
+        </NavbarItem>
+      </NavbarContent>
+
+      <NavbarMenu>
+        <NavbarMenuItem>
+          <NextLink href="/pods" className="w-full">
+            <Button variant="light" className="w-full justify-start">
+              Pods
+            </Button>
+          </NextLink>
+        </NavbarMenuItem>
+        <NavbarMenuItem>
+          <NextLink href="/grants-pool" className="w-full">
+            <Button variant="light" className="w-full justify-start">
+              Grants Pool
+            </Button>
+          </NextLink>
+        </NavbarMenuItem>
+      </NavbarMenu>
+    </Navbar>
   );
 } 

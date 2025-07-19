@@ -1,6 +1,66 @@
 @import "tailwindcss";
+@layer base {
+     :root {
+        --background: #ffffff;
+        --foreground: #020817;
+        --card: #ffffff;
+        --card-foreground: #020817;
+        --popover: #ffffff;
+        --popover-foreground: #020817;
+        --primary: #3b82f6;
+        --primary-foreground: #f8fafc;
+        --secondary: #f1f5f9;
+        --secondary-foreground: #020817;
+        --muted: #f1f5f9;
+        --muted-foreground: #64748b;
+        --accent: #f1f5f9;
+        --accent-foreground: #020817;
+        --destructive: #ef4444;
+        --destructive-foreground: #f8fafc;
+        --border: #e2e8f0;
+        --input: #e2e8f0;
+        --ring: #3b82f6;
+        --chart-1: #dc2626;
+        --chart-2: #0891b2;
+        --chart-3: #1e293b;
+        --chart-4: #eab308;
+        --chart-5: #ea580c;
+        --radius: 0.5rem;
+    }
+    .dark {
+        --background: #020817;
+        --foreground: #f8fafc;
+        --card: #020817;
+        --card-foreground: #f8fafc;
+        --popover: #020817;
+        --popover-foreground: #f8fafc;
+        --primary: #60a5fa;
+        --primary-foreground: #020817;
+        --secondary: #1e293b;
+        --secondary-foreground: #f8fafc;
+        --muted: #1e293b;
+        --muted-foreground: #94a3b8;
+        --accent: #1e293b;
+        --accent-foreground: #f8fafc;
+        --destructive: #7f1d1d;
+        --destructive-foreground: #f8fafc;
+        --border: #1e293b;
+        --input: #1e293b;
+        --ring: #f1f5f9;
+        --chart-1: #3b82f6;
+        --chart-2: #10b981;
+        --chart-3: #f59e0b;
+        --chart-4: #8b5cf6;
+        --chart-5: #ec4899;
+    }
+}
 
-@theme {
-  --font-sans: var(--font-geist-sans), ui-sans-serif, system-ui, sans-serif,
-    "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol", "Noto Color Emoji";
+@layer base {
+    * {
+        border-color: var(--border);
+    }
+    body {
+        background-color: var(--background);
+        color: var(--foreground);
+    }
 }
