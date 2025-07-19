@@ -28,7 +28,7 @@ import { verifyToken, getTokenFromRequest } from "~/lib/jwt";
 export const createTRPCContext = async (opts: { headers: Headers }) => {
   // 尝试从headers中获取JWT token
   const authHeader = opts.headers.get('authorization');
-  const token = getTokenFromRequest(authHeader || undefined);
+  const token = getTokenFromRequest(authHeader ?? undefined);
   
   let user = null;
   if (token) {

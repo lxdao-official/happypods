@@ -1,6 +1,5 @@
 import Link from "next/link";
 import { HydrateClient } from "~/trpc/server";
-import { LoginModal } from "./_components/login-modal";
 
 export default async function Home() {
   return (

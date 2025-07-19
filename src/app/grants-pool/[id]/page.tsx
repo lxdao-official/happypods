@@ -80,7 +80,7 @@ export default function GrantsPoolDetailPage() {
       <div className="container mx-auto px-4 py-8">
         <div className="text-center">
           <div className="text-red-600 text-lg mb-4">
-            {error?.message || "Grants Pool不存在"}
+            {error?.message ?? "Grants Pool不存在"}
           </div>
           <Link
             href="/grants-pool"
@@ -147,12 +147,12 @@ export default function GrantsPoolDetailPage() {
                 {grantsPool.owner.avatar && (
                   <img
                     src={grantsPool.owner.avatar}
-                    alt={grantsPool.owner.name || "创建者"}
+                    alt={grantsPool.owner.name ?? "创建者"}
                     className="w-8 h-8 rounded-full object-cover"
                   />
                 )}
                 <span className="text-gray-700">
-                  {grantsPool.owner.name || "匿名用户"}
+                  {grantsPool.owner.name ?? "匿名用户"}
                 </span>
               </div>
             </div>
@@ -285,7 +285,7 @@ export default function GrantsPoolDetailPage() {
                     {pod.shortDescription}
                   </p>
                   <div className="flex items-center justify-between text-xs text-gray-500">
-                    <span>申请人: {pod.applicant.name || "匿名用户"}</span>
+                    <span>申请人: {pod.applicant.name ?? "匿名用户"}</span>
                     <span>币种: {pod.currency}</span>
                   </div>
                 </Link>

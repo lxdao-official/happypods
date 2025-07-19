@@ -42,7 +42,7 @@ export function LoginModal() {
   const { signTypedDataAsync } = useSignTypedData();
 
   // 获取nonce
-  const { data: nonceData, refetch: refetchNonce } = api.auth.getNonce.useQuery(
+  const { refetch: refetchNonce } = api.auth.getNonce.useQuery(
     undefined,
     { enabled: false }
   );
@@ -53,9 +53,9 @@ export function LoginModal() {
       // 处理用户信息，确保符合StoredUser接口
       const userInfo = {
         id: result.user.id,
-        name: result.user.name || `用户 ${result.user.address.slice(0, 6)}...${result.user.address.slice(-4)}`,
-        email: result.user.email || `${result.user.address.toLowerCase()}@wallet.local`,
-        role: result.user.role || "APPLICANT",
+        name: result.user.name ?? `用户 ${result.user.address.slice(0, 6)}...${result.user.address.slice(-4)}`,
+        email: result.user.email ?? `${result.user.address.toLowerCase()}@wallet.local`,
+        role: result.user.role ?? "APPLICANT",
         address: result.user.address,
       };
       
@@ -139,16 +139,17 @@ export function LoginModal() {
         nonce: nonce.nonce,
       });
 
-    } catch (error: any) {
+    } catch (error: unknown) {
       setIsLoading(false);
       console.error('Login error:', error);
       
-      if (error.message?.includes('User rejected')) {
+      const errorMessage = error instanceof Error ? error.message : String(error);
+      if (errorMessage?.includes('User rejected')) {
         alert("用户取消了签名");
-      } else if (error.message?.includes('Connection')) {
+      } else if (errorMessage?.includes('Connection')) {
         alert("钱包连接失败，请确保钱包已安装并解锁");
       } else {
-        alert(`登录失败：${error.message || "未知错误"}`);
+        alert(`登录失败：${errorMessage ?? "未知错误"}`);
       }
     }
   };
@@ -164,9 +165,9 @@ export function LoginModal() {
   // 钱包连接后自动继续登录流程
   useEffect(() => {
     if (isConnected && address && isLoading && loadingMessage.includes("等待钱包连接")) {
-      handleLogin();
+      void handleLogin();
     }
-  }, [isConnected, address]);
+  }, [isConnected, address, isLoading, loadingMessage, handleLogin]);
 
   return (
     <div>

@@ -49,7 +49,7 @@ export default function ProfilePage() {
 
   // 获取当前用户信息
   const { data: userData, isLoading: userLoading } = api.user.getById.useQuery(
-    { id: currentUser?.id || 0 },
+    { id: currentUser?.id ?? 0 },
     { enabled: !!currentUser?.id }
   );
 
@@ -59,8 +59,9 @@ export default function ProfilePage() {
       await utils.user.invalidate();
       alert("个人资料更新成功！");
     },
-    onError: (error: any) => {
-      alert(`更新失败：${error.message}`);
+    onError: (error: unknown) => {
+      const errorMessage = error instanceof Error ? error.message : String(error);
+      alert(`更新失败：${errorMessage}`);
     },
   });
 
@@ -79,12 +80,12 @@ export default function ProfilePage() {
   useEffect(() => {
     if (userData) {
       setFormData({
-        avatar: userData.avatar || "",
-        name: userData.name || "",
-        email: userData.email || "",
-        role: userData.role || "APPLICANT",
-        description: userData.description || "",
-        links: (userData.links as UserLinks) || {},
+        avatar: userData.avatar ?? "",
+        name: userData.name ?? "",
+        email: userData.email ?? "",
+        role: userData.role ?? "APPLICANT",
+        description: userData.description ?? "",
+        links: (userData.links as UserLinks) ?? {},
       });
       setIsLoading(false);
     }
@@ -112,7 +113,7 @@ export default function ProfilePage() {
 
     const links = Object.keys(formData.links).length > 0 
       ? Object.fromEntries(
-          Object.entries(formData.links).filter(([_, value]) => value?.trim())
+          Object.entries(formData.links).filter(([_, value]) => (value as string)?.trim())
         ) as Record<string, string> 
       : undefined;
 
@@ -290,7 +291,7 @@ export default function ProfilePage() {
                   <label className="block text-xs text-gray-500 mb-1">X (Twitter)</label>
                   <input
                     type="url"
-                    value={formData.links.x || ""}
+                    value={formData.links.x ?? ""}
                     onChange={(e) => updateLink("x", e.target.value)}
                     placeholder="https://x.com/username"
                     className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
@@ -300,7 +301,7 @@ export default function ProfilePage() {
                   <label className="block text-xs text-gray-500 mb-1">Telegram</label>
                   <input
                     type="url"
-                    value={formData.links.telegram || ""}
+                    value={formData.links.telegram ?? ""}
                     onChange={(e) => updateLink("telegram", e.target.value)}
                     placeholder="https://t.me/username"
                     className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
@@ -310,7 +311,7 @@ export default function ProfilePage() {
                   <label className="block text-xs text-gray-500 mb-1">GitHub</label>
                   <input
                     type="url"
-                    value={formData.links.github || ""}
+                    value={formData.links.github ?? ""}
                     onChange={(e) => updateLink("github", e.target.value)}
                     placeholder="https://github.com/username"
                     className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
@@ -320,7 +321,7 @@ export default function ProfilePage() {
                   <label className="block text-xs text-gray-500 mb-1">个人网站</label>
                   <input
                     type="url"
-                    value={formData.links.website || ""}
+                    value={formData.links.website ?? ""}
                     onChange={(e) => updateLink("website", e.target.value)}
                     placeholder="https://yourwebsite.com"
                     className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
