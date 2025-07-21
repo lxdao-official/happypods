@@ -1,62 +1,34 @@
 'use client';
 
-import { Button, Navbar, NavbarBrand, NavbarContent, NavbarItem, NavbarMenu, NavbarMenuToggle, NavbarMenuItem } from '@heroui/react';
-import { LoginModal } from '~/app/_components/login-modal';
+import { LoginModal } from '~/components/login-modal';
 import NextLink from 'next/link';
+import { useState } from 'react';
 
 export function Header() {
+
   return (
-    <Navbar className="border-b border-border bg-background">
-      <NavbarContent>
-        <NavbarMenuToggle className="sm:hidden" />
-        <NavbarBrand>
-          <NextLink href="/">
-            <h3 className="text-primary cursor-pointer transition-colors hover:text-primary-foreground">
-              Happy Pods
-            </h3>
+    <header className="p-4 border-b border-border bg-background">
+      <div className="flex items-center justify-between">
+        
+        {/* Logo */}
+        <div className="flex items-center basis-1/5">
+          <NextLink href="/" className="flex items-center">
+            <img src="/logo.svg" alt="HappyPods" className="h-8" />
           </NextLink>
-        </NavbarBrand>
-      </NavbarContent>
+        </div>
 
-      <NavbarContent className="hidden sm:flex gap-4" justify="center">
-        <NavbarItem>
-          <NextLink href="/pods">
-            <Button variant="light" className="text-muted-foreground hover:text-foreground">
-              Pods
-            </Button>
-          </NextLink>
-        </NavbarItem>
-        <NavbarItem>
-          <NextLink href="/grants-pool">
-            <Button variant="light" className="text-muted-foreground hover:text-foreground">
-              Grants Pool
-            </Button>
-          </NextLink>
-        </NavbarItem>
-      </NavbarContent>
+        {/* 桌面端导航 */}
+        <nav className="flex items-center justify-center flex-1 gap-10 ">
+          <NextLink href="/pods" className='hover:text-primary'> Pods</NextLink>
+          <NextLink href="/grants-pool" className='hover:text-primary'>Grants Pool</NextLink>
+          <NextLink href="/grants-pool" className='hover:text-primary'>How It Works</NextLink>
+        </nav>
 
-      <NavbarContent justify="end">
-        <NavbarItem>
+        {/* 登录按钮 */}
+        <div className="flex items-center justify-end basis-1/5">
           <LoginModal />
-        </NavbarItem>
-      </NavbarContent>
-
-      <NavbarMenu>
-        <NavbarMenuItem>
-          <NextLink href="/pods" className="w-full">
-            <Button variant="light" className="w-full justify-start">
-              Pods
-            </Button>
-          </NextLink>
-        </NavbarMenuItem>
-        <NavbarMenuItem>
-          <NextLink href="/grants-pool" className="w-full">
-            <Button variant="light" className="w-full justify-start">
-              Grants Pool
-            </Button>
-          </NextLink>
-        </NavbarMenuItem>
-      </NavbarMenu>
-    </Navbar>
+        </div>
+      </div>
+    </header>
   );
 } 
