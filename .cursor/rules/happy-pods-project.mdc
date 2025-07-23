@@ -1,0 +1,65 @@
+# Happy Pods 项目 Cursor 规则
+
+## 项目结构
+- 入口：Next.js 15 (App Router)
+- 主要目录：
+  - `src/app/` 页面与路由
+  - `src/components/` 组件
+  - `src/server/api/routers/` tRPC 路由
+  - `src/lib/` 工具库（如 wagmi 配置）
+  - `prisma/` 数据库 schema
+
+## 技术栈
+- TypeScript（严格模式）
+- tRPC + Prisma + PostgreSQL
+- Tailwind CSS 4
+- RainbowKit + wagmi + viem（Web3）
+- TanStack Query（React Query）
+- ESLint + Prettier
+
+## 命名规范
+- 组件：PascalCase
+- 文件：kebab-case
+- 变量/函数：camelCase
+- 常量：UPPER_SNAKE_CASE
+- 类型/接口：PascalCase
+
+## 代码规范
+- 类型导入用 `import type { ... }`
+- Props 类型用 `Readonly<T>`
+- 避免 `any`，优先 `unknown` 或具体类型
+- 运行时校验用 zod
+- 组件用函数式，props 用 `Readonly<{ children: React.ReactNode }>`
+- 客户端组件加 'use client'
+- Web3 配置在 `src/lib/wagmi.ts`
+- 环境变量用 `@t3-oss/env-nextjs` + zod 校验
+
+## 数据库
+- Prisma schema 定义在 `prisma/schema.prisma`
+- 时间戳用 `@default(now())` 和 `@updatedAt`
+- 频繁查询字段加索引
+- 仅服务端操作数据库
+
+## Web3
+- RainbowKit 负责钱包连接 UI
+- wagmi hooks 获取账户、余额等
+- 钱包连接状态需优雅处理
+- 支持多链，WalletConnect ID 用环境变量
+
+## 开发流程
+1. 包管理用 pnpm
+2. `pnpm dev` 启动开发（端口 3016）
+3. `pnpm db:studio` 查看数据库
+4. `pnpm format:write` 格式化
+5. `pnpm lint` 代码检查
+6. `pnpm typecheck` 类型检查
+
+## 其他
+- 遵循 T3 Stack 最佳实践
+- 保持代码简洁、可维护
+- Web3 多网络测试，钱包断开需处理
+- 重要变更需测试数据库迁移
+description:
+globs:
+alwaysApply: false
+---

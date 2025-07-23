@@ -3,6 +3,15 @@
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
+import { 
+  Input, 
+  Textarea, 
+  Select, 
+  SelectItem
+} from "@heroui/react";
+import CornerFrame from "~/components/corner-frame";
+import AppBtn from "~/components/app-btn";
+import RelatedLinksSection from "~/components/related-links-section";
 import { api } from "~/trpc/react";
 import { getUser } from "~/lib/auth-storage";
 
@@ -130,22 +139,16 @@ export default function ProfilePage() {
     updateUser.mutate(submitData);
   };
 
-  // 更新链接
-  const updateLink = (key: keyof UserLinks, value: string) => {
-    setFormData(prev => ({
-      ...prev,
-      links: {
-        ...prev.links,
-        [key]: value.trim() || undefined,
-      }
-    }));
+  // 处理输入变化
+  const handleInputChange = (field: string, value: string) => {
+    setFormData(prev => ({ ...prev, [field]: value }));
   };
 
   if (!currentUser) {
     return (
-      <div className="container mx-auto px-4 py-8">
+      <div className="container px-4 py-8 mx-auto">
         <div className="text-center">
-          <div className="text-red-600 text-lg mb-4">
+          <div className="mb-4 text-lg text-red-600">
             请先登录
           </div>
           <Link
@@ -161,12 +164,12 @@ export default function ProfilePage() {
 
   if (isLoading || userLoading) {
     return (
-      <div className="container mx-auto px-4 py-8">
-        <div className="max-w-2xl mx-auto">
-          <div className="bg-white rounded-lg shadow-md p-6 animate-pulse">
-            <div className="h-8 bg-gray-200 rounded mb-4"></div>
-            <div className="h-4 bg-gray-200 rounded mb-2"></div>
-            <div className="h-4 bg-gray-200 rounded mb-4"></div>
+      <div className="container px-4 py-8 mx-auto">
+        <div className="max-w-4xl mx-auto">
+          <div className="p-6 bg-white rounded-lg shadow-md animate-pulse">
+            <div className="h-8 mb-4 bg-gray-200 rounded"></div>
+            <div className="h-4 mb-2 bg-gray-200 rounded"></div>
+            <div className="h-4 mb-4 bg-gray-200 rounded"></div>
             <div className="h-32 bg-gray-200 rounded"></div>
           </div>
         </div>
@@ -175,190 +178,147 @@ export default function ProfilePage() {
   }
 
   return (
-    <div className="container mx-auto px-4 py-8">
-      <div className="max-w-2xl mx-auto">
-        <div className="mb-6">
-          <Link
-            href="/"
-            className="text-blue-600 hover:text-blue-700 text-sm"
-          >
-            ← 返回首页
-          </Link>
+    <div className="container px-4 py-8 mx-auto">
+      <div className="max-w-4xl mx-auto">
+        <div className="mb-8">
+          <h1 className="text-3xl font-bold text-foreground">个人资料</h1>
+          <p className="mt-2 text-default-500">管理您的个人信息和偏好设置</p>
         </div>
 
-        <div className="bg-white rounded-lg shadow-md p-6">
-          <h1 className="text-3xl font-bold text-gray-900 mb-8">个人资料</h1>
-
-          <form onSubmit={handleSubmit} className="space-y-6">
-            {/* 头像 */}
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                头像链接
-              </label>
-              <input
+        <form onSubmit={handleSubmit} className="space-y-6">
+          {/* 基本信息 */}
+          <CornerFrame backgroundColor="var(--color-background)">
+            <h2 className="mb-6 text-xl">基本信息</h2>
+            <div className="space-y-6">
+              {/* 头像 */}
+              <Input
                 type="url"
+                label="头像链接"
                 value={formData.avatar}
-                onChange={(e) => setFormData(prev => ({ ...prev, avatar: e.target.value }))}
+                onChange={(e) => handleInputChange("avatar", e.target.value)}
                 placeholder="https://example.com/avatar.jpg"
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                description="输入头像图片的 URL 地址"
+                endContent={
+                  formData.avatar && (
+                    <img
+                      src={formData.avatar}
+                      alt="头像预览"
+                      className="object-cover w-8 h-8 rounded-full"
+                      onError={(e) => {
+                        (e.target as HTMLImageElement).style.display = 'none';
+                      }}
+                    />
+                  )
+                }
               />
-              {formData.avatar && (
-                <div className="mt-2">
-                  <img
-                    src={formData.avatar}
-                    alt="头像预览"
-                    className="w-16 h-16 rounded-full object-cover"
-                    onError={(e) => {
-                      (e.target as HTMLImageElement).style.display = 'none';
-                    }}
-                  />
-                </div>
-              )}
-            </div>
 
-            {/* 用户名称 */}
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                用户名称 <span className="text-red-500">*</span>
-              </label>
-              <input
+              {/* 用户名称 */}
+              <Input
                 type="text"
+                label="用户名称"
                 value={formData.name}
-                onChange={(e) => setFormData(prev => ({ ...prev, name: e.target.value }))}
+                onChange={(e) => handleInputChange("name", e.target.value)}
                 placeholder="请输入用户名称"
-                required
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                isRequired
               />
-            </div>
 
-            {/* 邮箱 */}
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                邮箱地址 <span className="text-red-500">*</span>
-              </label>
-              <input
+              {/* 邮箱 */}
+              <Input
                 type="email"
+                label="邮箱地址"
                 value={formData.email}
-                onChange={(e) => setFormData(prev => ({ ...prev, email: e.target.value }))}
+                onChange={(e) => handleInputChange("email", e.target.value)}
                 placeholder="请输入邮箱地址"
-                required
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                isRequired
               />
-            </div>
 
-            {/* 用户角色 */}
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                用户角色
-              </label>
-              <select
-                value={formData.role}
-                onChange={(e) => setFormData(prev => ({ 
-                  ...prev, 
-                  role: e.target.value as FormData["role"]
-                }))}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white"
-              >
-                {USER_ROLES.map(role => (
-                  <option key={role.value} value={role.value}>
-                    {role.label}
-                  </option>
-                ))}
-              </select>
-            </div>
+              {/* 用户角色 */}
+              <Select
+                label="用户角色"
+                selectedKeys={[formData.role]}
+                onSelectionChange={(keys) => {
+                  const role = Array.from(keys)[0] as FormData["role"];
+                  handleInputChange("role", role);
+                }}
+                             >
+                 {USER_ROLES.map(role => (
+                   <SelectItem key={role.value}>
+                     {role.label}
+                   </SelectItem>
+                 ))}
+               </Select>
 
-            {/* 用户描述 */}
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                个人简介
-              </label>
-              <textarea
+              {/* 个人简介 */}
+              <Textarea
+                label="个人简介"
                 value={formData.description}
-                onChange={(e) => setFormData(prev => ({ ...prev, description: e.target.value }))}
+                onChange={(e) => handleInputChange("description", e.target.value)}
                 placeholder="请输入个人简介"
-                rows={4}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none"
+                minRows={4}
+                description="介绍您的背景、兴趣和专业领域"
               />
             </div>
+          </CornerFrame>
 
-            {/* 社交链接 */}
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                社交链接
-              </label>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-xs text-gray-500 mb-1">X (Twitter)</label>
-                  <input
-                    type="url"
-                    value={formData.links.x ?? ""}
-                    onChange={(e) => updateLink("x", e.target.value)}
-                    placeholder="https://x.com/username"
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  />
-                </div>
-                <div>
-                  <label className="block text-xs text-gray-500 mb-1">Telegram</label>
-                  <input
-                    type="url"
-                    value={formData.links.telegram ?? ""}
-                    onChange={(e) => updateLink("telegram", e.target.value)}
-                    placeholder="https://t.me/username"
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  />
-                </div>
-                <div>
-                  <label className="block text-xs text-gray-500 mb-1">GitHub</label>
-                  <input
-                    type="url"
-                    value={formData.links.github ?? ""}
-                    onChange={(e) => updateLink("github", e.target.value)}
-                    placeholder="https://github.com/username"
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  />
-                </div>
-                <div>
-                  <label className="block text-xs text-gray-500 mb-1">个人网站</label>
-                  <input
-                    type="url"
-                    value={formData.links.website ?? ""}
-                    onChange={(e) => updateLink("website", e.target.value)}
-                    placeholder="https://yourwebsite.com"
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  />
-                </div>
-              </div>
-            </div>
+          {/* 社交链接 */}
+          <RelatedLinksSection 
+            links={{
+              website: formData.links.website || '',
+              github: formData.links.github || '',
+              twitter: formData.links.x || '',
+              telegram: formData.links.telegram || ''
+            }}
+            onLinksChange={(links: Record<string, string>) => {
+              setFormData(prev => ({
+                ...prev,
+                links: {
+                  website: links.website || undefined,
+                  github: links.github || undefined,
+                  x: links.twitter || undefined,
+                  telegram: links.telegram || undefined,
+                }
+              }));
+            }}
+          />
 
-            {/* 钱包地址显示 */}
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                钱包地址
-              </label>
-              <div className="px-3 py-2 bg-gray-100 border border-gray-300 rounded-md text-gray-600">
-                {currentUser.address}
-              </div>
-              <p className="text-xs text-gray-500 mt-1">钱包地址无法修改</p>
-            </div>
+          {/* 钱包信息 */}
+          <CornerFrame backgroundColor="var(--color-background)">
+            <h2 className="mb-6 text-xl">钱包信息</h2>
+            <Input
+              label="钱包地址"
+              value={currentUser.address}
+              isReadOnly
+              description="钱包地址无法修改，由连接的钱包决定"
+            />
+          </CornerFrame>
 
-            {/* 提交按钮 */}
-            <div className="flex gap-4">
-              <button
-                type="submit"
-                disabled={updateUser.isPending}
-                className="flex-1 bg-blue-600 text-white py-2 px-4 rounded-md hover:bg-blue-700 disabled:bg-gray-400 disabled:cursor-not-allowed transition-colors"
-              >
-                {updateUser.isPending ? "保存中..." : "保存资料"}
-              </button>
-              <Link
-                href="/"
-                className="flex-1 bg-gray-300 text-gray-700 py-2 px-4 rounded-md hover:bg-gray-400 transition-colors text-center"
-              >
-                取消
-              </Link>
-            </div>
-          </form>
-        </div>
+          {/* 提交按钮 */}
+          <div className="flex items-center justify-center gap-4">
+            <AppBtn
+              btnProps={{
+                type: "submit",
+                color: "primary",
+                isLoading: updateUser.isPending,
+                className: "flex-1",
+                size: "lg",
+              }}
+            >
+              {updateUser.isPending ? "保存中..." : "保存资料"}
+            </AppBtn>
+            <AppBtn
+              btnProps={{
+                as: Link,
+                href: "/",
+                color: "default",
+                variant: "bordered",
+                className: "flex-1",
+                size: "lg",
+              }}
+            >
+              取消
+            </AppBtn>
+          </div>
+        </form>
       </div>
     </div>
   );

@@ -3,7 +3,31 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
+import { 
+  Input, 
+  Textarea, 
+  Select, 
+  SelectItem
+} from "@heroui/react";
+import CornerFrame from "~/components/corner-frame";
+import AppBtn from "~/components/app-btn";
+import RelatedLinksSection from "~/components/related-links-section";
+import MilestoneSection from "~/components/milestone-section";
 import { api } from "~/trpc/react";
+
+interface RelatedLinks {
+  website: string;
+  github: string;
+  twitter: string;
+  telegram: string;
+}
+
+interface Milestone {
+  id: string;
+  deadline: string;
+  amount: string;
+  description: string;
+}
 
 export default function CreatePodPage() {
   const router = useRouter();
@@ -16,11 +40,25 @@ export default function CreatePodPage() {
     shortDescription: "",
     detailDescription: "",
     currency: "",
+  });
+
+  // Related Links 数据
+  const [relatedLinks, setRelatedLinks] = useState<RelatedLinks>({
     website: "",
     github: "",
     twitter: "",
     telegram: "",
   });
+
+  // Milestones 数据
+  const [milestones, setMilestones] = useState<Milestone[]>([
+    {
+      id: "1",
+      deadline: "",
+      amount: "100",
+      description: ""
+    }
+  ]);
 
   const { data: grantsPools, isLoading: grantsPoolsLoading } = api.grantsPool.getActiveGrantsPools.useQuery();
   const createPodMutation = api.pod.create.useMutation();
@@ -32,16 +70,35 @@ export default function CreatePodPage() {
       return;
     }
 
+    // 验证里程碑
+    const hasInvalidMilestone = milestones.some(milestone => 
+      !milestone.description.trim() || !milestone.amount || !milestone.deadline
+    );
+    if (hasInvalidMilestone) {
+      alert("请完整填写所有里程碑信息");
+      return;
+    }
+
     setIsSubmitting(true);
     try {
       const links = {
-        ...(formData.website && { website: formData.website }),
-        ...(formData.github && { github: formData.github }),
-        ...(formData.twitter && { twitter: formData.twitter }),
-        ...(formData.telegram && { telegram: formData.telegram }),
+        ...(relatedLinks.website && { website: relatedLinks.website }),
+        ...(relatedLinks.github && { github: relatedLinks.github }),
+        ...(relatedLinks.twitter && { twitter: relatedLinks.twitter }),
+        ...(relatedLinks.telegram && { telegram: relatedLinks.telegram }),
       };
 
-      await createPodMutation.mutateAsync({
+      // 处理里程碑数据
+      const processedMilestones = milestones.map(milestone => ({
+        deadline: milestone.deadline || undefined,
+        amount: parseFloat(milestone.amount) || 0,
+        description: milestone.description || "No description provided"
+      }));
+
+      // 临时记录里程碑数据（等待API支持）
+      console.log("Milestones data:", processedMilestones);
+
+              await createPodMutation.mutateAsync({
         grantsPoolId: parseInt(formData.grantsPoolId),
         rfpIndex: parseInt(formData.rfpIndex) || 0,
         avatar: formData.avatar || undefined,
@@ -50,6 +107,8 @@ export default function CreatePodPage() {
         detailDescription: formData.detailDescription,
         currency: formData.currency,
         links: Object.keys(links).length > 0 ? links : undefined,
+        // TODO: Add milestones support to API
+        // milestones: processedMilestones,
       });
 
       alert("Pod创建成功！");
@@ -67,207 +126,145 @@ export default function CreatePodPage() {
   };
 
   return (
-    <div className="container mx-auto px-4 py-8">
-      <div className="mb-6">
-        <Link
-          href="/pods"
-          className="text-blue-600 hover:text-blue-700 text-sm"
-        >
-          ← 返回Pod列表
-        </Link>
-      </div>
-
-      <div className="max-w-2xl mx-auto">
-        <h1 className="text-3xl font-bold text-gray-900 mb-8">创建Pod项目</h1>
+    <div className="container px-4 py-8 mx-auto">
+      <div className="max-w-4xl mx-auto">
+        <div className="mb-8">
+          <h1 className="text-3xl font-bold text-foreground">Create Pod Project</h1>
+          <p className="mt-2 text-default-500">Fill in the following information to create your Pod project</p>
+        </div>
 
         <form onSubmit={handleSubmit} className="space-y-6">
-          {/* 选择Grants Pool */}
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              选择Grants Pool <span className="text-red-500">*</span>
-            </label>
-            {grantsPoolsLoading ? (
-              <div className="w-full px-3 py-2 border border-gray-300 rounded-md bg-gray-50">
-                加载中...
-              </div>
-            ) : (
-              <select
-                value={formData.grantsPoolId}
-                onChange={(e) => handleInputChange("grantsPoolId", e.target.value)}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500"
-                required
+          {/* 基本信息 */}
+          <CornerFrame backgroundColor="var(--color-background)">
+            <h2 className="mb-6 text-xl">Basic Information</h2>
+            <div className="space-y-6">
+              {/* 选择Grants Pool */}
+              <Select
+                label="Select Grants Pool"
+                isRequired
+                placeholder="Please select a Grants Pool"
+                selectedKeys={formData.grantsPoolId ? new Set([formData.grantsPoolId]) : new Set()}
+                onSelectionChange={(keys) => {
+                  const grantsPoolId = Array.from(keys)[0] as string;
+                  handleInputChange("grantsPoolId", grantsPoolId || "");
+                }}
+                isLoading={grantsPoolsLoading}
               >
-                <option value="">请选择Grants Pool</option>
                 {grantsPools?.map((gp) => (
-                  <option key={gp.id} value={gp.id}>
+                  <SelectItem key={gp.id.toString()}>
                     {gp.name} ({gp.chainType})
-                  </option>
-                ))}
-              </select>
-            )}
-          </div>
+                  </SelectItem>
+                )) ?? []}
+              </Select>
 
-          {/* RFP索引 */}
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              RFP索引
-            </label>
-            <input
-              type="number"
-              value={formData.rfpIndex}
-              onChange={(e) => handleInputChange("rfpIndex", e.target.value)}
-              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500"
-              placeholder="0"
-              min="0"
-            />
-          </div>
+              {/* RFP索引 */}
+              <Input
+                type="number"
+                label="RFP Index"
+                value={formData.rfpIndex}
+                onChange={(e) => handleInputChange("rfpIndex", e.target.value)}
+                placeholder="0"
+                description="RFP index in the selected Grants Pool"
+                min="0"
+              />
 
-          {/* Pod头像 */}
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              Pod头像链接
-            </label>
-            <input
-              type="url"
-              value={formData.avatar}
-              onChange={(e) => handleInputChange("avatar", e.target.value)}
-              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500"
-              placeholder="https://example.com/avatar.jpg"
-            />
-          </div>
-
-          {/* Pod名称 */}
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              Pod名称 <span className="text-red-500">*</span>
-            </label>
-            <input
-              type="text"
-              value={formData.name}
-              onChange={(e) => handleInputChange("name", e.target.value)}
-              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500"
-              placeholder="输入Pod名称"
-              required
-            />
-          </div>
-
-          {/* 简短描述 */}
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              简短描述 <span className="text-red-500">*</span>
-            </label>
-            <textarea
-              value={formData.shortDescription}
-              onChange={(e) => handleInputChange("shortDescription", e.target.value)}
-              rows={3}
-              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500"
-              placeholder="简要描述您的项目"
-              required
-            />
-          </div>
-
-          {/* 详细描述 */}
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              详细描述 <span className="text-red-500">*</span>
-            </label>
-            <textarea
-              value={formData.detailDescription}
-              onChange={(e) => handleInputChange("detailDescription", e.target.value)}
-              rows={8}
-              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500"
-              placeholder="详细描述您的项目，包括目标、实现方案、预期成果等"
-              required
-            />
-          </div>
-
-          {/* 申请币种 */}
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              申请币种 <span className="text-red-500">*</span>
-            </label>
-            <input
-              type="text"
-              value={formData.currency}
-              onChange={(e) => handleInputChange("currency", e.target.value)}
-              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500"
-              placeholder="如: ETH, USDC, DAI"
-              required
-            />
-          </div>
-
-          {/* 相关链接 */}
-          <div className="space-y-4">
-            <h3 className="text-lg font-medium text-gray-900">相关链接</h3>
-            
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                官方网站
-              </label>
-              <input
+              {/* Pod头像 */}
+              <Input
                 type="url"
-                value={formData.website}
-                onChange={(e) => handleInputChange("website", e.target.value)}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500"
-                placeholder="https://yourproject.com"
+                label="Pod Avatar URL"
+                value={formData.avatar}
+                onChange={(e) => handleInputChange("avatar", e.target.value)}
+                placeholder="https://example.com/avatar.jpg"
+                description="Enter the URL of the Pod avatar image"
+              />
+
+              {/* Pod名称 */}
+              <Input
+                type="text"
+                label="Pod Name"
+                value={formData.name}
+                onChange={(e) => handleInputChange("name", e.target.value)}
+                placeholder="Enter Pod name"
+                isRequired
+              />
+
+              {/* 申请币种 */}
+              <Input
+                type="text"
+                label="Currency"
+                value={formData.currency}
+                onChange={(e) => handleInputChange("currency", e.target.value)}
+                placeholder="e.g. ETH, USDC, DAI"
+                isRequired
               />
             </div>
+          </CornerFrame>
 
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                GitHub
-              </label>
-              <input
-                type="url"
-                value={formData.github}
-                onChange={(e) => handleInputChange("github", e.target.value)}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500"
-                placeholder="https://github.com/yourproject"
+          {/* 项目描述 */}
+          <CornerFrame backgroundColor="var(--color-background)">
+            <h2 className="mb-6 text-xl">Project Description</h2>
+            <div className="space-y-6">
+              {/* 简短描述 */}
+              <Textarea
+                label="Short Description"
+                value={formData.shortDescription}
+                onChange={(e) => handleInputChange("shortDescription", e.target.value)}
+                placeholder="Briefly describe your project"
+                isRequired
+                minRows={3}
+                description="Summarize your project in concise language"
+              />
+
+              {/* 详细描述 */}
+              <Textarea
+                label="Detailed Description"
+                value={formData.detailDescription}
+                onChange={(e) => handleInputChange("detailDescription", e.target.value)}
+                placeholder="Describe your project in detail, including goals, implementation plan, expected outcomes, etc."
+                isRequired
+                minRows={8}
+                description="Detailed description of project background, goals, technical approach and expected outcomes"
               />
             </div>
+          </CornerFrame>
 
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Twitter
-              </label>
-              <input
-                type="url"
-                value={formData.twitter}
-                onChange={(e) => handleInputChange("twitter", e.target.value)}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500"
-                placeholder="https://twitter.com/yourproject"
-              />
-            </div>
+          {/* Milestone Information */}
+          <MilestoneSection 
+            milestones={milestones}
+            onMilestonesChange={setMilestones}
+          />
 
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Telegram
-              </label>
-              <input
-                type="url"
-                value={formData.telegram}
-                onChange={(e) => handleInputChange("telegram", e.target.value)}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500"
-                placeholder="https://t.me/yourproject"
-              />
-            </div>
-          </div>
+          {/* Related Links - Using Component */}
+          <RelatedLinksSection 
+            links={{
+              website: relatedLinks.website,
+              github: relatedLinks.github,
+              twitter: relatedLinks.twitter,
+              telegram: relatedLinks.telegram
+            }}
+            onLinksChange={(links: Record<string, string>) => {
+              setRelatedLinks({
+                website: links.website || '',
+                github: links.github || '',
+                twitter: links.twitter || '',
+                telegram: links.telegram || ''
+              });
+            }}
+          />
 
           {/* 提交按钮 */}
-          <div className="flex gap-4">
-            <button
-              type="submit"
-              disabled={isSubmitting}
-              className="flex-1 bg-green-600 text-white py-2 px-4 rounded-md hover:bg-green-700 disabled:bg-gray-400 disabled:cursor-not-allowed transition-colors"
+          <div className="flex items-center justify-center gap-4">
+            <AppBtn
+              btnProps={{
+                type: "submit",
+                color: "primary",
+                isLoading: isSubmitting,
+                className: "flex-1",
+                size: "lg",
+              }}
             >
-              {isSubmitting ? "创建中..." : "创建Pod"}
-            </button>
-            <Link
-              href="/pods"
-              className="flex-1 bg-gray-300 text-gray-700 py-2 px-4 rounded-md hover:bg-gray-400 transition-colors text-center"
-            >
-              取消
-            </Link>
+              {isSubmitting ? "Loading..." : "Create Pod"}
+            </AppBtn>
           </div>
         </form>
       </div>

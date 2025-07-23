@@ -4,6 +4,7 @@ import GrantspoolRFPItem from "./grantspool-rfp-item";
 import CardBox from "./card-box";
 import AppBtn from "./app-btn";
 import NextLink from "next/link";
+import { QRCodeTooltip } from "./qr-code-tooltip";
 
 interface GrantspoolItemProps {
   grantsPool: {
@@ -24,11 +25,12 @@ interface GrantspoolItemProps {
       avatar?: string | null;
     }>;
   };
-  onClick?: () => void;
   className?: string;
+  children?: React.ReactNode;
+  type?: "list" | "detail";
 }
 
-const GrantspoolItem = ({ grantsPool, onClick, className = "" }: GrantspoolItemProps) => {
+const GrantspoolItem = ({ grantsPool, className = "", children, type = "list" }: GrantspoolItemProps) => {
   const [activeCategory, setActiveCategory] = useState(grantsPool.categories[0]);
 
   const handleProposalClick = (proposalId: number) => {
@@ -56,7 +58,15 @@ const GrantspoolItem = ({ grantsPool, onClick, className = "" }: GrantspoolItemP
               <i className={`${icon} text-2xl`}></i>
             </NextLink>
           ))}
-          <AppBtn>View More</AppBtn>
+          {
+            type === "list" ?
+            <NextLink href={`/grants-pool/${grantsPool.id}`}>
+              <AppBtn>View More</AppBtn>
+            </NextLink>:
+            <NextLink href={`/grants-pool/${grantsPool.id}/edit`}>
+              <AppBtn btnProps={{color:"warning"}}>Eidt</AppBtn>
+            </NextLink>
+          }
         </div>
         
       </div>
@@ -84,7 +94,13 @@ const GrantspoolItem = ({ grantsPool, onClick, className = "" }: GrantspoolItemP
 
         {/* 资金池 */}  
         <div className="space-y-10">
-            <h3 className="text-2xl font-bold">Grants Pool</h3>
+            <div className="flex items-center space-x-3 text-xl">
+                <div className="text-2xl font-bold">Grants Pool</div>
+                <QRCodeTooltip content="https://www.google.com" />
+                <a href="https://www.google.com" target="_blank" className="hover:opacity-70">
+                  <i className="ri-external-link-line"></i>
+                </a>
+            </div>
             <div className="grid grid-cols-3 gap-8">
               {grantsPool.fundingAmounts.map((funding, index) => (
                 <div key={index} className="relative flex items-start gap-10 p-2 pt-10 border border-black rounded-lg">
@@ -114,9 +130,10 @@ const GrantspoolItem = ({ grantsPool, onClick, className = "" }: GrantspoolItemP
               ))}
             </div>
         </div>
-        {/*  */}
-        
       </div>
+
+      {children}
+
     </CardBox>
   );
 };

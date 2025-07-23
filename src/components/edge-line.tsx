@@ -5,7 +5,6 @@ interface EdgeLineProps {
   color?: string;
   thickness?: number; // 线的粗细
   nodeSize?: number; // 节点大小
-  nodeColor?: string;
   className?: string;
   style?: React.CSSProperties;
 }
@@ -15,7 +14,6 @@ const EdgeLine = ({
   color = "#fff",
   thickness = 1,
   nodeSize = 8,
-  nodeColor = "#fff",
   className = "",
   style = {},
 }: EdgeLineProps) => {
@@ -49,7 +47,7 @@ const EdgeLine = ({
   const nodeStyle: React.CSSProperties = {
     width: nodeSize,
     height: nodeSize,
-    background: nodeColor,
+    background: color,
     position: "absolute",
     zIndex: 2,
   };
