@@ -16,10 +16,10 @@ module.exports = {
                 primary: "var(--color-primary)",
                 secondary: "var(--color-secondary)",
                 /* 辅助色 */
-                green: "var(--color-green)",
-                purple: "var(--color-purple)",
+                green2: "var(--color-green2)",
+                purple2: "var(--color-purple2)",
                 pink: "var(--color-pink)",
-                red: "var(--color-red)",
+                red2: "var(--color-red2)",
                 /* 功能色 */
                 muted: "var(--color-muted)",
                 accent: "var(--color-accent)",

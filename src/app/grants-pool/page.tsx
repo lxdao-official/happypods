@@ -138,7 +138,6 @@ export default function GrantsPoolPage() {
             <GrantspoolItem
               key={grantsPool.id}
               grantsPool={grantsPool}
-              onClick={() => handleGrantsPoolClick(grantsPool.id)}
             />
           ))}
         </div>

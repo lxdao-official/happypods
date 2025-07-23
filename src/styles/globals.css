@@ -7,12 +7,12 @@
     --color-foreground: #f8fafc;
     /* 主要颜色 */
     --color-primary: #FF6B6B;
-    --color-secondary: #2a2a28;
+    --color-secondary: #7b7e87;
     /* 辅助色 */
-    --color-green: #02BC59;
-    --color-purple: #9267F4;
+    --color-green2: #02BC59;
+    --color-purple2: #9267F4;
     --color-pink: #FDF1E5;
-    --color-red: #ff6655;
+    --color-red2: #ff6655;
     /* 功能色 */
     --color-muted: #2a2a28;
     --color-accent: #2a2a28;
