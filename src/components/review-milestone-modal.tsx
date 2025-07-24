@@ -112,6 +112,7 @@ export default function ReviewMilestoneModal({ milestoneId, onReview }: ReviewMi
               </div>
 
               <Textarea
+                variant="bordered"
                 label={reviewAction === 'approve' ? 'Approval Comments' : 'Rejection Reasons'}
                 placeholder={
                   reviewAction === 'approve' 

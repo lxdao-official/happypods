@@ -112,6 +112,7 @@ const MilestoneSection = ({ milestones, onMilestonesChange }: MilestoneSectionPr
                 />
                 {/* Amount */}
                 <Input
+                variant="bordered"
                   type="number"
                   label="Amount (USDC)"
                   value={milestone.amount}
@@ -139,6 +140,7 @@ const MilestoneSection = ({ milestones, onMilestonesChange }: MilestoneSectionPr
               </div>
               {/* Description */}
               <Textarea
+                variant="bordered"
                 label="Milestone Description"
                 value={milestone.description}
                 onChange={e => updateMilestone(milestone.id, "description", e.target.value)}

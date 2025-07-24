@@ -140,6 +140,7 @@ export default function CreatePodPage() {
             <div className="space-y-6">
               {/* 选择Grants Pool */}
               <Select
+                variant="bordered"
                 label="Select Grants Pool"
                 isRequired
                 placeholder="Please select a Grants Pool"
@@ -159,6 +160,7 @@ export default function CreatePodPage() {
 
               {/* RFP索引 */}
               <Input
+                variant="bordered"
                 type="number"
                 label="RFP Index"
                 value={formData.rfpIndex}
@@ -170,6 +172,7 @@ export default function CreatePodPage() {
 
               {/* Pod头像 */}
               <Input
+                variant="bordered"
                 type="url"
                 label="Pod Avatar URL"
                 value={formData.avatar}
@@ -180,6 +183,7 @@ export default function CreatePodPage() {
 
               {/* Pod名称 */}
               <Input
+                variant="bordered"
                 type="text"
                 label="Pod Name"
                 value={formData.name}
@@ -190,6 +194,7 @@ export default function CreatePodPage() {
 
               {/* 申请币种 */}
               <Input
+                variant="bordered"
                 type="text"
                 label="Currency"
                 value={formData.currency}
@@ -206,6 +211,7 @@ export default function CreatePodPage() {
             <div className="space-y-6">
               {/* 简短描述 */}
               <Textarea
+                variant="bordered"
                 label="Short Description"
                 value={formData.shortDescription}
                 onChange={(e) => handleInputChange("shortDescription", e.target.value)}
@@ -217,6 +223,7 @@ export default function CreatePodPage() {
 
               {/* 详细描述 */}
               <Textarea
+                variant="bordered"
                 label="Detailed Description"
                 value={formData.detailDescription}
                 onChange={(e) => handleInputChange("detailDescription", e.target.value)}

@@ -72,6 +72,7 @@ export default function SubmitMilestoneModal({ milestoneId, onSubmit }: SubmitMi
               {/* Description Input */}
               <div>
                 <Textarea
+                variant="bordered"
                   label="Milestone Description"
                   placeholder="Describe what you have accomplished in this milestone, including deliverables, progress, and any relevant details..."
                   value={description}

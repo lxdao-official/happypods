@@ -127,11 +127,12 @@ export default function CreateGrantsPoolPage() {
 
         <form onSubmit={handleSubmit} className="space-y-6">
           {/* General Information */}
-          <CornerFrame backgroundColor="var(--color-background)">
+          <CornerFrame backgroundColor="var(--color-background)" color="gray">
             <h2 className="mb-6 text-xl">General Information</h2>
             <div className="space-y-6">
               {/* Avatar */}
               <Input
+                variant="bordered"
                 type="url"
                 label="Avatar URL"
                 value={formData.avatar}
@@ -142,6 +143,7 @@ export default function CreateGrantsPoolPage() {
 
               {/* Name */}
               <Input
+                variant="bordered"
                 type="text"
                 label="Grants Pool Name"
                 value={formData.name}
@@ -152,6 +154,7 @@ export default function CreateGrantsPoolPage() {
 
               {/* Description */}
               <Textarea
+                variant="bordered"
                 label="Description"
                 value={formData.description}
                 onChange={(e) => handleInputChange("description", e.target.value)}
@@ -162,6 +165,7 @@ export default function CreateGrantsPoolPage() {
 
               {/* Chain Type */}
               <Select
+                variant="bordered"
                 label="Treasury Chain Type"
                 value={formData.chainType}
                 onChange={(e) => handleInputChange("chainType", e.target.value)}
@@ -173,6 +177,7 @@ export default function CreateGrantsPoolPage() {
 
               {/* Tags */}
               <Input
+                variant="bordered"
                 type="text"
                 label="Tags"
                 value={formData.tags}
@@ -190,10 +195,11 @@ export default function CreateGrantsPoolPage() {
           />
 
           {/* Moderator Information */}
-          <CornerFrame backgroundColor="var(--color-background)">
+          <CornerFrame backgroundColor="var(--color-background)" color="gray" >
             <h2 className="mb-6 text-xl">Moderator Information</h2>
             <div className="space-y-6">
               <Input
+                variant="bordered"
                 type="text"
                 label="Moderator Name"
                 value={formData.modName}
@@ -202,6 +208,7 @@ export default function CreateGrantsPoolPage() {
               />
 
               <Input
+                variant="bordered"
                 type="email"
                 label="Moderator Email"
                 value={formData.modEmail}
@@ -210,6 +217,7 @@ export default function CreateGrantsPoolPage() {
               />
 
               <Input
+                variant="bordered"
                 type="text"
                 label="Moderator Telegram"
                 value={formData.modTelegram}

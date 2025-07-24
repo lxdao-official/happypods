@@ -5,9 +5,8 @@ interface CornerFrameProps {
   className?: string;
   cornerSize?: number;
   borderWidth?: number;
-  cornerColor?: string;
-  borderColor?: string;
   backgroundColor?: string;
+  color?: 'white' | 'black' | 'gray';
 }
 
 const CornerFrame = ({
@@ -15,16 +14,21 @@ const CornerFrame = ({
   className = "",
   cornerSize = 8,
   borderWidth = 1,
-  cornerColor = "white",
-  borderColor = "white",
+  color="white",
   backgroundColor = "transparent"
 }: CornerFrameProps) => {
+  const colorMap = {
+    white: 'white',
+    black: 'black',
+    gray: 'var(--color-secondary)',
+  };
+
   return (
     <div 
       className={`relative ${className}`}
       style={{
         backgroundColor,
-        border: `${borderWidth}px solid ${borderColor}`,
+        border: `${borderWidth}px solid ${colorMap[color]}`,
       }}
     >
       {/* 左上角 */}
@@ -33,7 +37,7 @@ const CornerFrame = ({
         style={{
           width: cornerSize,
           height: cornerSize,
-          backgroundColor: cornerColor,
+          backgroundColor: colorMap[color],
           transform: 'translate(-50%, -50%)',
         }}
       />
@@ -44,7 +48,7 @@ const CornerFrame = ({
         style={{
           width: cornerSize,
           height: cornerSize,
-          backgroundColor: cornerColor,
+          backgroundColor: colorMap[color],
           transform: 'translate(50%, -50%)',
         }}
       />
@@ -55,7 +59,7 @@ const CornerFrame = ({
         style={{
           width: cornerSize,
           height: cornerSize,
-          backgroundColor: cornerColor,
+          backgroundColor: colorMap[color],
           transform: 'translate(-50%, 50%)',
         }}
       />
@@ -66,7 +70,7 @@ const CornerFrame = ({
         style={{
           width: cornerSize,
           height: cornerSize,
-          backgroundColor: cornerColor,
+          backgroundColor: colorMap[color],
           transform: 'translate(50%, 50%)',
         }}
       />

@@ -192,6 +192,7 @@ export default function ProfilePage() {
             <div className="space-y-6">
               {/* 头像 */}
               <Input
+                variant="bordered"
                 type="url"
                 label="头像链接"
                 value={formData.avatar}
@@ -214,6 +215,7 @@ export default function ProfilePage() {
 
               {/* 用户名称 */}
               <Input
+                variant="bordered"
                 type="text"
                 label="用户名称"
                 value={formData.name}
@@ -224,6 +226,7 @@ export default function ProfilePage() {
 
               {/* 邮箱 */}
               <Input
+                variant="bordered"
                 type="email"
                 label="邮箱地址"
                 value={formData.email}
@@ -234,6 +237,7 @@ export default function ProfilePage() {
 
               {/* 用户角色 */}
               <Select
+                variant="bordered"
                 label="用户角色"
                 selectedKeys={[formData.role]}
                 onSelectionChange={(keys) => {
@@ -250,6 +254,7 @@ export default function ProfilePage() {
 
               {/* 个人简介 */}
               <Textarea
+                variant="bordered"
                 label="个人简介"
                 value={formData.description}
                 onChange={(e) => handleInputChange("description", e.target.value)}
@@ -285,6 +290,7 @@ export default function ProfilePage() {
           <CornerFrame backgroundColor="var(--color-background)">
             <h2 className="mb-6 text-xl">钱包信息</h2>
             <Input
+                variant="bordered"
               label="钱包地址"
               value={currentUser.address}
               isReadOnly

@@ -39,7 +39,7 @@ const RFPSection = ({ rfps, onRfpsChange }: RFPSectionProps) => {
   };
 
   return (
-    <CornerFrame backgroundColor="var(--color-background)">
+    <CornerFrame backgroundColor="var(--color-background)" color="gray">
       <div className="flex items-center justify-between mb-6">
         <h2 className="flex items-center gap-2 text-xl">
           <span>RFP Information</span>
@@ -75,6 +75,7 @@ const RFPSection = ({ rfps, onRfpsChange }: RFPSectionProps) => {
             
             <div className="space-y-6">
               <Input
+                variant="bordered"
                 type="text"
                 label="RFP Title"
                 value={rfp.title}
@@ -83,6 +84,7 @@ const RFPSection = ({ rfps, onRfpsChange }: RFPSectionProps) => {
               />
 
               <Textarea
+                variant="bordered"
                 label="RFP Description"
                 value={rfp.description}
                 onChange={(e) => updateRFP(rfp.id, "description", e.target.value)}

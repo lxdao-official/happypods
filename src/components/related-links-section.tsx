@@ -69,7 +69,7 @@ const RelatedLinksSection = ({ links, onLinksChange }: RelatedLinksSectionProps)
   };
 
   return (
-    <CornerFrame backgroundColor="var(--color-background)">
+    <CornerFrame backgroundColor="var(--color-background)" color="gray">
       <h2 className="mb-6 text-xl">Related Links</h2>
       {/* tab 区域：只显示未添加的预设类型和Others按钮 */}
       {availableTabs.length > 0 && (
@@ -93,6 +93,7 @@ const RelatedLinksSection = ({ links, onLinksChange }: RelatedLinksSectionProps)
               {item.icon || <i className="ri-link" />} {item.label}
             </span>
             <Input
+                variant="bordered"
               type="url"
               value={item.url}
               onChange={e => handleInput(item.key, e.target.value)}
