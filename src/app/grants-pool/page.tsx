@@ -31,8 +31,7 @@ export default function GrantsPoolPage() {
       const proposals = pool.rfps.map(rfp => ({
         id: rfp.id,
         title: rfp.title,
-        description: rfp.description,
-        avatar: null as string | null,                              
+        description: rfp.description                           
       }));
       return {
         id: pool.id,
@@ -51,7 +50,7 @@ export default function GrantsPoolPage() {
   if (isLoading) {
     return (
       <div className="flex items-center justify-center min-h-screen p-6">
-        <div className="text-xl">正在加载 Grants Pool...</div>
+        <div className="text-xl">Loading Grants Pools...</div>
       </div>
     );
   }
@@ -59,7 +58,7 @@ export default function GrantsPoolPage() {
   if (error) {
     return (
       <div className="flex items-center justify-center min-h-screen p-6">
-        <div className="text-xl text-red-500">加载失败: {error.message}</div>
+        <div className="text-xl text-red-500">Failed to load: {error.message}</div>
       </div>
     );
   }
@@ -70,7 +69,7 @@ export default function GrantsPoolPage() {
         {/* 顶部横幅 */}
         <CornerFrame className="mb-20"> 
           <div className="flex flex-col items-center justify-center gap-6 py-8 text-2xl text-center">
-            <div className="mb-8">A sentence to describe Pods maybe, A sentence to describe Pods maybe</div>
+            <div className="mb-8">Discover and manage all available Grants Pools. Empower your project with community funding!</div>
             <NextLink href="/grants-pool/create" className="absolute bottom-[-25px]">
               <AppBtn btnProps={{color:"success"}}>Create Grant Pool</AppBtn>
             </NextLink>
@@ -88,7 +87,7 @@ export default function GrantsPoolPage() {
             ))
           ) : (
             <div className="py-12 text-center">
-              <div className="text-xl text-gray-500">暂无 Grants Pool</div>
+              <div className="text-xl text-gray-500">No Grants Pool found</div>
             </div>
           )}
         </div>

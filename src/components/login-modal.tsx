@@ -1,6 +1,6 @@
 "use client";
 import { Button, Dropdown, DropdownTrigger, DropdownMenu, DropdownItem, DropdownSection } from "@heroui/react";
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useMemo } from "react";
 import { useAccount, useConnect, useDisconnect, useSignTypedData } from "wagmi";
 import Link from "next/link";
 import { api } from "~/trpc/react";
@@ -26,6 +26,27 @@ const types = {
 export function LoginModal() {
   const [isLoading, setIsLoading] = useState(false);
   const [loggedInUser, setLoggedInUser] = useState(getUser());
+
+  // 每次进入组件时拉取后端最新用户信息
+  const { data: latestUser, refetch: refetchUser } = api.user.getById.useQuery(
+    { id: loggedInUser?.id ?? 0 },
+    { enabled: !!loggedInUser?.id }
+  );
+
+  // 拉取到新数据后，更新本地存储和 state
+  useEffect(() => {
+    if (latestUser && latestUser.id) {
+      const userInfo = {
+        id: latestUser.id,
+        name: latestUser.name ?? '',
+        email: latestUser.email ?? '',
+        role: latestUser.role ?? 'APPLICANT',
+        address: latestUser.walletAddress,
+      };
+      storeUser(userInfo);
+      setLoggedInUser(userInfo);
+    }
+  }, [latestUser]);
 
   const { address, isConnected } = useAccount();
   const { connect } = useConnect();
@@ -53,10 +74,11 @@ export function LoginModal() {
       // 存储token和用户信息
       storeToken(result.token);
       storeUser(userInfo);
-      // 更新本地状态
       setLoggedInUser(userInfo);
       setIsLoading(false);
       toast.success("logged in");
+      // 登录成功后同步一次后端用户信息
+      refetchUser();
     },
     onError: (error) => {
       setIsLoading(false);
@@ -154,6 +176,14 @@ export function LoginModal() {
     loggedInUser: loggedInUser?.name 
   });
 
+  const username = useMemo(()=>{
+    if(loggedInUser){
+      const wallet  = truncateString(loggedInUser.address, 6);
+      return loggedInUser.name ? `${loggedInUser.name} (${wallet})` : wallet
+    }
+    return ''
+  },[loggedInUser])
+
   return (
     <div>
       {loggedInUser ? (
@@ -162,7 +192,7 @@ export function LoginModal() {
           <DropdownTrigger>
             <Button variant="bordered" className="flex items-center space-x-2">
             <i className="text-xl ri-wallet-line"></i>
-              <span>{loggedInUser.name || truncateString(loggedInUser.address, 6)}</span>
+              <span>{username}</span>
               <i className="text-xl ri-arrow-down-s-line"></i>
             </Button>
           </DropdownTrigger>

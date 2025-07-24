@@ -15,12 +15,12 @@ import RelatedLinksSection from "~/components/related-links-section";
 import { api } from "~/trpc/react";
 import { getUser } from "~/lib/auth-storage";
 
-// 定义用户角色选项
+// Define user role options
 const USER_ROLES = [
-  { value: "ADMIN", label: "系统管理员" },
-  { value: "GP_MOD", label: "GP管理员" },
-  { value: "APPLICANT", label: "申请人" },
-  { value: "VIEWER", label: "观察者" },
+  { value: "ADMIN", label: "System Administrator" },
+  { value: "GP_MOD", label: "GP Administrator" },
+  { value: "APPLICANT", label: "Applicant" },
+  { value: "VIEWER", label: "Viewer" },
 ] as const;
 
 // 定义链接类型
@@ -66,11 +66,11 @@ export default function ProfilePage() {
   const updateUser = api.user.update.useMutation({
     onSuccess: async () => {
       await utils.user.invalidate();
-      alert("个人资料更新成功！");
+      alert("Profile updated successfully!");
     },
     onError: (error: unknown) => {
       const errorMessage = error instanceof Error ? error.message : String(error);
-      alert(`更新失败：${errorMessage}`);
+      alert(`Update failed: ${errorMessage}`);
     },
   });
 
@@ -78,7 +78,7 @@ export default function ProfilePage() {
   useEffect(() => {
     const user = getUser();
     if (!user) {
-      alert("请先登录");
+      alert("Please log in first.");
       router.push("/");
       return;
     }
@@ -105,18 +105,18 @@ export default function ProfilePage() {
     e.preventDefault();
 
     if (!currentUser?.id) {
-      alert("用户信息获取失败");
+      alert("Failed to get user information.");
       return;
     }
 
     // 基本验证
     if (!formData.name.trim()) {
-      alert("请输入用户名称");
+      alert("Please enter a username.");
       return;
     }
 
     if (!formData.email.trim()) {
-      alert("请输入邮箱地址");
+      alert("Please enter an email address.");
       return;
     }
 
@@ -149,13 +149,13 @@ export default function ProfilePage() {
       <div className="container px-4 py-8 mx-auto">
         <div className="text-center">
           <div className="mb-4 text-lg text-red-600">
-            请先登录
+            Please log in first
           </div>
           <Link
             href="/"
             className="text-blue-600 hover:text-blue-700"
           >
-            返回首页
+            Back to Home
           </Link>
         </div>
       </div>
@@ -181,29 +181,29 @@ export default function ProfilePage() {
     <div className="container px-4 py-8 mx-auto">
       <div className="max-w-4xl mx-auto">
         <div className="mb-8">
-          <h1 className="text-3xl font-bold text-foreground">个人资料</h1>
-          <p className="mt-2 text-default-500">管理您的个人信息和偏好设置</p>
+          <h1 className="text-3xl font-bold text-foreground">Profile</h1>
+          <p className="mt-2 text-default-500">Manage your personal information and preferences.</p>
         </div>
 
         <form onSubmit={handleSubmit} className="space-y-6">
-          {/* 基本信息 */}
-          <CornerFrame backgroundColor="var(--color-background)">
-            <h2 className="mb-6 text-xl">基本信息</h2>
+          {/* Basic Information */}
+          <CornerFrame backgroundColor="var(--color-background)" color="gray">
+            <h2 className="mb-6 text-xl">Basic Information</h2>
             <div className="space-y-6">
-              {/* 头像 */}
+              {/* Avatar */}
               <Input
                 variant="bordered"
                 type="url"
-                label="头像链接"
+                label="Avatar URL"
                 value={formData.avatar}
                 onChange={(e) => handleInputChange("avatar", e.target.value)}
                 placeholder="https://example.com/avatar.jpg"
-                description="输入头像图片的 URL 地址"
+                description="Enter the URL for your avatar image."
                 endContent={
                   formData.avatar && (
                     <img
                       src={formData.avatar}
-                      alt="头像预览"
+                      alt="Avatar Preview"
                       className="object-cover w-8 h-8 rounded-full"
                       onError={(e) => {
                         (e.target as HTMLImageElement).style.display = 'none';
@@ -213,59 +213,43 @@ export default function ProfilePage() {
                 }
               />
 
-              {/* 用户名称 */}
+              {/* Username */}
               <Input
                 variant="bordered"
                 type="text"
-                label="用户名称"
+                label="Username"
                 value={formData.name}
                 onChange={(e) => handleInputChange("name", e.target.value)}
-                placeholder="请输入用户名称"
+                placeholder="Enter your username"
                 isRequired
               />
 
-              {/* 邮箱 */}
+              {/* Email */}
               <Input
                 variant="bordered"
                 type="email"
-                label="邮箱地址"
+                label="Email Address"
                 value={formData.email}
                 onChange={(e) => handleInputChange("email", e.target.value)}
-                placeholder="请输入邮箱地址"
+                placeholder="Enter your email address"
                 isRequired
               />
 
-              {/* 用户角色 */}
-              <Select
-                variant="bordered"
-                label="用户角色"
-                selectedKeys={[formData.role]}
-                onSelectionChange={(keys) => {
-                  const role = Array.from(keys)[0] as FormData["role"];
-                  handleInputChange("role", role);
-                }}
-                             >
-                 {USER_ROLES.map(role => (
-                   <SelectItem key={role.value}>
-                     {role.label}
-                   </SelectItem>
-                 ))}
-               </Select>
-
-              {/* 个人简介 */}
+              {/* Bio */}
               <Textarea
+                isRequired
                 variant="bordered"
-                label="个人简介"
+                label="Bio"
                 value={formData.description}
                 onChange={(e) => handleInputChange("description", e.target.value)}
-                placeholder="请输入个人简介"
+                placeholder="Tell us about yourself"
                 minRows={4}
-                description="介绍您的背景、兴趣和专业领域"
+                description="Introduce your background, interests, and professional expertise."
               />
             </div>
           </CornerFrame>
 
-          {/* 社交链接 */}
+          {/* Social Links */}
           <RelatedLinksSection 
             links={{
               website: formData.links.website || '',
@@ -286,18 +270,6 @@ export default function ProfilePage() {
             }}
           />
 
-          {/* 钱包信息 */}
-          <CornerFrame backgroundColor="var(--color-background)">
-            <h2 className="mb-6 text-xl">钱包信息</h2>
-            <Input
-                variant="bordered"
-              label="钱包地址"
-              value={currentUser.address}
-              isReadOnly
-              description="钱包地址无法修改，由连接的钱包决定"
-            />
-          </CornerFrame>
-
           {/* 提交按钮 */}
           <div className="flex items-center justify-center gap-4">
             <AppBtn
@@ -309,19 +281,7 @@ export default function ProfilePage() {
                 size: "lg",
               }}
             >
-              {updateUser.isPending ? "保存中..." : "保存资料"}
-            </AppBtn>
-            <AppBtn
-              btnProps={{
-                as: Link,
-                href: "/",
-                color: "default",
-                variant: "bordered",
-                className: "flex-1",
-                size: "lg",
-              }}
-            >
-              取消
+              {updateUser.isPending ? "Saving..." : "Save Profile"}
             </AppBtn>
           </div>
         </form>
