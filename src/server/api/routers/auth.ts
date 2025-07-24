@@ -111,7 +111,7 @@ export const authRouter = createTRPCRouter({
         // 查找或创建用户（通过email，因为email包含钱包地址）
         let user = await ctx.db.user.findFirst({
           where: {
-            email: `${input.address.toLowerCase()}@wallet.local`,
+            walletAddress: input.address.toLowerCase(),
           },
         });
 

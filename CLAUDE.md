@@ -58,7 +58,7 @@ pnpm db:studio       # Open Prisma Studio GUI
 - **Milestone**: Phase-based funding releases and deliverable tracking
 
 ### Web3 Integration
-- Supports Ethereum Mainnet and Sepolia Testnet
+- Supports Ethereum Mainnet and Sepolia Testnet and Optimistic
 - Multi-sig wallet integration for treasury management
 - Wallet-first user authentication with signature verification
 - Configured in `src/lib/wagmi.ts`

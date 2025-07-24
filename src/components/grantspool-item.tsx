@@ -8,15 +8,18 @@ import { QRCodeTooltip } from "./qr-code-tooltip";
 
 interface GrantspoolItemProps {
   grantsPool: {
+    avatar?: string | null;
     id: number;
     name: string;
     description: string;
-    logo: string;
-    socialIcons: string[];
-    fundingAmounts: Array<{
+    logo?: string;
+    links?: Record<string, string>;
+    socialIcons?: string[]; // 不再直接用
+    fundingAmounts?: Array<{
       amount: string;
       currency: string;
-    }>;
+    }>; // 不再直接用
+    treasuryBalances?: Record<string, string>;
     categories: string[];
     proposals: Array<{
       id: number;
@@ -37,25 +40,37 @@ const GrantspoolItem = ({ grantsPool, className = "", children, type = "list" }:
     console.log(`Clicked on proposal: ${proposalId}`);
   };
 
+  // links icon 映射
+  const iconMap: Record<string, string> = {
+    email: "ri-mail-line",
+    github: "ri-github-line",
+    twitter: "ri-twitter-line",
+    discord: "ri-discord-line",
+    telegram: "ri-telegram-line",
+    website: "ri-global-line",
+  };
+
+  // 头像逻辑
+  const avatarSrc = grantsPool.avatar || grantsPool.logo || "/logo.svg";
+
   return (
     <CardBox 
     className={`${className}`} 
     titleBg="#02BC59"
     title={
       <div className="flex items-center justify-between">
-        
         <div className="flex items-center gap-2 text-2xl">
           <img 
-            src="https://cdn.lxdao.io/bafkreic7yeypjshk3vc6rko3rnuijygyqqlawpmlgmi3ucisyj4pj6pm4q.png" alt="" 
-              className="w-10 h-10 border-black rounded-full border-1" 
+            src={avatarSrc} alt="avatar" 
+            className="w-10 h-10 bg-white border-black rounded-full border-1" 
           />
           <b>{grantsPool.name}</b>
         </div>
-
         <div className="flex items-center space-x-4">
-          {grantsPool.socialIcons.map((icon, index) => (
-            <NextLink href={`https://${icon}`} key={index} target="_blank" className="hover:scale-105">
-              <i className={`${icon} text-2xl`}></i>
+          {/* links 渲染 */}
+          {grantsPool.links && Object.entries(grantsPool.links).map(([key, url]) => (
+            <NextLink href={url} key={key} target="_blank" className="hover:scale-105">
+              <i className={`${iconMap[key] || "ri-link"} text-2xl`}></i>
             </NextLink>
           ))}
           {
@@ -68,11 +83,9 @@ const GrantspoolItem = ({ grantsPool, className = "", children, type = "list" }:
             </NextLink>
           }
         </div>
-        
       </div>
     }
     >
-
       {/* 主内容区域 */}
       <div className="p-4 space-y-6">
         {/* 导航标签 */}
@@ -86,54 +99,49 @@ const GrantspoolItem = ({ grantsPool, className = "", children, type = "list" }:
             </button>
           ))}
         </div>
-
         {/* 描述 */}
         <div className="md:col-span-2">
           <p className="leading-relaxed text-gray-700">{grantsPool.description}</p>
         </div>
-
-        {/* 资金池 */}  
-        <div className="space-y-10">
+        {/* 资金池（treasuryBalances） */}
+        {grantsPool.treasuryBalances && Object.keys(grantsPool.treasuryBalances).length > 0 && (
+          <div className="space-y-10">
             <div className="flex items-center space-x-3 text-xl">
-                <div className="text-2xl font-bold">Grants Pool</div>
-                <QRCodeTooltip content="https://www.google.com" />
-                <a href="https://www.google.com" target="_blank" className="hover:opacity-70">
-                  <i className="ri-external-link-line"></i>
-                </a>
+              <div className="text-2xl font-bold">Grants Pool</div>
+              <QRCodeTooltip content="https://www.google.com" />
+              <a href="https://www.google.com" target="_blank" className="hover:opacity-70">
+                <i className="ri-external-link-line"></i>
+              </a>
             </div>
             <div className="grid grid-cols-3 gap-8">
-              {grantsPool.fundingAmounts.map((funding, index) => (
-                <div key={index} className="relative flex items-start gap-10 p-2 pt-10 border border-black rounded-lg">
+              {Object.entries(grantsPool.treasuryBalances).map(([currency, amount]) => (
+                <div key={currency} className="relative flex items-start gap-10 p-2 pt-10 border border-black rounded-lg">
                   <div className="absolute top-[-20px] left-[-10px] inline-flex items-center gap-2 p-2 border border-black rounded-full bg-pink">
-                    <img src={`/tokens/${funding.currency.toLowerCase()}.svg`} alt="" className="w-6 h-6" />
-                    <b>{funding.currency}</b>
+                    <img src={`/tokens/${currency.toLowerCase()}.svg`} alt={currency} className="w-6 h-6" />
+                    <b>{currency}</b>
                   </div>
-                  <div className="flex flex-col"><b>1000</b><small>Grants pool</small></div>
-                  <div className="flex flex-col"><b>1000</b><small>Funded amount</small></div>    
-                  <div className="flex flex-col"><b>1000</b><small>Locked Funds</small></div>
-              </div>
+                  <div className="flex flex-col"><b>{amount}</b><small>Grants pool</small></div>
+                  {/* 这里可以扩展更多资金信息 */}
+                </div>
               ))}
             </div>
           </div>
-
+        )}
         {/* Request-For-Proposal 部分 */}
         <div>
           <h2 className="mb-4 text-2xl font-bold">Request-For-Proposal</h2>
-          
-            <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-4">
-              {grantsPool.proposals.map((proposal) => (
-                <GrantspoolRFPItem
-                  key={proposal.id}
-                  proposal={proposal}
-                  onClick={() => handleProposalClick(proposal.id)}
-                />
-              ))}
-            </div>
+          <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-4">
+            {grantsPool.proposals.map((proposal) => (
+              <GrantspoolRFPItem
+                key={proposal.id}
+                proposal={proposal}
+                onClick={() => handleProposalClick(proposal.id)}
+              />
+            ))}
+          </div>
         </div>
       </div>
-
       {children}
-
     </CardBox>
   );
 };

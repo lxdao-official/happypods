@@ -7,6 +7,7 @@ import { api } from "~/trpc/react";
 import { storeToken, storeUser, getUser, logout } from "~/lib/auth-storage";
 import { ConnectButton } from '@rainbow-me/rainbowkit';
 import { toast } from "sonner";
+import { truncateString } from "~/lib/utils";
 
 // 定义TypedData结构 - 需要与后端保持一致
 const domain = {
@@ -43,8 +44,8 @@ export function LoginModal() {
       // 处理用户信息，确保符合StoredUser接口
       const userInfo = {
         id: result.user.id,
-        name: result.user.name ?? `${result.user.address.slice(0, 6)}...${result.user.address.slice(-4)}`,
-        email: result.user.email ?? `${result.user.address.toLowerCase()}@wallet.local`,
+        name: result.user.name ?? ``,
+        email: result.user.email ?? ``,
         role: result.user.role ?? "APPLICANT",
         address: result.user.address,
       };
@@ -161,7 +162,7 @@ export function LoginModal() {
           <DropdownTrigger>
             <Button variant="bordered" className="flex items-center space-x-2">
             <i className="text-xl ri-wallet-line"></i>
-              <span>{loggedInUser.name}</span>
+              <span>{loggedInUser.name || truncateString(loggedInUser.address, 6)}</span>
               <i className="text-xl ri-arrow-down-s-line"></i>
             </Button>
           </DropdownTrigger>

@@ -1,146 +1,144 @@
-// This is your Prisma schema file,
-// learn more about it in the docs: https://pris.ly/d/prisma-schema
-
 generator client {
-    provider = "prisma-client-js"
+  provider = "prisma-client-js"
 }
 
 datasource db {
-    provider = "postgresql"
-    url      = env("DATABASE_URL")
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
 }
 
-// 用户信息表
 model User {
-    id          Int      @id @default(autoincrement())
-    avatar      String?  // 用户头像图片链接
-    name        String?   // 用户名称
-    email       String?   @unique // 用户邮箱
-    role        UserRole? // 用户角色
-    description String?  // 用户描述
-    links       Json?    // 用户链接（多个链接）
-    metadata    Json?    // 附加信息
-    createdAt   DateTime @default(now())
-    updatedAt   DateTime @updatedAt
-    walletAddress String  // 用户钱包地址
+  id               Int          @id @default(autoincrement())
+  avatar           String?
+  name             String?
+  email            String?      @unique
+  role             UserRole?
+  description      String?
+  links            Json?
+  metadata         Json?
+  createdAt        DateTime     @default(now())
+  updatedAt        DateTime     @updatedAt
+  walletAddress    String
+  ownedGrantsPools GrantsPool[] @relation("UserGrantsPools")
+  pods             Pod[]        @relation("UserPods")
 
-    // 关系字段（Prisma语法要求）
-    ownedGrantsPools GrantsPool[] @relation("UserGrantsPools")
-    pods             Pod[]        @relation("UserPods")
-
-    @@index([email])
-    @@index([role])
-    @@index([walletAddress])
+  @@index([email])
+  @@index([role])
+  @@index([walletAddress])
 }
 
-// 资助方 GP 表
 model GrantsPool {
-    id             Int             @id @default(autoincrement())
-    avatar         String?         // 头像图片链接
-    name           String          // GP名称
-    description    String          // GP详细描述信息
-    links          Json?           // 多个链接（x,tg,github,website）
-    tags           String?         // 用英文逗号隔开的标签字符串
-    rfp            Json            // Request for Proposals
-    modInfo        Json            // GP管理员信息（name,email,tg）
-    treasuryWallet String          // 国库钱包地址（多签钱包）
-    chainType      ChainType       // 国库钱包链类型
-    status         GrantsPoolStatus @default(ACTIVE) // GP状态
-    metadata       Json?           // 附加信息
-    createdAt      DateTime        @default(now())
-    updatedAt      DateTime        @updatedAt
+  id               Int              @id @default(autoincrement())
+  avatar           String?
+  name             String
+  description      String
+  links            Json?
+  tags             String?
+  modInfo          Json
+  treasuryWallet   String
+  treasuryBalances Json?
+  chainType        ChainType
+  status           GrantsPoolStatus @default(ACTIVE)
+  metadata         Json?
+  createdAt        DateTime         @default(now())
+  updatedAt        DateTime         @updatedAt
+  ownerId          Int
+  owner            User             @relation("UserGrantsPools", fields: [ownerId], references: [id])
+  pods             Pod[]            @relation("GrantsPoolPods")
+  rfps             Rfps[]
 
-    // 关系
-    ownerId Int  // 创建者ID
-    owner   User @relation("UserGrantsPools", fields: [ownerId], references: [id])
-    pods    Pod[] @relation("GrantsPoolPods")
-
-    @@index([name])
-    @@index([chainType])
-    @@index([status])
-    @@index([ownerId])
-    @@index([treasuryWallet])
+  @@index([name])
+  @@index([chainType])
+  @@index([status])
+  @@index([ownerId])
+  @@index([treasuryWallet])
 }
 
-// Pod 申请表
+model Rfps {
+  id           Int        @id @default(autoincrement())
+  grantsPoolId Int
+  title        String
+  description  String
+  metadata     Json?
+  createdAt    DateTime   @default(now())
+  updatedAt    DateTime   @updatedAt
+  grantsPool   GrantsPool @relation(fields: [grantsPoolId], references: [id], onDelete: Cascade)
+
+  @@index([grantsPoolId])
+}
+
 model Pod {
-    id               Int       @id @default(autoincrement())
-    applicantId      Int       // 申请人ID
-    grantsPoolId     Int       // 申请的GP ID
-    rfpIndex         Int       // 申请的GP的RFP索引
-    avatar           String?   // Pod头像图片
-    name             String    // Pod名称
-    shortDescription String    // 简短描述
-    detailDescription String   // 详细描述
-    links            Json?     // Pod链接（多个链接）
-    currency         String    // 申请的币种
-    status           PodStatus @default(REVIEWING) // 当前状态
-    metadata         Json?     // 附加信息（如Mod驳回反馈）
-    createdAt        DateTime  @default(now())
-    updatedAt        DateTime  @updatedAt
+  id                Int         @id @default(autoincrement())
+  applicantId       Int
+  grantsPoolId      Int
+  rfpIndex          Int
+  avatar            String?
+  name              String
+  shortDescription  String
+  detailDescription String
+  links             Json?
+  currency          String
+  status            PodStatus   @default(REVIEWING)
+  metadata          Json?
+  createdAt         DateTime    @default(now())
+  updatedAt         DateTime    @updatedAt
+  milestones        Milestone[] @relation("PodMilestones")
+  applicant         User        @relation("UserPods", fields: [applicantId], references: [id])
+  grantsPool        GrantsPool  @relation("GrantsPoolPods", fields: [grantsPoolId], references: [id])
 
-    // 关系
-    applicant   User       @relation("UserPods", fields: [applicantId], references: [id])
-    grantsPool  GrantsPool @relation("GrantsPoolPods", fields: [grantsPoolId], references: [id])
-    milestones  Milestone[] @relation("PodMilestones")
-
-    @@index([applicantId])
-    @@index([grantsPoolId])
-    @@index([status])
-    @@index([name])
+  @@index([applicantId])
+  @@index([grantsPoolId])
+  @@index([status])
+  @@index([name])
 }
 
-// Milestone 表
 model Milestone {
-    id                    Int             @id @default(autoincrement())
-    podId                 Int             // 关联Pod ID
-    milestoneData         Json            // milestone详细数据（开始时间,结束时间,申请金额,详细描述等）
-    associatedWallet      String?         // 关联多签钱包地址
-    status                MilestoneStatus @default(ACTIVE) // 状态（使用中，已失效）
-    currentPhase          String          @default("PENDING") // 当前阶段（审核中，已拒绝，工作中等）
-    deliveryInfo          Json?           // 交付信息（交付描述，交付链接，交付文件）
-    metadata              Json?           // 附加信息
-    createdAt             DateTime        @default(now())
-    updatedAt             DateTime        @updatedAt
+  id               Int             @id @default(autoincrement())
+  podId            Int
+  milestoneData    Json
+  associatedWallet String?
+  status           MilestoneStatus @default(ACTIVE)
+  currentPhase     String          @default("PENDING")
+  deliveryInfo     Json?
+  metadata         Json?
+  createdAt        DateTime        @default(now())
+  updatedAt        DateTime        @updatedAt
+  pod              Pod             @relation("PodMilestones", fields: [podId], references: [id], onDelete: Cascade)
 
-    // 关系
-    pod Pod @relation("PodMilestones", fields: [podId], references: [id], onDelete: Cascade)
-
-    @@index([podId])
-    @@index([status])
-    @@index([associatedWallet])
-    @@index([currentPhase])
+  @@index([podId])
+  @@index([status])
+  @@index([associatedWallet])
+  @@index([currentPhase])
 }
 
-// 枚举定义
 enum UserRole {
-    ADMIN       // 系统管理员
-    GP_MOD      // GP管理员
-    APPLICANT   // 申请人
-    VIEWER      // 观察者
+  ADMIN
+  GP_MOD
+  APPLICANT
+  VIEWER
 }
 
 enum ChainType {
-    ETHEREUM    // 以太坊主网
-    OPTIMISM    // Optimism网络
+  ETHEREUM
+  OPTIMISM
 }
 
 enum GrantsPoolStatus {
-    ACTIVE      // 活跃
-    INACTIVE    // 停用
-    ARCHIVED    // 归档
+  ACTIVE
+  INACTIVE
+  ARCHIVED
 }
 
 enum PodStatus {
-    REVIEWING   // 审核中
-    APPROVED    // 审核通过
-    REJECTED    // 审核驳回
-    IN_PROGRESS // 进行中
-    COMPLETED   // 已完成
-    TERMINATED  // 已终止
+  REVIEWING
+  APPROVED
+  REJECTED
+  IN_PROGRESS
+  COMPLETED
+  TERMINATED
 }
 
 enum MilestoneStatus {
-    ACTIVE      // 使用中
-    INACTIVE    // 已失效
+  ACTIVE
+  INACTIVE
 }

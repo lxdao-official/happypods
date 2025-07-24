@@ -13,7 +13,9 @@ import CornerFrame from "~/components/corner-frame";
 import AppBtn from "~/components/app-btn";
 import RFPSection from "~/components/rfp-section";
 import RelatedLinksSection from "~/components/related-links-section";
+import CreateSafeModal from "~/components/create-safe-modal";
 import { api } from "~/trpc/react";
+import { toast } from "sonner";
 
 interface RFP {
   id: string;
@@ -31,13 +33,15 @@ interface RelatedLinks {
 export default function CreateGrantsPoolPage() {
   const router = useRouter();
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [showSafeModal, setShowSafeModal] = useState(false);
+  const [safeAddress, setSafeAddress] = useState("");
   const [formData, setFormData] = useState({
     avatar: "",
     name: "",
     description: "",
     tags: "",
     treasuryWallet: "",
-    chainType: "ETHEREUM" as "ETHEREUM" | "OPTIMISM",
+    chainType: "OPTIMISM" as "ETHEREUM" | "OPTIMISM",
     // Moderator info
     modName: "",
     modEmail: "",
@@ -65,19 +69,53 @@ export default function CreateGrantsPoolPage() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!formData.name || !formData.description || !formData.treasuryWallet) {
-      alert("Please fill in all required fields");
+    
+    // 验证基本信息
+    if (!formData.avatar || !formData.name || !formData.description) {
+      toast.error("Please fill in avatar URL, Grants Pool name and description");
+      return;
+    }
+
+    // 验证管理员信息
+    if (!formData.modName || !formData.modEmail || !formData.modTelegram) {
+      toast.error("Please fill in complete moderator information (name, email, Telegram)");
+      return;
+    }
+
+    // 验证RFP信息
+    if (rfps.length === 0) {
+      toast.error("At least one RFP is required");
+      return;
+    }
+
+    // 检查每个RFP的标题和描述
+    for (let i = 0; i < rfps.length; i++) {
+      const rfp = rfps[i];
+      if (!rfp?.title.trim()) {
+        toast.error(`Please fill in RFP #${i + 1} title`);
+        return;
+      }
+      if (!rfp?.description.trim()) {
+        toast.error(`Please fill in RFP #${i + 1} description`);
+        return;
+      }
+    }
+
+    // 如果没有Safe地址，先创建Safe多签钱包
+    if (!safeAddress) {
+      setShowSafeModal(true);
       return;
     }
 
     setIsSubmitting(true);
     try {
-      const links = {
-        ...(relatedLinks.website && { website: relatedLinks.website }),
-        ...(relatedLinks.github && { github: relatedLinks.github }),
-        ...(relatedLinks.twitter && { twitter: relatedLinks.twitter }),
-        ...(relatedLinks.telegram && { telegram: relatedLinks.telegram }),
-      };
+      // 过滤掉空的链接
+      const links = Object.entries(relatedLinks).reduce((acc, [key, value]) => {
+        if (value.trim()) {
+          acc[key] = value.trim();
+        }
+        return acc;
+      }, {} as Record<string, string>);
 
       // 处理多个RFP
       const processedRfps = rfps.map(rfp => ({
@@ -96,18 +134,18 @@ export default function CreateGrantsPoolPage() {
         name: formData.name,
         description: formData.description,
         tags: formData.tags || undefined,
-        treasuryWallet: formData.treasuryWallet,
+        treasuryWallet: safeAddress, // 使用Safe地址
         chainType: formData.chainType,
         links: Object.keys(links).length > 0 ? links : undefined,
-        rfp: processedRfps[0], // 保持向后兼容，使用第一个RFP
+        rfps: processedRfps, // 传递所有RFP
         modInfo,
       });
 
-      alert("Grants Pool created successfully!");
+      toast.success("Grants Pool created successfully!");
       router.push("/grants-pool");
     } catch (error) {
       console.error("Failed to create Grants Pool:", error);
-      alert("Creation failed, please try again");
+      toast.error("Creation failed, please try again");
     } finally {
       setIsSubmitting(false);
     }
@@ -115,6 +153,13 @@ export default function CreateGrantsPoolPage() {
 
   const handleInputChange = (field: string, value: string) => {
     setFormData(prev => ({ ...prev, [field]: value }));
+  };
+
+  const handleSafeConfirm = (address: string) => {
+    setSafeAddress(address);
+    setShowSafeModal(false);
+    // 自动提交表单
+    handleSubmit(new Event('submit') as any);
   };
 
   return (
@@ -139,6 +184,7 @@ export default function CreateGrantsPoolPage() {
                 onChange={(e) => handleInputChange("avatar", e.target.value)}
                 placeholder="https://example.com/avatar.jpg"
                 description="Enter the URL of the avatar image"
+                isRequired
               />
 
               {/* Name */}
@@ -163,16 +209,17 @@ export default function CreateGrantsPoolPage() {
                 minRows={4}
               />
 
-              {/* Chain Type */}
+              {/* Chain Type - 只允许Optimism */}
               <Select
                 variant="bordered"
                 label="Treasury Chain Type"
                 value={formData.chainType}
+                defaultSelectedKeys={[formData.chainType]}
                 onChange={(e) => handleInputChange("chainType", e.target.value)}
                 isRequired
               >
-                <SelectItem key="ETHEREUM">Ethereum Mainnet</SelectItem>
                 <SelectItem key="OPTIMISM">Optimism Network</SelectItem>
+                <SelectItem key="ETHEREUM" isDisabled>Ethereum Mainnet (Not Available)</SelectItem>
               </Select>
 
               {/* Tags */}
@@ -185,6 +232,20 @@ export default function CreateGrantsPoolPage() {
                 placeholder="DeFi,Web3,DAO"
                 description="Separate multiple tags with commas"
               />
+
+              {/* Safe Address Display */}
+              {safeAddress && (
+                <div>
+                  <label className="text-sm font-medium">Safe Multi-sig Wallet Address</label>
+                  <Input
+                    value={safeAddress}
+                    readOnly
+                    variant="bordered"
+                    className="mt-1"
+                    description="Created Safe multi-sig wallet address"
+                  />
+                </div>
+              )}
             </div>
           </CornerFrame>
 
@@ -205,6 +266,7 @@ export default function CreateGrantsPoolPage() {
                 value={formData.modName}
                 onChange={(e) => handleInputChange("modName", e.target.value)}
                 placeholder="Moderator Name"
+                isRequired
               />
 
               <Input
@@ -214,6 +276,7 @@ export default function CreateGrantsPoolPage() {
                 value={formData.modEmail}
                 onChange={(e) => handleInputChange("modEmail", e.target.value)}
                 placeholder="admin@example.com"
+                isRequired
               />
 
               <Input
@@ -223,6 +286,7 @@ export default function CreateGrantsPoolPage() {
                 value={formData.modTelegram}
                 onChange={(e) => handleInputChange("modTelegram", e.target.value)}
                 placeholder="@username"
+                isRequired
               />
             </div>
           </CornerFrame>
@@ -261,6 +325,13 @@ export default function CreateGrantsPoolPage() {
           </div>
         </form>
       </div>
+
+      {/* Safe创建模态框 */}
+      <CreateSafeModal
+        isOpen={showSafeModal}
+        onClose={() => setShowSafeModal(false)}
+        onConfirm={handleSafeConfirm}
+      />
     </div>
   );
 } 

@@ -61,7 +61,7 @@ This is a Next.js project based on the T3 Stack, using TypeScript, tRPC, Prisma,
 - Use `useAccount`, `useBalance`, and other wagmi hooks
 - Always handle wallet connection states gracefully
 - Use environment variables for WalletConnect Project ID
-- Support multiple chains (mainnet, testnets)
+- Support multiple chains (mainnet, testnets, optimistic)
 
 ### Styling Standards
 - Use Tailwind CSS class names

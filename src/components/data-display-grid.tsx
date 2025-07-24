@@ -112,7 +112,6 @@ export const DataDisplayGrid = ({
     const classname = type === "detail" ?  "w-[200px] rounded-xl" : "w-[300px] rounded-full border-primary border-1 overflow-hidden";
     return (
         <Input
-                variant="bordered"
             type="text"
             placeholder={searchPlaceholder}
             value={search}

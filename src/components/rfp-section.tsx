@@ -81,6 +81,7 @@ const RFPSection = ({ rfps, onRfpsChange }: RFPSectionProps) => {
                 value={rfp.title}
                 onChange={(e) => updateRFP(rfp.id, "title", e.target.value)}
                 placeholder="RFP Title"
+                isRequired
               />
 
               <Textarea
@@ -90,6 +91,7 @@ const RFPSection = ({ rfps, onRfpsChange }: RFPSectionProps) => {
                 onChange={(e) => updateRFP(rfp.id, "description", e.target.value)}
                 placeholder="Describe the background and objectives of the RFP"
                 minRows={3}
+                isRequired
               />
 
             </div>

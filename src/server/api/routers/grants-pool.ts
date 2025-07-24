@@ -6,16 +6,23 @@ import {
   publicProcedure,
 } from "~/server/api/trpc";
 
+const rfpSchema = z.object({
+  title: z.string().min(1, "RFP标题不能为空"),
+  description: z.string().min(1, "RFP描述不能为空"),
+  metadata: z.any().optional(),
+});
+
 const createGrantsPoolSchema = z.object({
   avatar: z.string().url().optional(),
   name: z.string().min(1, "GP名称不能为空"),
   description: z.string().min(1, "GP描述不能为空"),
   links: z.record(z.string()).optional(),
   tags: z.string().optional(),
-  rfp: z.any(),
+  rfps: z.array(rfpSchema),
   modInfo: z.any(),
   treasuryWallet: z.string().min(1, "国库钱包地址不能为空"),
   chainType: z.enum(["ETHEREUM", "OPTIMISM"]),
+  treasuryBalances: z.any().optional(),
 });
 
 const updateGrantsPoolSchema = z.object({
@@ -25,11 +32,11 @@ const updateGrantsPoolSchema = z.object({
   description: z.string().min(1, "GP描述不能为空").optional(),
   links: z.record(z.string()).optional(),
   tags: z.string().optional(),
-  rfp: z.any().optional(),
   modInfo: z.any().optional(),
   treasuryWallet: z.string().min(1, "国库钱包地址不能为空").optional(),
   chainType: z.enum(["ETHEREUM", "OPTIMISM"]).optional(),
   status: z.enum(["ACTIVE", "INACTIVE", "ARCHIVED"]).optional(),
+  treasuryBalances: z.any().optional(),
 });
 
 export const grantsPoolRouter = createTRPCRouter({
@@ -37,30 +44,35 @@ export const grantsPoolRouter = createTRPCRouter({
   create: protectedProcedure
     .input(createGrantsPoolSchema)
     .mutation(async ({ ctx, input }) => {
+      const { rfps, ...poolData } = input;
       const grantsPool = await ctx.db.grantsPool.create({
         data: {
-          name: input.name,
-          description: input.description,
-          treasuryWallet: input.treasuryWallet,
-          chainType: input.chainType,
-          avatar: input.avatar,
-          tags: input.tags,
-          links: input.links,
-          rfp: input.rfp as Prisma.InputJsonValue,
-          modInfo: input.modInfo as Prisma.InputJsonValue,
+          name: poolData.name,
+          description: poolData.description,
+          treasuryWallet: poolData.treasuryWallet,
+          chainType: poolData.chainType,
+          avatar: poolData.avatar,
+          tags: poolData.tags,
+          links: poolData.links,
+          modInfo: poolData.modInfo as Prisma.InputJsonValue,
+          treasuryBalances: poolData.treasuryBalances as Prisma.InputJsonValue,
           ownerId: ctx.user.id,
         },
-        include: {
-          owner: {
-            select: {
-              id: true,
-              name: true,
-              avatar: true,
-            },
-          },
-        },
       });
-      return grantsPool;
+      // 批量插入RFPs
+      if (rfps && rfps.length > 0) {
+        await ctx.db.rfps.createMany({
+          data: rfps.map(rfp => ({
+            ...rfp,
+            grantsPoolId: grantsPool.id
+          }))
+        });
+      }
+      // 返回带rfps的grantsPool
+      return ctx.db.grantsPool.findUnique({
+        where: { id: grantsPool.id },
+        include: { rfps: true, owner: { select: { id: true, name: true, avatar: true } } }
+      });
     }),
 
   // 获取GrantsPool列表
@@ -104,6 +116,7 @@ export const grantsPoolRouter = createTRPCRouter({
               avatar: true,
             },
           },
+          rfps: true,
           _count: {
             select: {
               pods: true,
@@ -197,9 +210,6 @@ export const grantsPoolRouter = createTRPCRouter({
         where: { id },
         data: {
           ...updateData,
-          rfp: updateData.rfp
-            ? (updateData.rfp as Prisma.InputJsonValue)
-            : undefined,
           modInfo: updateData.modInfo
             ? (updateData.modInfo as Prisma.InputJsonValue)
             : undefined,
@@ -264,7 +274,7 @@ export const grantsPoolRouter = createTRPCRouter({
         id: true,
         name: true,
         avatar: true,
-        rfp: true,
+        rfps: true,
         chainType: true,
       },
     });
