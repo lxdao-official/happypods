@@ -13,8 +13,13 @@ interface PodsItemProps {
     milestones: Array<{
       name: string;
       progress: number;
+      amount: number;
+      createdAt: string;
+      deadline: string;
+      status: string;
     }>;
     lastUpdate: string;
+    unlocked?: number;
   };
   onClick?: () => void;
   className?: string;
@@ -37,7 +42,7 @@ const PodsItem = ({ pod, onClick, className = "" }: PodsItemProps) => {
     >
       {/* 卡片头部 */}
       <div className="flex items-center p-4 space-x-4 bg-white border-b border-black">
-        <img src="https://cdn.lxdao.io/bafkreic7yeypjshk3vc6rko3rnuijygyqqlawpmlgmi3ucisyj4pj6pm4q.png" alt="" className="w-10 h-10 rounded-full" />
+        <img src={pod.avatar || ""} alt="" className="w-10 h-10 rounded-full" />
         <div className="text-xl font-bold text-gray-900">{pod.name}</div>
       </div>
 
@@ -63,11 +68,11 @@ const PodsItem = ({ pod, onClick, className = "" }: PodsItemProps) => {
         {/* 资金进度 */}
         <div className="mb-4">
           <div className="flex justify-between mb-2 text-sm">
-            <b>{pod.progress} / {pod.totalFunding} {pod.currency} unlocked</b>
+            <b>{pod.unlocked ?? 0} / {pod.totalFunding} {pod.currency} unlocked</b>
             <small>Progress: {pod.progress}%</small>
           </div>
           
-          <ProgressMilestoneBar progress={pod.progress} milestones={pod.milestones} />
+          <ProgressMilestoneBar progress={pod.progress} milestones={pod.milestones} totalFunding={pod.totalFunding} unlocked={pod.unlocked ?? 0} />
 
         </div>
 

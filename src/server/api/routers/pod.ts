@@ -201,31 +201,31 @@ export const podRouter = createTRPCRouter({
       return pod;
     }),
 
-  // 获取Pod列表
-  getAll: publicProcedure
+  // 获取Pod列表（支持分页、搜索、状态、gpId、我的）
+  getList: protectedProcedure
     .input(
       z.object({
-        limit: z.number().min(1).max(100).default(50),
+        limit: z.number().min(1).max(100).default(20),
         cursor: z.number().nullish(),
         search: z.string().optional(),
         status: z.enum(["REVIEWING", "APPROVED", "REJECTED", "IN_PROGRESS", "COMPLETED", "TERMINATED"]).optional(),
         grantsPoolId: z.number().optional(),
-      }).optional()
+        myOnly: z.boolean().optional(),
+      })
     )
     .query(async ({ ctx, input }) => {
-      const limit = input?.limit ?? 50;
-      const { cursor, search, status, grantsPoolId } = input ?? {};
-
-      const where = {
-        ...(search && {
-          OR: [
-            { title: { contains: search, mode: "insensitive" as const } },
-            { description: { contains: search, mode: "insensitive" as const } },
-          ],
-        }),
-        ...(status && { status }),
-        ...(grantsPoolId && { grantsPoolId }),
-      };
+      const { limit, cursor, search, status, grantsPoolId, myOnly } = input;
+      const where: any = {};
+      if (search) {
+        where.OR = [
+          { title: { contains: search, mode: "insensitive" } },
+          { description: { contains: search, mode: "insensitive" } },
+          { tags: { contains: search, mode: "insensitive" } },
+        ];
+      }
+      if (status) where.status = status;
+      if (grantsPoolId) where.grantsPoolId = grantsPoolId;
+      if (myOnly) where.applicantId = ctx.user.id;
 
       const pods = await ctx.db.pod.findMany({
         take: limit + 1,
@@ -233,38 +233,18 @@ export const podRouter = createTRPCRouter({
         cursor: cursor ? { id: cursor } : undefined,
         orderBy: { createdAt: "desc" },
         include: {
-          applicant: {
-            select: {
-              id: true,
-              name: true,
-              avatar: true,
-            },
-          },
-          grantsPool: {
-            select: {
-              id: true,
-              name: true,
-              avatar: true,
-            },
-          },
-          _count: {
-            select: {
-              milestones: true,
-            },
-          },
+          applicant: { select: { id: true, name: true, avatar: true } },
+          grantsPool: { select: { id: true, name: true, avatar: true } },
+          milestones: { orderBy: { createdAt: "asc" } },
+          _count: { select: { milestones: true } },
         },
       });
-
       let nextCursor: typeof cursor | undefined = undefined;
       if (pods.length > limit) {
         const nextItem = pods.pop();
         nextCursor = nextItem!.id;
       }
-
-      return {
-        pods,
-        nextCursor,
-      };
+      return { pods, nextCursor };
     }),
 
   // 根据ID获取Pod详情
