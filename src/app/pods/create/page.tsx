@@ -1,19 +1,23 @@
 "use client";
 
-import { useState } from "react";
-import { useRouter } from "next/navigation";
+import { useState, useEffect } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { 
   Input, 
   Textarea, 
   Select, 
-  SelectItem
+  SelectItem,
+  Chip
 } from "@heroui/react";
 import CornerFrame from "~/components/corner-frame";
 import AppBtn from "~/components/app-btn";
 import RelatedLinksSection from "~/components/related-links-section";
 import MilestoneSection from "~/components/milestone-section";
+import CreateSafeModal from "~/components/create-safe-modal";
+import GrantsPoolInfoSection from "~/components/grants-pool-info-section";
 import { api } from "~/trpc/react";
+import { toast } from "sonner";
 
 interface RelatedLinks {
   website: string;
@@ -24,6 +28,7 @@ interface RelatedLinks {
 
 interface Milestone {
   id: string;
+  title: string;
   deadline: string;
   amount: string;
   description: string;
@@ -31,16 +36,28 @@ interface Milestone {
 
 export default function CreatePodPage() {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [showSafeModal, setShowSafeModal] = useState(false);
+  const [safeAddress, setSafeAddress] = useState("");
+  
+  // URL参数
+  const gpId = searchParams.get("gpId");
+  const rfpId = searchParams.get("rfpId");
+  const isPreselected = !!(gpId && rfpId);
+
   const [formData, setFormData] = useState({
-    grantsPoolId: "",
-    rfpIndex: "",
+    grantsPoolId: gpId || "",
+    rfpIndex: rfpId || "",
     avatar: "",
-    name: "",
-    shortDescription: "",
-    detailDescription: "",
+    title: "",
+    description: "",
     currency: "",
+    tags: "",
   });
+
+  // Tags选择状态
+  const [selectedTags, setSelectedTags] = useState<string[]>([]);
 
   // Related Links 数据
   const [relatedLinks, setRelatedLinks] = useState<RelatedLinks>({
@@ -54,32 +71,100 @@ export default function CreatePodPage() {
   const [milestones, setMilestones] = useState<Milestone[]>([
     {
       id: "1",
+      title: "",
       deadline: "",
       amount: "100",
       description: ""
     }
   ]);
 
-  const { data: grantsPools, isLoading: grantsPoolsLoading } = api.grantsPool.getActiveGrantsPools.useQuery();
+  // API queries
+  const { data: userProfile, isLoading: profileLoading } = api.pod.checkUserProfile.useQuery();
+  const { data: grantsPoolDetails, isLoading: poolDetailsLoading } = api.pod.getGrantsPoolDetails.useQuery(
+    { id: parseInt(formData.grantsPoolId) },
+    { enabled: !!formData.grantsPoolId }
+  );
+  
   const createPodMutation = api.pod.create.useMutation();
+
+  // 检查用户信息是否完善
+  useEffect(() => {
+    if (userProfile && !userProfile.isComplete) {
+      alert("请先完善个人信息（姓名、邮箱、描述）后再创建Pod");
+      router.push("/profile");
+      return;
+    }
+  }, [userProfile, router]);
+
+  // 处理预选的GP和RFP
+  useEffect(() => {
+    if (isPreselected && grantsPoolDetails) {
+      // 设置默认币种为第一个可用token
+      if (grantsPoolDetails.availableTokens.length > 0 && !formData.currency) {
+        setFormData(prev => ({ 
+          ...prev, 
+          currency: grantsPoolDetails.availableTokens[0]?.symbol || "" 
+        }));
+      }
+    }
+  }, [isPreselected, grantsPoolDetails, formData.currency]);
+
+  // 确保URL参数正确设置到formData
+  useEffect(() => {
+    if (gpId && rfpId) {
+      setFormData(prev => ({
+        ...prev,
+        grantsPoolId: gpId,
+        rfpIndex: rfpId,
+      }));
+    }
+  }, [gpId, rfpId]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!formData.grantsPoolId || !formData.name || !formData.shortDescription || !formData.detailDescription || !formData.currency) {
-      alert("请填写所有必需字段");
+    
+    if (!formData.grantsPoolId || !formData.title || !formData.description || !formData.currency) {
+      toast.error("请填写所有必需字段");
       return;
     }
 
     // 验证里程碑
     const hasInvalidMilestone = milestones.some(milestone => 
-      !milestone.description.trim() || !milestone.amount || !milestone.deadline
+      !milestone.title.trim() || !milestone.description.trim() || !milestone.amount || !milestone.deadline
     );
     if (hasInvalidMilestone) {
-      alert("请完整填写所有里程碑信息");
+      toast.error("请完整填写所有里程碑信息");
       return;
     }
 
+    // 验证里程碑总额
+    if (grantsPoolDetails) {
+      const processedMilestones = milestones.map(milestone => ({
+        title: milestone.title,
+        description: milestone.description,
+        amount: parseFloat(milestone.amount) || 0,
+        deadline: milestone.deadline
+      }));
+
+      const totalAmount = processedMilestones.reduce((sum, milestone) => sum + milestone.amount, 0);
+      const availableToken = grantsPoolDetails.availableTokens.find(token => token.symbol === formData.currency);
+      const available = parseFloat(availableToken?.available || "0");
+
+      if (totalAmount > available) {
+        toast.error(`里程碑总额 ${totalAmount} ${formData.currency} 超过了可用资金 ${available} ${formData.currency}`);
+        return;
+      }
+    }
+
+    // 显示Safe创建模态框
+    setShowSafeModal(true);
+  };
+
+  const handleSafeCreated = async (walletAddress: string) => {
+    setShowSafeModal(false);
+    setSafeAddress(walletAddress);
     setIsSubmitting(true);
+
     try {
       const links = {
         ...(relatedLinks.website && { website: relatedLinks.website }),
@@ -90,32 +175,29 @@ export default function CreatePodPage() {
 
       // 处理里程碑数据
       const processedMilestones = milestones.map(milestone => ({
-        deadline: milestone.deadline || undefined,
+        title: milestone.title,
+        description: milestone.description,
         amount: parseFloat(milestone.amount) || 0,
-        description: milestone.description || "No description provided"
+        deadline: milestone.deadline
       }));
 
-      // 临时记录里程碑数据（等待API支持）
-      console.log("Milestones data:", processedMilestones);
-
-              await createPodMutation.mutateAsync({
+      await createPodMutation.mutateAsync({
         grantsPoolId: parseInt(formData.grantsPoolId),
         rfpIndex: parseInt(formData.rfpIndex) || 0,
+        walletAddress: walletAddress,
         avatar: formData.avatar || undefined,
-        name: formData.name,
-        shortDescription: formData.shortDescription,
-        detailDescription: formData.detailDescription,
+        title: formData.title,
+        description: formData.description,
         currency: formData.currency,
+        tags: selectedTags.length > 0 ? selectedTags.join(',') : undefined,
         links: Object.keys(links).length > 0 ? links : undefined,
-        // TODO: Add milestones support to API
-        // milestones: processedMilestones,
+        milestones: processedMilestones,
       });
 
-      alert("Pod创建成功！");
+      toast.success("Pod创建成功！");
       router.push("/pods");
     } catch (error) {
-      console.error("创建Pod失败:", error);
-      alert("创建失败，请重试");
+      toast.error("创建失败，请重试");
     } finally {
       setIsSubmitting(false);
     }
@@ -124,6 +206,11 @@ export default function CreatePodPage() {
   const handleInputChange = (field: string, value: string) => {
     setFormData(prev => ({ ...prev, [field]: value }));
   };
+
+
+  if (profileLoading) {
+    return <div className="container px-4 py-8 mx-auto">Loading...</div>;
+  }
 
   return (
     <div className="container px-4 py-8 mx-auto">
@@ -134,104 +221,86 @@ export default function CreatePodPage() {
         </div>
 
         <form onSubmit={handleSubmit} className="space-y-6">
-          {/* 基本信息 */}
-          <CornerFrame backgroundColor="var(--color-background)">
-            <h2 className="mb-6 text-xl">Basic Information</h2>
-            <div className="space-y-6">
-              {/* 选择Grants Pool */}
-              <Select
-                variant="bordered"
-                label="Select Grants Pool"
-                isRequired
-                placeholder="Please select a Grants Pool"
-                selectedKeys={formData.grantsPoolId ? new Set([formData.grantsPoolId]) : new Set()}
-                onSelectionChange={(keys) => {
-                  const grantsPoolId = Array.from(keys)[0] as string;
-                  handleInputChange("grantsPoolId", grantsPoolId || "");
-                }}
-                isLoading={grantsPoolsLoading}
-              >
-                {grantsPools?.map((gp) => (
-                  <SelectItem key={gp.id.toString()}>
-                    {gp.name} ({gp.chainType})
-                  </SelectItem>
-                )) ?? []}
-              </Select>
+          {/* GP信息 */}
+          <GrantsPoolInfoSection
+            grantsPoolId={formData.grantsPoolId}
+            rfpIndex={formData.rfpIndex}
+            currency={formData.currency}
+            onGrantsPoolChange={(grantsPoolId) => handleInputChange("grantsPoolId", grantsPoolId)}
+            onRfpChange={(rfpIndex) => handleInputChange("rfpIndex", rfpIndex)}
+            onCurrencyChange={(currency) => handleInputChange("currency", currency)}
+            isPreselected={isPreselected}
+          />
 
-              {/* RFP索引 */}
-              <Input
-                variant="bordered"
-                type="number"
-                label="RFP Index"
-                value={formData.rfpIndex}
-                onChange={(e) => handleInputChange("rfpIndex", e.target.value)}
-                placeholder="0"
-                description="RFP index in the selected Grants Pool"
-                min="0"
-              />
+          {/* 项目描述 */}
+          <CornerFrame backgroundColor="var(--color-background)" color="gray">
+            <h2 className="mb-6 text-xl">Project Information</h2>
+            
+            <div className="space-y-6">
 
               {/* Pod头像 */}
               <Input
-                variant="bordered"
-                type="url"
-                label="Pod Avatar URL"
-                value={formData.avatar}
-                onChange={(e) => handleInputChange("avatar", e.target.value)}
-                placeholder="https://example.com/avatar.jpg"
-                description="Enter the URL of the Pod avatar image"
-              />
+                  variant="bordered"
+                  type="url"
+                  label="Pod Avatar URL"
+                  value={formData.avatar}
+                  onChange={(e) => handleInputChange("avatar", e.target.value)}
+                  placeholder="https://example.com/avatar.jpg"
+                  description="Enter the URL of the Pod avatar image"
+                />
 
-              {/* Pod名称 */}
+                
+                
+              {/* 项目标题 */}
               <Input
                 variant="bordered"
                 type="text"
-                label="Pod Name"
-                value={formData.name}
-                onChange={(e) => handleInputChange("name", e.target.value)}
-                placeholder="Enter Pod name"
+                label="Project Title"
+                value={formData.title}
+                onChange={(e) => handleInputChange("title", e.target.value)}
+                placeholder="Enter project title"
                 isRequired
-              />
-
-              {/* 申请币种 */}
-              <Input
-                variant="bordered"
-                type="text"
-                label="Currency"
-                value={formData.currency}
-                onChange={(e) => handleInputChange("currency", e.target.value)}
-                placeholder="e.g. ETH, USDC, DAI"
-                isRequired
-              />
-            </div>
-          </CornerFrame>
-
-          {/* 项目描述 */}
-          <CornerFrame backgroundColor="var(--color-background)">
-            <h2 className="mb-6 text-xl">Project Description</h2>
-            <div className="space-y-6">
-              {/* 简短描述 */}
-              <Textarea
-                variant="bordered"
-                label="Short Description"
-                value={formData.shortDescription}
-                onChange={(e) => handleInputChange("shortDescription", e.target.value)}
-                placeholder="Briefly describe your project"
-                isRequired
-                minRows={3}
-                description="Summarize your project in concise language"
+                description="Concise title of your project"
               />
 
               {/* 详细描述 */}
               <Textarea
                 variant="bordered"
-                label="Detailed Description"
-                value={formData.detailDescription}
-                onChange={(e) => handleInputChange("detailDescription", e.target.value)}
+                label="Project Description"
+                value={formData.description}
+                onChange={(e) => handleInputChange("description", e.target.value)}
                 placeholder="Describe your project in detail, including goals, implementation plan, expected outcomes, etc."
                 isRequired
                 minRows={8}
                 description="Detailed description of project background, goals, technical approach and expected outcomes"
               />
+
+              {/* Tags选择 */}
+              <div className="space-y-3">
+                <label className="text-sm font-medium">Project Tags</label>
+                <Select
+                  variant="bordered"
+                  placeholder="Select tags for your project"
+                  selectionMode="multiple"
+                  selectedKeys={new Set(selectedTags)}
+                  onSelectionChange={(keys) => {
+                    const newTags = Array.from(keys) as string[];
+                    setSelectedTags(newTags);
+                  }}
+                  description="Choose relevant tags to help others discover your project"
+                >
+                  {[
+                    "DeFi", "NFT", "GameFi", "Infrastructure", "DAO", "Privacy", 
+                    "Scalability", "Interoperability", "AI/ML", "Social Impact",
+                    "Education", "Healthcare", "Finance", "Gaming", "Art", "Music",
+                    "Environment", "Governance", "Security", "Analytics"
+                  ].map((tag) => (
+                    <SelectItem key={tag}>
+                      {tag}
+                    </SelectItem>
+                  ))}
+                </Select>
+              </div>
             </div>
           </CornerFrame>
 
@@ -270,10 +339,17 @@ export default function CreatePodPage() {
                 size: "lg",
               }}
             >
-              {isSubmitting ? "Loading..." : "Create Pod"}
+              {isSubmitting ? "Creating..." : "Create Pod"}
             </AppBtn>
           </div>
         </form>
+
+        {/* Safe 创建模态框 */}
+        <CreateSafeModal
+          isOpen={showSafeModal}
+          onClose={() => setShowSafeModal(false)}
+          onConfirm={handleSafeCreated}
+        />
       </div>
     </div>
   );

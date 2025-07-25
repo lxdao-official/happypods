@@ -32,7 +32,6 @@ export default function PodsPage() {
 
         {/* 数据展示网格 */}
         <DataDisplayGrid className="mt-20"/>
-
       </div>
     </div>
   );

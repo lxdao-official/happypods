@@ -1,6 +1,7 @@
 import { Button } from "@heroui/button";
 import { Modal, ModalBody, ModalContent, ModalHeader, useDisclosure } from "@heroui/react";
 import { useRef, useEffect, useState } from "react";
+import NextLink from "next/link";
 
 interface GrantspoolRFPItemProps {
   proposal: {
@@ -11,9 +12,10 @@ interface GrantspoolRFPItemProps {
   };
   onClick?: () => void;
   className?: string;
+  gpId: number;
 } 
 
-const GrantspoolRFPItem = ({ proposal, onClick, className = "" }: GrantspoolRFPItemProps) => {
+const GrantspoolRFPItem = ({ proposal, onClick, className = "", gpId }: GrantspoolRFPItemProps) => {
   const descRef = useRef<HTMLParagraphElement>(null);
   const [showMore, setShowMore] = useState(false);
   const { isOpen, onOpen, onClose } = useDisclosure();
@@ -51,7 +53,9 @@ const GrantspoolRFPItem = ({ proposal, onClick, className = "" }: GrantspoolRFPI
               More
             </span>
           ) : <span />}
-          <Button size="sm" className="bg-black"><span>Apply</span><i className="ri-arrow-right-line"></i></Button>
+          <NextLink href={`/pods/create?rfpId=${proposal.id}&gpId=${gpId}`}>
+            <Button size="sm" className="bg-black"><span>Apply</span><i className="ri-arrow-right-line"></i></Button>
+          </NextLink>
         </div>
       </div>
       <Modal isOpen={isOpen} onOpenChange={onClose} placement="center"

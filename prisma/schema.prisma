@@ -36,7 +36,7 @@ model GrantsPool {
   tags             String?
   modInfo          Json
   treasuryWallet   String
-  treasuryBalances Json?
+  treasuryBalances Json? @default("{}") //{"USDC": {"available": "0", "used": "0", "locked": "0"},"USDT": {available: "0", used: "0", locked: "0"}}
   chainType        ChainType
   status           GrantsPoolStatus @default(ACTIVE)
   metadata         Json?
@@ -72,11 +72,12 @@ model Pod {
   applicantId       Int
   grantsPoolId      Int
   rfpIndex          Int
+  walletAddress     String
   avatar            String?
-  name              String
-  shortDescription  String
-  detailDescription String
+  title             String
+  description       String
   links             Json?
+  tags             String?
   currency          String
   status            PodStatus   @default(REVIEWING)
   metadata          Json?
@@ -89,17 +90,18 @@ model Pod {
   @@index([applicantId])
   @@index([grantsPoolId])
   @@index([status])
-  @@index([name])
 }
 
 model Milestone {
   id               Int             @id @default(autoincrement())
   podId            Int
-  milestoneData    Json
-  associatedWallet String?
+  title            String
+  description      String
+  amount           Int
+  deadline         DateTime
   status           MilestoneStatus @default(ACTIVE)
   currentPhase     String          @default("PENDING")
-  deliveryInfo     Json?
+  deliveryInfo     Json?  //{content: string, links: string[], deadline: string}
   metadata         Json?
   createdAt        DateTime        @default(now())
   updatedAt        DateTime        @updatedAt
@@ -107,7 +109,6 @@ model Milestone {
 
   @@index([podId])
   @@index([status])
-  @@index([associatedWallet])
   @@index([currentPhase])
 }
 

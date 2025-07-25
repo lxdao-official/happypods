@@ -205,6 +205,9 @@ export function LoginModal() {
               <DropdownItem key="pods" as={Link} href="/my-pods" className="py-2 my-2">
                 📦 My pods
               </DropdownItem>
+              <DropdownItem key="my-grants-pool" as={Link} href="/my-grants-pool" className="py-2 my-2">
+                💰 My Grants Pool
+              </DropdownItem>
               <DropdownItem key="logout" color="danger" onPress={handleLogout} className="py-2 my-2">
                 🚪 Logout
               </DropdownItem>

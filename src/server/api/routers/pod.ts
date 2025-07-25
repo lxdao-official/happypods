@@ -1,43 +1,203 @@
 import { z } from "zod";
 import { createTRPCRouter, protectedProcedure, publicProcedure } from "~/server/api/trpc";
 
+const milestoneSchema = z.object({
+  title: z.string().min(1, "里程碑标题不能为空"),
+  description: z.string().min(1, "里程碑描述不能为空"),
+  amount: z.number().min(0, "金额必须大于等于0"),
+  deadline: z.string().min(1, "截止日期不能为空"),
+});
+
 const createPodSchema = z.object({
   grantsPoolId: z.number(),
   rfpIndex: z.number(),
+  walletAddress: z.string().min(1, "钱包地址不能为空"),
   avatar: z.string().url().optional(),
-  name: z.string().min(1, "Pod名称不能为空"),
-  shortDescription: z.string().min(1, "简短描述不能为空"),
-  detailDescription: z.string().min(1, "详细描述不能为空"),
+  title: z.string().min(1, "项目标题不能为空"),
+  description: z.string().min(1, "项目描述不能为空"),
   links: z.any().optional(),
   currency: z.string().min(1, "币种不能为空"),
+  tags: z.string().optional(),
+  milestones: z.array(milestoneSchema).min(1, "至少需要一个里程碑"),
 });
 
 const updatePodSchema = z.object({
   id: z.number(),
   avatar: z.string().url().optional(),
-  name: z.string().min(1, "Pod名称不能为空").optional(),
-  shortDescription: z.string().min(1, "简短描述不能为空").optional(),
-  detailDescription: z.string().min(1, "详细描述不能为空").optional(),
+  title: z.string().min(1, "项目标题不能为空").optional(),
+  description: z.string().min(1, "项目描述不能为空").optional(),
   links: z.any().optional(),
   currency: z.string().min(1, "币种不能为空").optional(),
+  tags: z.string().optional(),
   status: z.enum(["REVIEWING", "APPROVED", "REJECTED", "IN_PROGRESS", "COMPLETED", "TERMINATED"]).optional(),
 });
 
 export const podRouter = createTRPCRouter({
+  // 检查用户信息是否完善
+  checkUserProfile: protectedProcedure
+    .query(async ({ ctx }) => {
+      const user = await ctx.db.user.findUnique({
+        where: { id: ctx.user.id },
+        select: {
+          name: true,
+          email: true,
+          description: true,
+        },
+      });
+
+      if (!user) {
+        throw new Error("用户不存在");
+      }
+
+      const isComplete = !!(user.name && user.email && user.description);
+      return { isComplete, user };
+    }),
+
+  // 获取Grants Pool详细信息（包含RFP和token信息）
+  getGrantsPoolDetails: publicProcedure
+    .input(z.object({ id: z.number() }))
+    .query(async ({ ctx, input }) => {
+      const grantsPool = await ctx.db.grantsPool.findUnique({
+        where: { id: input.id },
+        include: {
+          rfps: {
+            orderBy: { createdAt: "asc" },
+          },
+        },
+      });
+
+      if (!grantsPool) {
+        throw new Error("Grants Pool不存在");
+      }
+
+      // 解析treasury balances获取可用token
+      const treasuryBalances = grantsPool.treasuryBalances as Record<string, any> || {};
+      const availableTokens = Object.entries(treasuryBalances)
+        .filter(([_, balance]) => parseFloat(balance.available || "0") > 0)
+        .map(([token, balance]) => ({
+          symbol: token,
+          available: balance.available,
+        }));
+
+      return {
+        ...grantsPool,
+        availableTokens,
+      };
+    }),
+
+  // 验证milestone总额
+  validateMilestones: publicProcedure
+    .input(z.object({
+      grantsPoolId: z.number(),
+      currency: z.string(),
+      milestones: z.array(milestoneSchema),
+    }))
+    .query(async ({ ctx, input }) => {
+      const grantsPool = await ctx.db.grantsPool.findUnique({
+        where: { id: input.grantsPoolId },
+      });
+
+      if (!grantsPool) {
+        throw new Error("Grants Pool不存在");
+      }
+
+      const treasuryBalances = grantsPool.treasuryBalances as Record<string, any> || {};
+      const tokenBalance = treasuryBalances[input.currency];
+      
+      if (!tokenBalance) {
+        throw new Error(`未找到币种 ${input.currency} 的余额信息`);
+      }
+
+      const available = parseFloat(tokenBalance.available || "0");
+      const totalAmount = input.milestones.reduce((sum, milestone) => sum + milestone.amount, 0);
+
+      const isValid = totalAmount <= available;
+      
+      return {
+        isValid,
+        totalAmount,
+        available,
+        currency: input.currency,
+      };
+    }),
+
   // 创建Pod
   create: protectedProcedure
     .input(createPodSchema)
     .mutation(async ({ ctx, input }) => {
-      const pod = await ctx.db.pod.create({
-        data: {
-          ...input,
-          applicantId: ctx.user.id,
-        },
-        include: {
-          applicant: true,
-          grantsPool: true,
-        },
+      // 验证用户信息是否完善
+      const user = await ctx.db.user.findUnique({
+        where: { id: ctx.user.id },
+        select: { name: true, email: true, description: true },
       });
+
+      if (!user?.name || !user?.email || !user?.description) {
+        throw new Error("请先完善个人信息");
+      }
+
+      // 验证Grants Pool和RFP
+      const grantsPool = await ctx.db.grantsPool.findUnique({
+        where: { id: input.grantsPoolId },
+        include: { rfps: true },
+      });
+
+      if (!grantsPool) {
+        throw new Error("Grants Pool不存在");
+      }
+
+      // 验证milestone总额
+      const treasuryBalances = grantsPool.treasuryBalances as Record<string, any> || {};
+      const tokenBalance = treasuryBalances[input.currency];
+      
+      if (!tokenBalance) {
+        throw new Error(`未找到币种 ${input.currency} 的余额信息`);
+      }
+
+      const available = parseFloat(tokenBalance.available || "0");
+      const totalAmount = input.milestones.reduce((sum, milestone) => sum + milestone.amount, 0);
+
+      if (totalAmount > available) {
+        throw new Error(`里程碑总额 ${totalAmount} 超过了可用资金 ${available} ${input.currency}`);
+      }
+
+      const { milestones, ...podData } = input;
+
+             // 创建Pod
+       const pod = await ctx.db.pod.create({
+         data: {
+           grantsPoolId: podData.grantsPoolId,
+           rfpIndex: podData.rfpIndex,
+           walletAddress: podData.walletAddress,
+           avatar: podData.avatar,
+           title: podData.title,
+           description: podData.description,
+           links: podData.links as any,
+           currency: podData.currency,
+           tags: podData.tags,
+           applicantId: ctx.user.id,
+         },
+         include: {
+           applicant: true,
+           grantsPool: true,
+         },
+       });
+
+       // 创建milestones
+       if (milestones && milestones.length > 0) {
+         const milestonePromises = milestones.map(milestone => 
+           ctx.db.milestone.create({
+             data: {
+               podId: pod.id,
+               title: milestone.title,
+               description: milestone.description,
+               amount: milestone.amount,
+               deadline: new Date(milestone.deadline),
+             },
+           })
+         );
+         await Promise.all(milestonePromises);
+       }
+
       return pod;
     }),
 
@@ -59,8 +219,8 @@ export const podRouter = createTRPCRouter({
       const where = {
         ...(search && {
           OR: [
-            { name: { contains: search, mode: "insensitive" as const } },
-            { shortDescription: { contains: search, mode: "insensitive" as const } },
+            { title: { contains: search, mode: "insensitive" as const } },
+            { description: { contains: search, mode: "insensitive" as const } },
           ],
         }),
         ...(status && { status }),

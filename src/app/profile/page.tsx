@@ -14,6 +14,7 @@ import AppBtn from "~/components/app-btn";
 import RelatedLinksSection from "~/components/related-links-section";
 import { api } from "~/trpc/react";
 import { getUser } from "~/lib/auth-storage";
+import { toast } from "sonner";
 
 // Define user role options
 const USER_ROLES = [
@@ -66,11 +67,11 @@ export default function ProfilePage() {
   const updateUser = api.user.update.useMutation({
     onSuccess: async () => {
       await utils.user.invalidate();
-      alert("Profile updated successfully!");
+      toast.success("Profile updated successfully!");
     },
     onError: (error: unknown) => {
       const errorMessage = error instanceof Error ? error.message : String(error);
-      alert(`Update failed: ${errorMessage}`);
+      toast.error(`Update failed: ${errorMessage}`);
     },
   });
 
@@ -78,7 +79,7 @@ export default function ProfilePage() {
   useEffect(() => {
     const user = getUser();
     if (!user) {
-      alert("Please log in first.");
+      toast.error("Please log in first.");
       router.push("/");
       return;
     }
@@ -105,18 +106,18 @@ export default function ProfilePage() {
     e.preventDefault();
 
     if (!currentUser?.id) {
-      alert("Failed to get user information.");
+      toast.error("Failed to get user information.");
       return;
     }
 
     // 基本验证
     if (!formData.name.trim()) {
-      alert("Please enter a username.");
+      toast.error("Please enter a username.");
       return;
     }
 
     if (!formData.email.trim()) {
-      alert("Please enter an email address.");
+      toast.error("Please enter an email address.");
       return;
     }
 

@@ -19,7 +19,7 @@ interface GrantspoolItemProps {
       amount: string;
       currency: string;
     }>; // 不再直接用
-    treasuryBalances?: Record<string, string>;
+    treasuryBalances?: Record<string, {available: string, used: string, locked: string}>;
     categories: string[];
     proposals: Array<{
       id: number;
@@ -120,8 +120,9 @@ const GrantspoolItem = ({ grantsPool, className = "", children, type = "list" }:
                     <img src={`/tokens/${currency.toLowerCase()}.svg`} alt={currency} className="w-6 h-6" />
                     <b>{currency}</b>
                   </div>
-                  <div className="flex flex-col"><b>{amount}</b><small>Grants pool</small></div>
-                  {/* 这里可以扩展更多资金信息 */}
+                  <div className="flex flex-col"><b>{amount.available}</b><small>Fundable</small></div>
+                  <div className="flex flex-col"><b>{amount.used}</b><small>Funded</small></div>
+                  <div className="flex flex-col"><b>{amount.locked}</b><small>Locked</small></div>
                 </div>
               ))}
             </div>
@@ -134,6 +135,7 @@ const GrantspoolItem = ({ grantsPool, className = "", children, type = "list" }:
             {grantsPool.proposals.map((proposal) => (
               <GrantspoolRFPItem
                 key={proposal.id}
+                gpId={grantsPool.id}
                 proposal={proposal}
                 onClick={() => handleProposalClick(proposal.id)}
               />

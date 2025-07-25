@@ -173,6 +173,7 @@ export const grantsPoolRouter = createTRPCRouter({
       where: { ownerId: ctx.user.id },
       orderBy: { createdAt: "desc" },
       include: {
+        rfps: true,
         _count: {
           select: {
             pods: true,

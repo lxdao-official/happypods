@@ -6,6 +6,7 @@ import EdgeLine from "./edge-line";
 
 interface Milestone {
   id: string;
+  title: string;
   deadline: string; // ISO date string
   amount: string;
   description: string;
@@ -23,6 +24,7 @@ const MilestoneSection = ({ milestones, onMilestonesChange }: MilestoneSectionPr
     if (milestones.length >= 3) return;
     const newMilestone: Milestone = {
       id: Date.now().toString(),
+      title: "",
       deadline: "",
       amount: "",
       description: ""
@@ -66,7 +68,7 @@ const MilestoneSection = ({ milestones, onMilestonesChange }: MilestoneSectionPr
   };
 
   return (
-    <CornerFrame backgroundColor="var(--color-background)">
+    <CornerFrame backgroundColor="var(--color-background)" color="gray">
       <div className="flex items-center justify-between mb-6">
         <h2 className="flex items-center gap-2 text-xl">
           <span>Milestone Information</span>
@@ -100,6 +102,17 @@ const MilestoneSection = ({ milestones, onMilestonesChange }: MilestoneSectionPr
               )}
             </div>
             <div className="space-y-6">
+              {/* Title */}
+              <Input
+                variant="bordered"
+                type="text"
+                label="Milestone Title"
+                value={milestone.title}
+                onChange={e => updateMilestone(milestone.id, "title", e.target.value)}
+                placeholder="Enter milestone title"
+                description="Brief title for this milestone"
+              />
+              
               {/* Deadline & Amount in one row */}
               <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
                 {/* Deadline */}
