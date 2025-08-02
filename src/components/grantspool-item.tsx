@@ -1,10 +1,11 @@
-import { useState } from "react";
-import { Button } from "@heroui/react";
+'use client'
+import { useState, useEffect } from "react";
 import GrantspoolRFPItem from "./grantspool-rfp-item";
 import CardBox from "./card-box";
 import AppBtn from "./app-btn";
 import NextLink from "next/link";
 import { QRCodeTooltip } from "./qr-code-tooltip";
+import { useAccount } from "wagmi";
 
 interface GrantspoolItemProps {
   grantsPool: {
@@ -27,6 +28,13 @@ interface GrantspoolItemProps {
       description: string;
       avatar?: string | null;
     }>;
+    owner?: {
+      id: number;
+      name: string | null;
+      avatar: string | null;
+      walletAddress: string;
+    };
+    isOwner?: boolean;
   };
   className?: string;
   children?: React.ReactNode;
@@ -34,7 +42,13 @@ interface GrantspoolItemProps {
 }
 
 const GrantspoolItem = ({ grantsPool, className = "", children, type = "list" }: GrantspoolItemProps) => {
-  const [activeCategory, setActiveCategory] = useState(grantsPool.categories[0]);
+  const [isMounted, setIsMounted] = useState(false);
+  const { address: account } = useAccount();
+  
+  // 避免SSR问题，只在客户端渲染后执行
+  useEffect(() => {
+    setIsMounted(true);
+  }, []);
 
   const handleProposalClick = (proposalId: number) => {
     console.log(`Clicked on proposal: ${proposalId}`);
@@ -78,9 +92,11 @@ const GrantspoolItem = ({ grantsPool, className = "", children, type = "list" }:
             <NextLink href={`/grants-pool/${grantsPool.id}`}>
               <AppBtn>View More</AppBtn>
             </NextLink>:
-            <NextLink href={`/grants-pool/${grantsPool.id}/edit`}>
-              <AppBtn btnProps={{color:"warning"}}>Eidt</AppBtn>
-            </NextLink>
+            grantsPool.isOwner && (
+              <NextLink href={`/grants-pool/create?id=${grantsPool.id}`}>
+                <AppBtn btnProps={{color:"warning"}}>Eidt</AppBtn>
+              </NextLink>
+            )
           }
         </div>
       </div>

@@ -23,7 +23,7 @@ export default function MyGrantsPoolPage() {
       // 解析 tags 为 categories
       const categories = pool.tags ? pool.tags.split(',').map(tag => tag.trim()) : [];
       // treasuryBalances 直接传递
-      const treasuryBalances = pool.treasuryBalances as Record<string, string> | undefined;
+      const treasuryBalances = pool.treasuryBalances as Record<string, {available: string, used: string, locked: string}> | undefined;
       // proposals
       const proposals = pool.rfps.map(rfp => ({
         id: rfp.id,

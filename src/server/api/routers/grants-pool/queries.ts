@@ -63,6 +63,7 @@ export const grantsPoolQueries = {
         where: { id: input.id },
         include: {
           owner: true,
+          rfps: true,
           pods: {
             include: {
               applicant: {

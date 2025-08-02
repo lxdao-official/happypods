@@ -1,4 +1,4 @@
-import { Chip } from "@heroui/react";
+import { Button, Chip } from "@heroui/react";
 import EdgeLine from "./edge-line";
 
 export interface PodHistoryItem {
@@ -31,6 +31,15 @@ const formatDate = (dateString: string) => {
 };
 
 export default function PodHistorySection({ history }: PodHistorySectionProps) {
+  if(history.length <= 1) return(
+    <div className="mt-8 mb-4">
+      <EdgeLine color="var(--color-background)" className="mb-4"/>
+      <Button variant="bordered" className="flex items-center gap-2 text-black cursor-pointer hover:opacity-70">
+        <i className="ri-edit-line"></i>
+        <span>Edit Pod</span>
+      </Button>
+    </div>
+  );
   return (
     <div className="mt-8">
 

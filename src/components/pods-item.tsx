@@ -72,7 +72,7 @@ const PodsItem = ({ pod, onClick, className = "" }: PodsItemProps) => {
             <small>Progress: {pod.progress}%</small>
           </div>
           
-          <ProgressMilestoneBar progress={pod.progress} milestones={pod.milestones} totalFunding={pod.totalFunding} unlocked={pod.unlocked ?? 0} />
+          <ProgressMilestoneBar milestones={pod.milestones}/>
 
         </div>
 

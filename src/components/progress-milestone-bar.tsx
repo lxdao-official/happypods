@@ -1,7 +1,6 @@
 import { Tooltip } from "@heroui/react";
 
 interface ProgressMilestoneBarProps {
-  progress: number;
   milestones: {
     name: string;
     progress: number;
@@ -9,19 +8,34 @@ interface ProgressMilestoneBarProps {
     createdAt: string;
     deadline: string;
     status: string;
-  }[];
-  totalFunding: number;
-  unlocked: number;
+  }[]
 }
 
-export default function ProgressMilestoneBar({ progress, milestones = [], totalFunding, unlocked }: ProgressMilestoneBarProps) {
-  // 时间轴
-  const start = milestones.length > 0 && milestones[0]?.createdAt ? new Date(milestones[0].createdAt).getTime() : 0;
-  const lastMilestone = milestones.length > 0 ? milestones[milestones.length-1] : undefined;
-  const end = lastMilestone && lastMilestone.deadline ? new Date(lastMilestone.deadline).getTime() : 0;
-  const now = Date.now();
-  // 当前时间百分比
-  const percent = end > start ? Math.min(100, Math.max(0, ((now - start) / (end - start)) * 100)) : 0;
+export default function ProgressMilestoneBar({ milestones = [] }: ProgressMilestoneBarProps) {
+  // 计算时间进度
+  const calculateTimeProgress = () => {
+    if (milestones.length === 0) return 0;
+    
+    const firstMilestone = milestones[0];
+    const lastMilestone = milestones[milestones.length - 1];
+    
+    if (!firstMilestone?.createdAt || !lastMilestone?.deadline) return 0;
+    
+    const startTime = new Date(firstMilestone.createdAt).getTime();
+    const endTime = new Date(lastMilestone.deadline).getTime();
+    const currentTime = Date.now();
+    
+    // 计算时间进度百分比
+    const totalDuration = endTime - startTime;
+    if (totalDuration <= 0) return 0;
+    
+    const elapsed = currentTime - startTime;
+    const progress = Math.min(100, Math.max(0, (elapsed / totalDuration) * 100));
+    
+    return progress;
+  };
+
+  const progress = calculateTimeProgress();
 
   return (
     <div>
@@ -45,7 +59,7 @@ export default function ProgressMilestoneBar({ progress, milestones = [], totalF
         {milestones.map((milestone, index) => (
           <div key={index} className="flex flex-col items-center min-w-[60px]">
             <Tooltip 
-            color="success"
+            color="foreground"
             content={
               <div className="flex flex-col gap-1">
                 <div>{milestone.name}</div>
@@ -54,8 +68,11 @@ export default function ProgressMilestoneBar({ progress, milestones = [], totalF
                 <div>{milestone.deadline ? new Date(milestone.deadline).toLocaleDateString() : ''}</div>
               </div>
             } placement="top" showArrow={true}>
-              <span className="font-bold text-center progress-milestone">
-                {`M${index+1}`}-{milestone.amount}U
+              <span className="font-bold text-center cursor-pointer progress-milestone">
+                <small>{`M${index+1}`}-{milestone.amount}U</small>
+                {
+                  milestone.status === 'Completed' && <i className="text-green-500 ri-check-line"></i>
+                }
               </span>
             </Tooltip>
           </div>

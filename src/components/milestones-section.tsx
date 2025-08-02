@@ -53,14 +53,16 @@ const getMilestoneStatusColor = (status: string) => {
 };
 
 export default function MilestonesSection({ milestones }: MilestonesSectionProps) {
-  // mock 进度条和里程碑数据
-  const progressMock = 66;
-  const milestonesMock = [
-    { name: "Milestone I", progress: 20 },
-    { name: "Milestone II", progress: 20 },
-    { name: "Milestone III", progress: 26 },
-    { name: "Milestone IV", progress: 0 },
-  ];
+
+  // 转换里程碑数据格式以适配 ProgressMilestoneBar 组件
+  const progressMilestones = milestones.map((milestone, index) => ({
+    name: milestone.title,
+    progress: milestone.status === 'Progress' ? 100 : milestone.status === 'Submitted' ? 75 : 0,
+    amount: milestone.amount,
+    createdAt: milestone.deadline, // 使用 deadline 作为 createdAt，因为原始数据中没有 createdAt
+    deadline: milestone.deadline,
+    status: milestone.status
+  }));
 
   const handleMilestoneSubmit = (milestoneId: string | number, data: { description: string; links: Record<string, string> }) => {
     // 这里可以处理提交逻辑，比如更新状态、调用API等
@@ -88,7 +90,7 @@ export default function MilestonesSection({ milestones }: MilestonesSectionProps
       <div className="flex items-center justify-between mb-6">
         <h2 className="text-xl font-bold">Milestones</h2>
         <div className="flex-1 max-w-[500px]">
-          <ProgressMilestoneBar progress={progressMock} milestones={milestonesMock} />
+          <ProgressMilestoneBar milestones={progressMilestones} />
         </div>
       </div>
 
@@ -134,8 +136,8 @@ export default function MilestonesSection({ milestones }: MilestonesSectionProps
                 </div>
               </div>
               <div className="mb-2 text-sm text-gray-600">
-                <span className="font-medium">Deadline:</span> {formatDate(milestone.deadline)} • 
-                <span className="ml-2 font-medium">Submitted on:</span> {formatDate(milestone.deadline)}
+                <span className="ml-2 font-medium">Submitted on:</span> {formatDate(milestone.deadline)} • 
+                <span className="font-medium">Deadline:</span> {formatDate(milestone.deadline)}
               </div>
               <p className="text-sm text-gray-700">
                 {milestone.description}

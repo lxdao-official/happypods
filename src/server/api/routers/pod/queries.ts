@@ -92,7 +92,9 @@ export const podQueries = {
     .input(getListSchema)
     .query(async ({ ctx, input }) => {
       const { limit, cursor, search, status, grantsPoolId, myOnly } = input;
-      const where: any = {};
+      const where: any = {
+        inactiveTime: null, // 只获取当前活跃的 Pod 版本
+      };
       if (search) {
         where.OR = [
           { title: { contains: search, mode: "insensitive" } },
@@ -150,7 +152,10 @@ export const podQueries = {
   getMyPods: protectedProcedure
     .query(async ({ ctx }) => {
       const pods = await ctx.db.pod.findMany({
-        where: { applicantId: ctx.user.id },
+        where: { 
+          applicantId: ctx.user.id,
+          inactiveTime: null, // 只获取当前活跃的 Pod 版本
+        },
         orderBy: { createdAt: "desc" },
         include: {
           grantsPool: {
