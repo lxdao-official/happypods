@@ -18,7 +18,7 @@ interface DataDisplayGridProps {
 }
 
 const STATUS_OPTIONS = [
-  { key: '', label: 'All Status' },
+  { key: 'ALL', label: 'All Status' },
   { key: 'REVIEWING', label: 'Reviewing' },
   { key: 'APPROVED', label: 'Approved' },
   { key: 'REJECTED', label: 'Rejected' },
@@ -34,7 +34,6 @@ export const DataDisplayGrid = ({
   gridClassName = 'grid grid-cols-1 gap-6 mb-8 md:grid-cols-2 lg:grid-cols-3',
   itemsPerPage = 12,
   showPagination = true,
-  sortClassName = '',
   title = '',
   searchPlaceholder = 'Search for a pod',
 }: Readonly<DataDisplayGridProps>) => {
@@ -86,7 +85,6 @@ export const DataDisplayGrid = ({
       type="text"
       placeholder={searchPlaceholder}
       value={search}
-      variant="bordered"
       onChange={(e: React.ChangeEvent<HTMLInputElement>) => setSearch(e.target.value)}
       startContent={<i className="ri-search-line"></i>}
       isClearable
@@ -143,14 +141,13 @@ export const DataDisplayGrid = ({
         </div>
         <div className="flex items-center gap-4">
           <Select
-            variant="bordered"
-            label="Status"
-            selectedKeys={status ? new Set([status]) : new Set()}
+            defaultSelectedKeys={['ALL']}
+            selectedKeys={status ? new Set([status]) : new Set(['ALL'])}
             onSelectionChange={(keys) => {
               const s = Array.from(keys)[0] as string;
               setStatus(s);
             }}
-            className="min-w-[150px]"
+            className="min-w-[150px] border-1 rounded-xl border-secondary overflow-hidden"
           >
             {STATUS_OPTIONS.map(opt => (
               <SelectItem key={opt.key}>{opt.label}</SelectItem>

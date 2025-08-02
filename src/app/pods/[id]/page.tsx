@@ -12,19 +12,19 @@ import AppBtn from "~/components/app-btn";
 import type { PodHistoryItem } from "~/components/pod-history-section";
 import PodHistorySection from "~/components/pod-history-section";
 
+type Status = 'IN_PROGRESS' | 'COMPLETED' | 'REJECTED' | 'WAITLISTED' | 'SUBMITTED' | 'APPROVED' | 'REVIEWING';
+
 export default function PodDetailPage() {
-  // mock 数据
   const pod = {
     id: 1,
     name: "WhatToBuild",
     avatar: "/logo.svg",
-    status: "IN_PROGRESS",
+    status: "IN_PROGRESS" as Status,
     rfpIndex: 2,
     currency: "USDC",
     tags: ["AI", "Web3", "NFT", "DAO"],
     createdAt: new Date().toISOString(),
-    shortDescription: "Analyze, research, and organize application ideas to inspire everyone's creativity and avoid reinventing basic wheels.",
-    detailDescription: "Climate change is a serious problem that is affecting our planet and we are building a platform that connects people with similar interests.\n\nWe are solving this problem by building a platform that connects people with similar interests to solve the problem of climate change.\n\nWe are on a mission to build a better world by solving the problem of climate change.",
+    description: "Analyze, research, and organize application ideas to inspire everyone's creativity and avoid reinventing basic wheels.",
     applicant: {
       name: "Alice Chen",
       avatar: "https://cdn.lxdao.io/bafkreic7yeypjshk3vc6rko3rnuijygyqqlawpmlgmi3ucisyj4pj6pm4q.png"
@@ -43,112 +43,113 @@ export default function PodDetailPage() {
       website: "https://whattobuild.app",
       github: "https://github.com/whattobuild",
       twitter: "https://twitter.com/whattobuild"
-    },
-    milestones: [
-      {
-        id: 1,
-        title: "Milestone I",
-        status: "Progress",
-        deadline: "2024-03-20",
-        amount: 3000,
-        description: "Summary of milestone one.",
-        phase: "Basic Setup"
-      },
-      {
-        id: 2,
-        title: "Milestone II",
-        status: "Upcoming",
-        deadline: "2024-04-15",
-        amount: 5000,
-        description: "Summary of milestone two.",
-        phase: "Core Development"
-      },
-      {
-        id: 3,
-        title: "Milestone III",
-        status: "Waitlisted",
-        deadline: "2024-05-10",
-        amount: 4000,
-        description: "Summary of milestone three.",
-        phase: "Testing & Launch",
-        maxSubmissions: 3,
-        submissions: [
-          {
-            description: "First submission: Initial testing completed. All basic features are working properly.",
-            links: {
-              website: "https://demo.whattobuild.app/v1",
-              github: "https://github.com/whattobuild/milestone-3-v1",
-              twitter: ""
-            },
-            submittedAt: "2024-05-01T10:00:00Z",
-            review: {
-              action: 'reject' as const,
-              comment: '测试覆盖率不足，需要补充更完整的测试用例。',
-              reviewedAt: '2024-05-02T15:00:00Z',
-              reviewer: 'GrantPool Admin'
-            }
-          }
-        ]
-      },
-      {
-        id: 4,
-        title: "Milestone IV",
-        status: "Submitted",
-        deadline: "2024-06-01",
-        amount: 3000,
-        description: "Summary of milestone four.",
-        phase: "Maintenance",
-        maxSubmissions: 3,
-        submissions: [
-          {
-            description: "I have successfully completed the maintenance phase of the project. This includes:\n\n1. Bug fixes and performance optimizations\n2. Documentation updates\n3. User feedback implementation\n4. Testing and quality assurance\n\nThe project is now stable and ready for production use.",
-            links: {
-              website: "https://demo.whattobuild.app",
-              github: "https://github.com/whattobuild/milestone-4",
-              twitter: "https://twitter.com/whattobuild/status/123"
-            },
-            submittedAt: "2024-05-28T10:30:00Z",
-            review: {
-              action: 'approve' as const,
-              comment: '交付内容完整，文档和测试齐全，项目已达标，给予通过。',
-              reviewedAt: '2024-05-29T15:00:00Z',
-              reviewer: 'GrantPool Admin'
-            }
-          },
-          {
-            description: "Second attempt with improved documentation and additional test cases.",
-            links: {
-              website: "https://demo.whattobuild.app/v2",
-              github: "https://github.com/whattobuild/milestone-4-v2",
-              twitter: ""
-            },
-            submittedAt: "2024-05-25T14:20:00Z",
-            review: {
-              action: 'reject' as const,
-              comment: '文档仍需完善，测试用例覆盖率不够。',
-              reviewedAt: '2024-05-26T10:00:00Z',
-              reviewer: 'GrantPool Admin'
-            }
-          },
-          {
-            description: "Initial submission for milestone IV. Basic maintenance tasks completed.",
-            links: {
-              website: "https://demo.whattobuild.app/v1",
-              github: "https://github.com/whattobuild/milestone-4-v1",
-              twitter: ""
-            },
-            submittedAt: "2024-05-20T16:45:00Z",
-            review: {
-              action: 'reject' as const,
-              comment: '提交内容不够详细，需要更多的说明和证明材料。',
-              reviewedAt: '2024-05-21T09:30:00Z',
-              reviewer: 'GrantPool Admin'
-            }
-          }
-        ]
-      }
-    ]
+    }
   };
+
+  const milestones = [
+    {
+      id: 1,
+      title: "Milestone I",
+      status: "Progress",
+      deadline: "2024-03-20",
+      amount: 3000,
+      description: "Summary of milestone one.",
+      phase: "Basic Setup"
+    },
+    {
+      id: 2,
+      title: "Milestone II",
+      status: "Upcoming",
+      deadline: "2024-04-15",
+      amount: 5000,
+      description: "Summary of milestone two.",
+      phase: "Core Development"
+    },
+    {
+      id: 3,
+      title: "Milestone III",
+      status: "Waitlisted",
+      deadline: "2024-05-10",
+      amount: 4000,
+      description: "Summary of milestone three.",
+      phase: "Testing & Launch",
+      maxSubmissions: 3,
+      submissions: [
+        {
+          description: "First submission: Initial testing completed. All basic features are working properly.",
+          links: {
+            website: "https://demo.whattobuild.app/v1",
+            github: "https://github.com/whattobuild/milestone-3-v1",
+            twitter: ""
+          },
+          submittedAt: "2024-05-01T10:00:00Z",
+          review: {
+            action: 'reject' as const,
+            comment: '测试覆盖率不足，需要补充更完整的测试用例。',
+            reviewedAt: '2024-05-02T15:00:00Z',
+            reviewer: 'GrantPool Admin'
+          }
+        }
+      ]
+    },
+    {
+      id: 4,
+      title: "Milestone IV",
+      status: "Submitted",
+      deadline: "2024-06-01",
+      amount: 3000,
+      description: "Summary of milestone four.",
+      phase: "Maintenance",
+      maxSubmissions: 3,
+      submissions: [
+        {
+          description: "I have successfully completed the maintenance phase of the project. This includes:\n\n1. Bug fixes and performance optimizations\n2. Documentation updates\n3. User feedback implementation\n4. Testing and quality assurance\n\nThe project is now stable and ready for production use.",
+          links: {
+            website: "https://demo.whattobuild.app",
+            github: "https://github.com/whattobuild/milestone-4",
+            twitter: "https://twitter.com/whattobuild/status/123"
+          },
+          submittedAt: "2024-05-28T10:30:00Z",
+          review: {
+            action: 'approve' as const,
+            comment: '交付内容完整，文档和测试齐全，项目已达标，给予通过。',
+            reviewedAt: '2024-05-29T15:00:00Z',
+            reviewer: 'GrantPool Admin'
+          }
+        },
+        {
+          description: "Second attempt with improved documentation and additional test cases.",
+          links: {
+            website: "https://demo.whattobuild.app/v2",
+            github: "https://github.com/whattobuild/milestone-4-v2",
+            twitter: ""
+          },
+          submittedAt: "2024-05-25T14:20:00Z",
+          review: {
+            action: 'reject' as const,
+            comment: '文档仍需完善，测试用例覆盖率不够。',
+            reviewedAt: '2024-05-26T10:00:00Z',
+            reviewer: 'GrantPool Admin'
+          }
+        },
+        {
+          description: "Initial submission for milestone IV. Basic maintenance tasks completed.",
+          links: {
+            website: "https://demo.whattobuild.app/v1",
+            github: "https://github.com/whattobuild/milestone-4-v1",
+            twitter: ""
+          },
+          submittedAt: "2024-05-20T16:45:00Z",
+          review: {
+            action: 'reject' as const,
+            comment: '提交内容不够详细，需要更多的说明和证明材料。',
+            reviewedAt: '2024-05-21T09:30:00Z',
+            reviewer: 'GrantPool Admin'
+          }
+        }
+      ]
+    }
+  ]
 
   const podHistory: PodHistoryItem[] = [
     {
@@ -176,6 +177,37 @@ export default function PodDetailPage() {
       description: "Current version, all requirements met."
     }
   ];
+
+  const StatusMap: Record<Status, { color: string; label: string }> = {
+    'IN_PROGRESS': {
+      color:"success",
+      label:"In Progress"
+    },
+    'COMPLETED': {
+      color:"success",
+      label:"Completed"
+    },
+    'REJECTED': {
+      color:"danger",
+      label:"Rejected"
+    },
+    'WAITLISTED': {
+      color:"warning",
+      label:"Waitlisted"
+    },
+    'SUBMITTED': {
+      color:"primary",
+      label:"Submitted"
+    },
+    'APPROVED': {
+      color:"success",
+      label:"Approved"
+    },
+    'REVIEWING': {
+      color:"primary",
+      label:"Reviewing"
+    }
+  }
 
   return (
     <div className="container px-4 py-8 mx-auto">
@@ -223,7 +255,7 @@ export default function PodDetailPage() {
             <div className="space-y-6">
               <div>
                 <p className="leading-relaxed text-secondary">
-                  {pod.shortDescription}
+                  {pod.description}
                 </p>
               </div>
             </div>
@@ -232,7 +264,7 @@ export default function PodDetailPage() {
           <EdgeLine color="var(--color-background)"/>
 
           <div>
-            <MilestonesSection milestones={pod.milestones} />
+            <MilestonesSection milestones={milestones} />
           </div>
         </div>
 
@@ -243,8 +275,8 @@ export default function PodDetailPage() {
                 <span className="text-xl font-bold">Treasury</span>
                 <div className="flex items-center gap-1 text-sm">
                   (
-                    <img src="/tokens/usdt.svg" alt="" className="w-4 h-4" />
-                    <small>USDT</small>
+                    <img src={`/tokens/${pod.currency}.svg`} alt="" className="w-4 h-4" />
+                    <small>{pod.currency}</small>
                   )
                 </div>
               </div>
@@ -274,7 +306,7 @@ export default function PodDetailPage() {
               <div className="space-y-4">
                 <div>
                   <div className="mb-1 text-sm text-secondary">Status</div>
-                  <Chip color="success" variant="bordered">In Progress</Chip>
+                  <Chip color={StatusMap[pod.status].color as any} variant="bordered">{StatusMap[pod.status].label}</Chip>
                 </div>
                 <div>
                   <div className="mb-1 text-sm text-secondary">Applicant</div>

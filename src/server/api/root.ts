@@ -1,8 +1,8 @@
 import { createCallerFactory, createTRPCRouter } from "~/server/api/trpc";
-import { userRouter } from "./routers/user";
-import { authRouter } from "./routers/auth";
-import { podRouter } from "./routers/pod";
-import { grantsPoolRouter } from "./routers/grants-pool";
+import { userRouter } from "./routers/user/index";
+import { authRouter } from "./routers/auth/index";
+import { podRouter } from "./routers/pod/index";
+import { grantsPoolRouter } from "./routers/grants-pool/index";
 
 /**
  * This is the primary router for your server.

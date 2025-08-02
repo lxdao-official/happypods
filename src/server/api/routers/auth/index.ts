@@ -1,39 +1,8 @@
 import { z } from "zod";
 import { verifyTypedData } from "viem";
-import jwt from 'jsonwebtoken';
 import { createTRPCRouter, publicProcedure } from "~/server/api/trpc";
-
-const JWT_SECRET = process.env.JWT_SECRET ?? 'your-secret-key-change-in-production';
-
-interface JWTPayload {
-  userId: number;
-  address: string;
-  iat?: number;
-  exp?: number;
-}
-
-function generateToken(payload: Omit<JWTPayload, 'iat' | 'exp'>): string {
-  return jwt.sign(payload, JWT_SECRET, {
-    expiresIn: '7d',
-  });
-}
-
-function verifyToken(token: string): JWTPayload | null {
-  try {
-    return jwt.verify(token, JWT_SECRET) as JWTPayload;
-  } catch (error) {
-    console.error('JWT verification failed:', error);
-    return null;
-  }
-}
-
-// 定义签名验证的Schema
-const verifySignatureSchema = z.object({
-  address: z.string().regex(/^0x[a-fA-F0-9]{40}$/, "无效的以太坊地址"),
-  signature: z.string(),
-  message: z.string(),
-  nonce: z.string(),
-});
+import { generateToken, verifyToken } from "./jwt";
+import { verifySignatureSchema, validateTokenSchema } from "./schemas";
 
 // 定义TypedData结构
 const domain = {
@@ -146,7 +115,7 @@ export const authRouter = createTRPCRouter({
 
   // 验证JWT token（可选，用于检查登录状态）
   validateToken: publicProcedure
-    .input(z.object({ token: z.string() }))
+    .input(validateTokenSchema)
     .query(async ({ ctx, input }) => {
       const payload = verifyToken(input.token);
       if (!payload) {
