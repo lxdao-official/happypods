@@ -6,6 +6,7 @@ import PodsItem from './pods-item';
 import { api } from '~/trpc/react';
 import LoadingSkeleton from './LoadingSkeleton';
 import Empty from './Empty';
+import { PodStatus } from '@prisma/client';
 
 interface DataDisplayGridProps {
   type?: 'all' | 'gp' | 'my';
@@ -20,14 +21,14 @@ interface DataDisplayGridProps {
   theme?: 'light' | 'dark';
 }
 
-const STATUS_OPTIONS = [
+const STATUS_OPTIONS: ({key: PodStatus, label: string} | {key:'ALL', label: string})[] = [
   { key: 'ALL', label: 'All Status' },
-  { key: 'REVIEWING', label: 'Reviewing' },
-  { key: 'APPROVED', label: 'Approved' },
-  { key: 'REJECTED', label: 'Rejected' },
-  { key: 'IN_PROGRESS', label: 'In Progress' },
-  { key: 'COMPLETED', label: 'Completed' },
-  { key: 'TERMINATED', label: 'Terminated' },
+  { key: PodStatus.REVIEWING, label: 'Reviewing' },
+  { key: PodStatus.APPROVED, label: 'Approved' },
+  { key: PodStatus.REJECTED, label: 'Rejected' },
+  { key: PodStatus.IN_PROGRESS, label: 'In Progress' },
+  { key: PodStatus.COMPLETED, label: 'Completed' },
+  { key: PodStatus.TERMINATED, label: 'Terminated' },
 ];
 
 export const DataDisplayGrid = ({
@@ -129,6 +130,7 @@ export const DataDisplayGrid = ({
       progress: Math.round(percent),
       totalFunding,
       currency: pod.currency,
+      status: pod.status,
       milestones,
       lastUpdate: pod.updatedAt ? new Date(pod.updatedAt).toLocaleDateString() : '',
       unlocked,
@@ -138,8 +140,7 @@ export const DataDisplayGrid = ({
   return (
     <div className={className}>
       {/* 搜索和筛选栏 */}
-      {
-        (!isLoading && podsForDisplay.length > 0) && 
+      { 
         <div className="flex flex-col gap-4 my-8 md:flex-row md:items-center md:justify-between">
           <div className="flex items-center gap-4">
             {title && <h2 className="text-2xl font-bold">{title}</h2>}

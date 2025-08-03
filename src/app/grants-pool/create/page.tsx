@@ -14,6 +14,7 @@ import AppBtn from "~/components/app-btn";
 import RFPSection from "~/components/rfp-section";
 import RelatedLinksSection from "~/components/related-links-section";
 import CreateSafeModal from "~/components/create-safe-modal";
+import TagsSelect from "~/components/tags-select";
 import { api } from "~/trpc/react";
 import { toast } from "sonner";
 import AvatarInput from "~/components/avatar-input";
@@ -40,7 +41,6 @@ export default function CreateGrantsPoolPage() {
     avatar: "",
     name: "",
     description: "",
-    tags: "",
     treasuryWallet: "",
     chainType: "OPTIMISM" as "ETHEREUM" | "OPTIMISM",
     // Moderator info
@@ -48,6 +48,9 @@ export default function CreateGrantsPoolPage() {
     modEmail: "",
     modTelegram: "",
   });
+
+  // Tags 数据
+  const [selectedTags, setSelectedTags] = useState<string[]>([]);
 
   // RFP 数据 - 支持多个RFP
   const [rfps, setRfps] = useState<RFP[]>([
@@ -134,7 +137,7 @@ export default function CreateGrantsPoolPage() {
         avatar: formData.avatar || undefined,
         name: formData.name,
         description: formData.description,
-        tags: formData.tags || undefined,
+        tags: selectedTags.length > 0 ? selectedTags.join(',') : undefined,
         treasuryWallet: safeAddress, // 使用Safe地址
         chainType: formData.chainType,
         links: Object.keys(links).length > 0 ? links : undefined,
@@ -220,14 +223,12 @@ export default function CreateGrantsPoolPage() {
               </Select>
 
               {/* Tags */}
-              <Input
-                variant="bordered"
-                type="text"
+              <TagsSelect
+                selectedTags={selectedTags}
+                onTagsChange={setSelectedTags}
                 label="Tags"
-                value={formData.tags}
-                onChange={(e) => handleInputChange("tags", e.target.value)}
                 placeholder="DeFi,Web3,DAO"
-                description="Separate multiple tags with commas"
+                description="Choose relevant tags for your Grants Pool"
               />
 
               {/* Safe Address Display */}

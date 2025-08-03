@@ -1,5 +1,8 @@
 import NextLink from 'next/link';
 import ProgressMilestoneBar from './progress-milestone-bar';
+import { Chip } from '@heroui/react';
+import type { Status } from './StatusChip';
+import StatusChip from './StatusChip';
 interface PodsItemProps {
   pod: {
     id: number;
@@ -10,13 +13,14 @@ interface PodsItemProps {
     progress: number;
     totalFunding: number;
     currency: string;
+    status: Status;
     milestones: Array<{
       name: string;
       progress: number;
       amount: number;
       createdAt: string;
       deadline: string;
-      status: string;
+      status: Status;
     }>;
     lastUpdate: string;
     unlocked?: number;
@@ -51,12 +55,12 @@ const PodsItem = ({ pod, onClick, className = "" }: PodsItemProps) => {
         {/* 标签 */}
         <div className="flex flex-wrap gap-2 mb-3">
           {pod.tags.map((tag, index) => (
-            <span 
+            <small 
               key={index}
-              className="px-3 py-1 text-xs text-black border border-black rounded-full"
+              className="px-3 py-1 text-[10px] text-black border border-black rounded-full"
             >
               {tag}
-            </span>
+            </small>
           ))}
         </div>
 
@@ -68,7 +72,10 @@ const PodsItem = ({ pod, onClick, className = "" }: PodsItemProps) => {
         {/* 资金进度 */}
         <div className="mb-4">
           <div className="flex justify-between mb-2 text-sm">
-            <b>{pod.unlocked ?? 0} / {pod.totalFunding} {pod.currency} unlocked</b>
+            <div className="flex items-center gap-1">
+              <b>{pod.unlocked ?? 0} / {pod.totalFunding} {pod.currency}</b>
+              <small><i className="ri-lock-line"></i></small>
+            </div>
             <small>Progress: {pod.progress}%</small>
           </div>
           
@@ -77,9 +84,10 @@ const PodsItem = ({ pod, onClick, className = "" }: PodsItemProps) => {
         </div>
 
         {/* 最后更新 */}
-        <i className="block text-xs text-gray-500">
-          Last update: {pod.lastUpdate}
-        </i>
+        <div className="flex items-center justify-between">
+          <i className="block text-xs text-gray-500">Last update: {pod.lastUpdate}</i>
+          <StatusChip status={pod.status} />
+        </div>
       </div>
     </NextLink>
   );

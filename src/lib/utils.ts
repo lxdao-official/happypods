@@ -1,4 +1,6 @@
-/**
+import dayjs from "dayjs";
+
+ /**
  * 字符串省略方法
  * 默认显示前6个字符与后6个字符，中间显示省略号
  * 如果总字符不超过两个之和则完全显示
@@ -28,4 +30,9 @@ export const truncateString = (
   const suffix = str.slice(-suffixLength);
   
   return `${prefix}${separator}${suffix}`;
+};
+
+// dayjs时间格式为指定格式
+export const formatDate = (date: string, format: string = 'YYYY-MM-DD') => {
+  return dayjs(date).format(format);
 };

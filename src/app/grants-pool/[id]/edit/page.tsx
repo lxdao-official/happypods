@@ -13,6 +13,7 @@ import AppBtn from "~/components/app-btn";
 import RFPSection from "~/components/rfp-section";
 import RelatedLinksSection from "~/components/related-links-section";
 import AvatarInput from "~/components/avatar-input";
+import TagsSelect from "~/components/tags-select";
 import { api } from "~/trpc/react";
 import { toast } from "sonner";
 import LoadingSkeleton from "~/components/LoadingSkeleton";
@@ -43,7 +44,6 @@ export default function EditGrantsPoolPage() {
     avatar: "",
     name: "",
     description: "",
-    tags: "",
     treasuryWallet: "",
     chainType: "OPTIMISM" as "ETHEREUM" | "OPTIMISM",
     // Moderator info
@@ -51,6 +51,9 @@ export default function EditGrantsPoolPage() {
     modEmail: "",
     modTelegram: "",
   });
+
+  // Tags 数据
+  const [selectedTags, setSelectedTags] = useState<string[]>([]);
 
   // RFP 数据
   const [rfps, setRfps] = useState<RFP[]>([]);
@@ -80,7 +83,6 @@ export default function EditGrantsPoolPage() {
         avatar: grantsPoolData.avatar || "",
         name: grantsPoolData.name || "",
         description: grantsPoolData.description || "",
-        tags: grantsPoolData.tags || "",
         treasuryWallet: grantsPoolData.treasuryWallet || "",
         chainType: grantsPoolData.chainType || "OPTIMISM",
         // 从 modInfo 中提取管理员信息
@@ -88,6 +90,12 @@ export default function EditGrantsPoolPage() {
         modEmail: (grantsPoolData.modInfo as any)?.email || "",
         modTelegram: (grantsPoolData.modInfo as any)?.telegram || "",
       });
+
+      // 设置标签数据
+      if (grantsPoolData.tags) {
+        const tagsArray = grantsPoolData.tags.split(',').map(tag => tag.trim()).filter(tag => tag);
+        setSelectedTags(tagsArray);
+      }
 
       // 设置 RFP 数据
       if (grantsPoolData.rfps) {
@@ -181,7 +189,7 @@ export default function EditGrantsPoolPage() {
         avatar: formData.avatar || undefined,
         name: formData.name,
         description: formData.description,
-        tags: formData.tags || undefined,
+        tags: selectedTags.length > 0 ? selectedTags.join(',') : undefined,
         treasuryWallet: formData.treasuryWallet,
         chainType: formData.chainType,
         links: Object.keys(links).length > 0 ? links : undefined,
@@ -272,14 +280,12 @@ export default function EditGrantsPoolPage() {
               </Select>
 
               {/* Tags */}
-              <Input
-                variant="bordered"
-                type="text"
+              <TagsSelect
+                selectedTags={selectedTags}
+                onTagsChange={setSelectedTags}
                 label="标签"
-                value={formData.tags}
-                onChange={(e) => handleInputChange("tags", e.target.value)}
                 placeholder="DeFi,Web3,DAO"
-                description="用逗号分隔多个标签"
+                description="选择相关的标签来描述您的 Grants Pool"
               />
 
               {/* Treasury Wallet - 只读 */}

@@ -17,13 +17,13 @@ export default function ProfileCompleteModal({
         onClose();
     }
   return (
-    <Modal isOpen={isOpen} onClose={onCloseModal} size="md">
+    <Modal isOpen={isOpen} onClose={onCloseModal} size="md" isDismissable={false}>
       <ModalContent>
         <ModalHeader className="text-xl font-bold">
           提示
         </ModalHeader>
         <ModalBody>
-          <span>请先完善个人信息，让 Grants pool Moderator 更好的了解你!</span>
+          <small>请先完善个人信息，让 Grants pool Moderator 更好的了解你!</small>
         </ModalBody>
         <ModalFooter>
           <Button variant="light" onPress={onCloseModal}>

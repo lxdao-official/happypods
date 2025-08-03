@@ -16,6 +16,7 @@ import CreateSafeModal from "~/components/create-safe-modal";
 import ProfileCompleteModal from "~/components/profile-complete-modal";
 import GrantsPoolInfoSection from "~/components/grants-pool-info-section";
 import AvatarInput from "~/components/avatar-input";
+import TagsSelect from "~/components/tags-select";
 import GpOwnerCheck from "~/components/gp-owner-check";
 import { api } from "~/trpc/react";
 import { toast } from "sonner";
@@ -277,31 +278,13 @@ export default function CreatePodPage() {
               />
 
               {/* Tags选择 */}
-              <div className="space-y-3">
-                <label className="text-sm font-medium">Project Tags</label>
-                <Select
-                  variant="bordered"
-                  placeholder="Select tags for your project"
-                  selectionMode="multiple"
-                  selectedKeys={new Set(selectedTags)}
-                  onSelectionChange={(keys) => {
-                    const newTags = Array.from(keys) as string[];
-                    setSelectedTags(newTags);
-                  }}
-                  description="Choose relevant tags to help others discover your project"
-                >
-                  {[
-                    "DeFi", "NFT", "GameFi", "Infrastructure", "DAO", "Privacy", 
-                    "Scalability", "Interoperability", "AI/ML", "Social Impact",
-                    "Education", "Healthcare", "Finance", "Gaming", "Art", "Music",
-                    "Environment", "Governance", "Security", "Analytics"
-                  ].map((tag) => (
-                    <SelectItem key={tag}>
-                      {tag}
-                    </SelectItem>
-                  ))}
-                </Select>
-              </div>
+              <TagsSelect
+                selectedTags={selectedTags}
+                onTagsChange={setSelectedTags}
+                label="Project Tags"
+                placeholder="Select tags for your project"
+                description="Choose relevant tags to help others discover your project"
+              />
             </div>
           </CornerFrame>
 

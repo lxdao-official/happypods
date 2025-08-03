@@ -13,6 +13,9 @@ import type { PodHistoryItem } from "~/components/pod-history-section";
 import PodHistorySection from "~/components/pod-history-section";
 import { api } from "~/trpc/react";
 import { MilestoneStatus } from "@prisma/client";
+import StatusChip from "~/components/StatusChip";
+import LoadingSkeleton from "~/components/LoadingSkeleton";
+import Empty from "~/components/Empty";
 
 type Status = 'IN_PROGRESS' | 'COMPLETED' | 'REJECTED' | 'WAITLISTED' | 'SUBMITTED' | 'APPROVED' | 'REVIEWING';
 
@@ -39,29 +42,15 @@ export default function PodDetailPage() {
   );
 
   if (isPodLoading || isMilestonesLoading || isHistoryLoading) {
-    return (
-      <div className="container px-4 py-8 mx-auto">
-        <div className="flex items-center justify-center min-h-[400px]">
-          <div className="text-center">
-            <div className="w-12 h-12 mx-auto mb-4 border-b-2 rounded-full animate-spin border-primary"></div>
-            <p>加载中...</p>
-          </div>
-        </div>
-      </div>
-    );
+    return <div className="container px-4 py-8 mx-auto">
+      <LoadingSkeleton />
+    </div>
   }
 
   if (!podDetail) {
     return (
       <div className="container px-4 py-8 mx-auto">
-        <div className="text-center">
-          <h1 className="mb-4 text-2xl font-bold text-red-500">Pod 不存在</h1>
-          <NextLink href="/pods">
-            <AppBtn btnProps={{ color: "primary" }}>
-              返回 Pods 列表
-            </AppBtn>
-          </NextLink>
-        </div>
+        <Empty/>
       </div>
     );
   }
@@ -74,7 +63,7 @@ export default function PodDetailPage() {
     walletAddress: podDetail.walletAddress,
     id: podDetail.id,
     name: podDetail.title,
-    avatar: podDetail.avatar || "/logo.svg",
+    avatar: podDetail.avatar || "",
     status: podDetail.status as Status,
     rfpIndex: podDetail.rfpIndex,
     currency: podDetail.currency,
@@ -82,13 +71,14 @@ export default function PodDetailPage() {
     createdAt: podDetail.createdAt.toISOString(),
     description: podDetail.description,
     applicant: {
-      name: podDetail.applicant.name || "未知用户",
-      avatar: podDetail.applicant.avatar || "https://cdn.lxdao.io/bafkreic7yeypjshk3vc6rko3rnuijygyqqlawpmlgmi3ucisyj4pj6pm4q.png"
+      id: podDetail.applicant.id,
+      name: podDetail.applicant.name,
+      avatar: podDetail.applicant.avatar
     },
     grantsPool: {
       id: podDetail.grantsPool.id,
       name: podDetail.grantsPool.name,
-      avatar: podDetail.grantsPool.avatar || "https://cdn.lxdao.io/bafkreic7yeypjshk3vc6rko3rnuijygyqqlawpmlgmi3ucisyj4pj6pm4q.png"
+      avatar: podDetail.grantsPool.avatar || ''
     },
     treasury: {
       totalFunding,
@@ -117,37 +107,6 @@ export default function PodDetailPage() {
     status: item.status,
     description: item.description
   })) || [];
-
-  const StatusMap: Record<Status, { color: string; label: string }> = {
-    'IN_PROGRESS': {
-      color:"success",
-      label:"In Progress"
-    },
-    'COMPLETED': {
-      color:"success",
-      label:"Completed"
-    },
-    'REJECTED': {
-      color:"danger",
-      label:"Rejected"
-    },
-    'WAITLISTED': {
-      color:"warning",
-      label:"Waitlisted"
-    },
-    'SUBMITTED': {
-      color:"primary",
-      label:"Submitted"
-    },
-    'APPROVED': {
-      color:"success",
-      label:"Approved"
-    },
-    'REVIEWING': {
-      color:"primary",
-      label:"Reviewing"
-    }
-  }
 
   return (
     <div className="container px-4 py-8 mx-auto">
@@ -252,20 +211,22 @@ export default function PodDetailPage() {
               <div className="space-y-4">
                 <div className="flex items-center justify-between space-x-2">
                   <div className="mb-1 text-sm text-secondary">Status</div>
-                  <Chip color={StatusMap[pod.status].color as any} variant="bordered">{StatusMap[pod.status].label}</Chip>
+                  <StatusChip status={pod.status as any} />
                 </div>
                 <div className="flex items-center justify-between space-x-2">
                   <div className="mb-1 text-sm text-secondary">Applicant</div>
                   <div className="flex items-center gap-2">
                     <div className="flex items-center gap-2 text-sm">
-                      <i className="ri-user-2-line"></i>
+                      {
+                        pod.applicant.avatar ? (
+                          <img src={pod.applicant.avatar} alt="" className="w-6 h-6 bg-white rounded-full" />
+                        ) : (
+                          <i className="ri-user-2-line"></i>
+                        )
+                      }
                       <span>{pod.applicant.name}</span>
                     </div>
-                    <span>|</span>
-                    <div className="flex items-center gap-2 text-sm">
-                      <i className="ri-wallet-line"></i>
-                      <span>{truncateString(podDetail.applicant.walletAddress || '0x0000000000000000000000000000000000000000')}</span>
-                    </div>
+                    <i className="ri-information-line"></i>
                   </div>
                 </div>
                 <div className="flex items-center justify-between space-x-2">

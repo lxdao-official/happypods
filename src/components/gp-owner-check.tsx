@@ -61,7 +61,7 @@ export default function GpOwnerCheck({ gpId }: GpOwnerCheckProps) {
   }
 
   return (
-    <Modal isOpen={showModal} onClose={handleCloseModal} size="md">
+    <Modal isOpen={showModal} onClose={handleCloseModal} size="md" isDismissable={false}>
       <ModalContent>
         <ModalHeader className="text-xl font-bold">
           无法申请自己的 Grants Pool

@@ -1,4 +1,6 @@
-import { Tooltip } from "@heroui/react";
+import { Chip, Tooltip } from "@heroui/react";
+import { m } from "framer-motion";
+import { formatDate } from "~/lib/utils";
 
 interface ProgressMilestoneBarProps {
   milestones: {
@@ -61,15 +63,12 @@ export default function ProgressMilestoneBar({ milestones = [] }: ProgressMilest
             <Tooltip 
             color="foreground"
             content={
-              <div className="flex flex-col gap-1">
-                <div>{milestone.name}</div>
-                <div>{milestone.amount} U</div>
-                <div>{milestone.status}</div>
-                <div>{milestone.deadline ? new Date(milestone.deadline).toLocaleDateString() : ''}</div>
+              <div className="flex flex-col gap-1 p-2 text-center">
+                <small>{milestone.name}</small>
               </div>
             } placement="top" showArrow={true}>
-              <span className="font-bold text-center cursor-pointer progress-milestone">
-                <small>{`M${index+1}`}-{milestone.amount}U</small>
+              <span className="font-bold text-center cursor-pointer progress-milestone hover:scale-105">
+                <small>{`${formatDate(milestone.deadline,'MM.DD')}`}-{milestone.amount}U</small>
                 {
                   milestone.status === 'Completed' && <i className="text-green-500 ri-check-line"></i>
                 }
