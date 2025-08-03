@@ -1,8 +1,7 @@
 "use client";
 
-import { useState } from "react";
-import { useRouter } from "next/navigation";
-import Link from "next/link";
+import { useState, useEffect } from "react";
+import { useRouter, useParams } from "next/navigation";
 import { 
   Input, 
   Textarea, 
@@ -13,10 +12,11 @@ import CornerFrame from "~/components/corner-frame";
 import AppBtn from "~/components/app-btn";
 import RFPSection from "~/components/rfp-section";
 import RelatedLinksSection from "~/components/related-links-section";
-import CreateSafeModal from "~/components/create-safe-modal";
+import AvatarInput from "~/components/avatar-input";
 import { api } from "~/trpc/react";
 import { toast } from "sonner";
-import AvatarInput from "~/components/avatar-input";
+import LoadingSkeleton from "~/components/LoadingSkeleton";
+import Empty from "~/components/Empty";
 
 interface RFP {
   id: string;
@@ -31,11 +31,14 @@ interface RelatedLinks {
   telegram: string;
 }
 
-export default function CreateGrantsPoolPage() {
+export default function EditGrantsPoolPage() {
   const router = useRouter();
+  const params = useParams();
+  const gpId = parseInt(params.id as string);
+  
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [showSafeModal, setShowSafeModal] = useState(false);
-  const [safeAddress, setSafeAddress] = useState("");
+  const [isLoading, setIsLoading] = useState(true);
+  
   const [formData, setFormData] = useState({
     avatar: "",
     name: "",
@@ -49,14 +52,8 @@ export default function CreateGrantsPoolPage() {
     modTelegram: "",
   });
 
-  // RFP 数据 - 支持多个RFP
-  const [rfps, setRfps] = useState<RFP[]>([
-    {
-      id: "1",
-      title: "",
-      description: ""
-    }
-  ]);
+  // RFP 数据
+  const [rfps, setRfps] = useState<RFP[]>([]);
 
   // Related Links 数据
   const [relatedLinks, setRelatedLinks] = useState<RelatedLinks>({
@@ -66,26 +63,77 @@ export default function CreateGrantsPoolPage() {
     telegram: "",
   });
 
-  const createGrantsPoolMutation = api.grantsPool.create.useMutation();
+  // 获取 GP 详情
+  const { data: grantsPoolData, isLoading: gpLoading } = api.grantsPool.getById.useQuery(
+    { id: gpId },
+    { enabled: !!gpId }
+  );
+
+  // 更新 GP
+  const updateGrantsPoolMutation = api.grantsPool.update.useMutation();
+
+  // 加载数据到表单
+  useEffect(() => {
+    if (grantsPoolData && !gpLoading) {
+      // 设置基本信息
+      setFormData({
+        avatar: grantsPoolData.avatar || "",
+        name: grantsPoolData.name || "",
+        description: grantsPoolData.description || "",
+        tags: grantsPoolData.tags || "",
+        treasuryWallet: grantsPoolData.treasuryWallet || "",
+        chainType: grantsPoolData.chainType || "OPTIMISM",
+        // 从 modInfo 中提取管理员信息
+        modName: (grantsPoolData.modInfo as any)?.name || "",
+        modEmail: (grantsPoolData.modInfo as any)?.email || "",
+        modTelegram: (grantsPoolData.modInfo as any)?.telegram || "",
+      });
+
+      // 设置 RFP 数据
+      if (grantsPoolData.rfps) {
+        const activeRfps = grantsPoolData.rfps
+          .filter(rfp => !rfp.inactiveTime) // 只显示活跃的 RFP
+          .map(rfp => ({
+            id: rfp.id.toString(),
+            title: rfp.title,
+            description: rfp.description,
+          }));
+        setRfps(activeRfps.length > 0 ? activeRfps : [{ id: "new-1", title: "", description: "" }]);
+      }
+
+      // 设置关联链接
+      const links = grantsPoolData.links as any;
+      if (links) {
+        setRelatedLinks({
+          website: links.website || "",
+          github: links.github || "",
+          twitter: links.twitter || "",
+          telegram: links.telegram || "",
+        });
+      }
+
+      setIsLoading(false);
+    }
+  }, [grantsPoolData, gpLoading]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
     // 验证基本信息
     if (!formData.avatar || !formData.name || !formData.description) {
-      toast.error("Please fill in avatar URL, Grants Pool name and description");
+      toast.error("请填写头像URL、Grants Pool名称和描述");
       return;
     }
 
     // 验证管理员信息
     if (!formData.modName || !formData.modEmail || !formData.modTelegram) {
-      toast.error("Please fill in complete moderator information (name, email, Telegram)");
+      toast.error("请填写完整的管理员信息（姓名、邮箱、Telegram）");
       return;
     }
 
     // 验证RFP信息
     if (rfps.length === 0) {
-      toast.error("At least one RFP is required");
+      toast.error("至少需要一个RFP");
       return;
     }
 
@@ -93,19 +141,13 @@ export default function CreateGrantsPoolPage() {
     for (let i = 0; i < rfps.length; i++) {
       const rfp = rfps[i];
       if (!rfp?.title.trim()) {
-        toast.error(`Please fill in RFP #${i + 1} title`);
+        toast.error(`请填写RFP #${i + 1}的标题`);
         return;
       }
       if (!rfp?.description.trim()) {
-        toast.error(`Please fill in RFP #${i + 1} description`);
+        toast.error(`请填写RFP #${i + 1}的描述`);
         return;
       }
-    }
-
-    // 如果没有Safe地址，先创建Safe多签钱包
-    if (!safeAddress) {
-      setShowSafeModal(true);
-      return;
     }
 
     setIsSubmitting(true);
@@ -118,35 +160,40 @@ export default function CreateGrantsPoolPage() {
         return acc;
       }, {} as Record<string, string>);
 
-      // 处理多个RFP
-      const processedRfps = rfps.map(rfp => ({
-        title: rfp.title || "Default RFP",
-        description: rfp.description || "Please provide RFP description"
-      }));
+      // 处理多个RFP - 区分新增和更新
+      const processedRfps = rfps.map(rfp => {
+        const isNew = rfp.id.startsWith('new-');
+        return {
+          ...(isNew ? {} : { id: parseInt(rfp.id) }),
+          title: rfp.title,
+          description: rfp.description,
+        };
+      });
 
       const modInfo = {
-        name: formData.modName || "Not set",
-        email: formData.modEmail || "Not set",
-        telegram: formData.modTelegram || "Not set",
+        name: formData.modName,
+        email: formData.modEmail,
+        telegram: formData.modTelegram,
       };
 
-      await createGrantsPoolMutation.mutateAsync({
+      await updateGrantsPoolMutation.mutateAsync({
+        id: gpId,
         avatar: formData.avatar || undefined,
         name: formData.name,
         description: formData.description,
         tags: formData.tags || undefined,
-        treasuryWallet: safeAddress, // 使用Safe地址
+        treasuryWallet: formData.treasuryWallet,
         chainType: formData.chainType,
         links: Object.keys(links).length > 0 ? links : undefined,
-        rfps: processedRfps, // 传递所有RFP
+        rfps: processedRfps,
         modInfo,
       });
 
-      toast.success("Grants Pool created successfully!");
-      router.push("/grants-pool");
-    } catch (error) {
-      console.error("Failed to create Grants Pool:", error);
-      toast.error("Creation failed, please try again");
+      toast.success("Grants Pool更新成功！");
+      router.back();
+    } catch (error: any) {
+      console.error("Failed to update Grants Pool:", error);
+      toast.error(error.message || "更新失败，请重试");
     } finally {
       setIsSubmitting(false);
     }
@@ -156,52 +203,55 @@ export default function CreateGrantsPoolPage() {
     setFormData(prev => ({ ...prev, [field]: value }));
   };
 
-  const handleSafeConfirm = (address: string) => {
-    setSafeAddress(address);
-    setShowSafeModal(false);
-    // 自动提交表单
-    handleSubmit(new Event('submit') as any);
-  };
+  // 如果正在加载，显示加载状态
+  if (isLoading || gpLoading) {
+    return <div className="container py-8"><LoadingSkeleton/></div>;
+  }
+
+  // 如果没有数据，显示错误
+  if (!grantsPoolData) {
+    return <Empty/>;
+  }
 
   return (
     <div className="container px-4 py-8 mx-auto">
       <div className="max-w-4xl mx-auto">
         <div className="mb-8">
-          <h1 className="text-3xl font-bold text-foreground">Create Grants Pool</h1>
-          <p className="mt-2 text-default-500">Fill in the following information to create your Grants Pool</p>
+          <h1 className="text-3xl font-bold text-foreground">编辑 Grants Pool</h1>
+          <p className="mt-2 text-default-500">修改以下信息来更新您的 Grants Pool</p>
         </div>
 
         <form onSubmit={handleSubmit} className="space-y-6">
           {/* General Information */}
           <CornerFrame backgroundColor="var(--color-background)" color="gray">
-            <h2 className="mb-6 text-xl">General Information</h2>
+            <h2 className="mb-6 text-xl">基本信息</h2>
             <div className="space-y-6">
               {/* Avatar */}
               <AvatarInput
                 value={formData.avatar}
                 onChange={(value) => handleInputChange("avatar", value)}
                 label="Grants Pool Avatar URL"
-                description="Enter the URL of the Grants Pool avatar image"
+                description="输入 Grants Pool 头像图片的 URL"
               />
 
               {/* Name */}
               <Input
                 variant="bordered"
                 type="text"
-                label="Grants Pool Name"
+                label="Grants Pool 名称"
                 value={formData.name}
                 onChange={(e) => handleInputChange("name", e.target.value)}
-                placeholder="Enter the name of the Grants Pool"
+                placeholder="输入 Grants Pool 的名称"
                 isRequired
               />
 
               {/* Description */}
               <Textarea
                 variant="bordered"
-                label="Description"
+                label="描述"
                 value={formData.description}
                 onChange={(e) => handleInputChange("description", e.target.value)}
-                placeholder="Describe the goals, vision, and funding direction of your Grants Pool"
+                placeholder="描述您的 Grants Pool 的目标、愿景和资助方向"
                 isRequired
                 minRows={4}
               />
@@ -209,67 +259,67 @@ export default function CreateGrantsPoolPage() {
               {/* Chain Type - 只允许Optimism */}
               <Select
                 variant="bordered"
-                label="Treasury Chain Type"
-                value={formData.chainType}
-                defaultSelectedKeys={[formData.chainType]}
-                onChange={(e) => handleInputChange("chainType", e.target.value)}
+                label="财库链类型"
+                selectedKeys={[formData.chainType]}
+                onSelectionChange={(keys) => {
+                  const selected = Array.from(keys)[0] as string;
+                  handleInputChange("chainType", selected);
+                }}
                 isRequired
               >
                 <SelectItem key="OPTIMISM">Optimism Network</SelectItem>
-                <SelectItem key="ETHEREUM" isDisabled>Ethereum Mainnet (Not Available)</SelectItem>
+                <SelectItem key="ETHEREUM" isDisabled>Ethereum Mainnet (不可用)</SelectItem>
               </Select>
 
               {/* Tags */}
               <Input
                 variant="bordered"
                 type="text"
-                label="Tags"
+                label="标签"
                 value={formData.tags}
                 onChange={(e) => handleInputChange("tags", e.target.value)}
                 placeholder="DeFi,Web3,DAO"
-                description="Separate multiple tags with commas"
+                description="用逗号分隔多个标签"
               />
 
-              {/* Safe Address Display */}
-              {safeAddress && (
-                <div>
-                  <label className="text-sm font-medium">Safe Multi-sig Wallet Address</label>
-                  <Input
-                    value={safeAddress}
-                    readOnly
-                    variant="bordered"
-                    className="mt-1"
-                    description="Created Safe multi-sig wallet address"
-                  />
-                </div>
-              )}
+              {/* Treasury Wallet - 只读 */}
+              <Input
+                variant="bordered"
+                type="text"
+                label="财库钱包地址"
+                value={formData.treasuryWallet}
+                isDisabled
+                description="财库钱包地址（不可修改）"
+              />
             </div>
           </CornerFrame>
 
-          {/* RFP Information - 使用新组件 */}
+          {/* RFP Information */}
           <RFPSection 
             rfps={rfps}
             onRfpsChange={setRfps}
+            isEdit={true}
+            grantsPoolId={gpId}
           />
 
           {/* Moderator Information */}
-          <CornerFrame backgroundColor="var(--color-background)" color="gray" >
-            <h2 className="mb-6 text-xl">Moderator Information</h2>
+          <CornerFrame backgroundColor="var(--color-background)" color="gray">
+            <h2 className="mb-6 text-xl">管理员信息</h2>
             <div className="space-y-6">
               <Input
                 variant="bordered"
                 type="text"
-                label="Moderator Name"
+                label="管理员姓名"
                 value={formData.modName}
                 onChange={(e) => handleInputChange("modName", e.target.value)}
-                placeholder="Moderator Name"
+                placeholder="管理员姓名"
                 isRequired
               />
 
               <Input
                 variant="bordered"
                 type="email"
-                label="Moderator Email"
+                label="管理员邮箱"
                 value={formData.modEmail}
                 onChange={(e) => handleInputChange("modEmail", e.target.value)}
                 placeholder="admin@example.com"
@@ -279,7 +329,7 @@ export default function CreateGrantsPoolPage() {
               <Input
                 variant="bordered"
                 type="text"
-                label="Moderator Telegram"
+                label="管理员 Telegram"
                 value={formData.modTelegram}
                 onChange={(e) => handleInputChange("modTelegram", e.target.value)}
                 placeholder="@username"
@@ -288,7 +338,7 @@ export default function CreateGrantsPoolPage() {
             </div>
           </CornerFrame>
 
-          {/* Related Links - 使用新组件 */}
+          {/* Related Links */}
           <RelatedLinksSection 
             links={{
               website: relatedLinks.website,
@@ -307,7 +357,18 @@ export default function CreateGrantsPoolPage() {
           />
 
           {/* Submit Button */}
-          <div className="flex items-center justify-center">
+          <div className="flex items-center justify-center gap-4">
+            <AppBtn
+              btnProps={{
+                variant: "bordered",
+                onClick: () => router.back(),
+                type: "button",
+                className: "flex-1",
+                size: "lg",
+              }}
+            >
+              取消
+            </AppBtn>
             <AppBtn
               btnProps={{
                 type: "submit",
@@ -317,18 +378,11 @@ export default function CreateGrantsPoolPage() {
                 size: "lg",
               }}
             >
-              {isSubmitting ? "Creating..." : "Create Grants Pool"}
+              {isSubmitting ? "更新中..." : "更新"}
             </AppBtn>
           </div>
         </form>
       </div>
-
-      {/* Safe创建模态框 */}
-      <CreateSafeModal
-        isOpen={showSafeModal}
-        onClose={() => setShowSafeModal(false)}
-        onConfirm={handleSafeConfirm}
-      />
     </div>
   );
-} 
+}

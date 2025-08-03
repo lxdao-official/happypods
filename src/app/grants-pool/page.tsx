@@ -6,6 +6,8 @@ import AppBtn from "~/components/app-btn";
 import GrantspoolItem from "~/components/grantspool-item";
 import NextLink from 'next/link';
 import { api } from "~/trpc/react";
+import Empty from "~/components/Empty";
+import LoadingSkeleton from "~/components/LoadingSkeleton";
 
 export default function GrantsPoolPage() {
   // 获取所有 grants pools 数据（不使用分页，获取全部）
@@ -47,24 +49,10 @@ export default function GrantsPoolPage() {
     });
   }, [grantsPoolsData]);
 
-  if (isLoading) {
-    return (
-      <div className="flex items-center justify-center min-h-screen p-6">
-        <div className="text-xl">Loading Grants Pools...</div>
-      </div>
-    );
-  }
 
-  if (error) {
-    return (
-      <div className="flex items-center justify-center min-h-screen p-6">
-        <div className="text-xl text-red-500">Failed to load: {error.message}</div>
-      </div>
-    );
-  }
 
   return (
-    <div className="min-h-screen p-6">
+    <div className="p-6 mb-8">
       <div className="mx-auto max-w-7xl">
         {/* 顶部横幅 */}
         <CornerFrame className="mb-20"> 
@@ -76,19 +64,21 @@ export default function GrantsPoolPage() {
           </div>
         </CornerFrame>
 
+
+        {
+          isLoading ? <LoadingSkeleton /> : 
+          transformedGrantsPools.length === 0 ? <Empty /> : null
+        }
+
         {/* Grants Pool 列表 */}
         <div className="space-y-8">
-          {transformedGrantsPools.length > 0 ? (
+          {transformedGrantsPools.length > 0 && (
             transformedGrantsPools.map((grantsPool) => (
               <GrantspoolItem
                 key={grantsPool.id}
                 grantsPool={grantsPool}
               />
             ))
-          ) : (
-            <div className="py-12 text-center">
-              <div className="text-xl text-gray-500">No Grants Pool found</div>
-            </div>
           )}
         </div>
       </div>

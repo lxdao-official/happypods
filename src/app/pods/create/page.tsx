@@ -2,20 +2,21 @@
 
 import { useState, useEffect } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
-import Link from "next/link";
 import { 
   Input, 
   Textarea, 
   Select, 
-  SelectItem,
-  Chip
+  SelectItem
 } from "@heroui/react";
 import CornerFrame from "~/components/corner-frame";
 import AppBtn from "~/components/app-btn";
 import RelatedLinksSection from "~/components/related-links-section";
 import MilestoneSection from "~/components/milestone-section";
 import CreateSafeModal from "~/components/create-safe-modal";
+import ProfileCompleteModal from "~/components/profile-complete-modal";
 import GrantsPoolInfoSection from "~/components/grants-pool-info-section";
+import AvatarInput from "~/components/avatar-input";
+import GpOwnerCheck from "~/components/gp-owner-check";
 import { api } from "~/trpc/react";
 import { toast } from "sonner";
 
@@ -39,6 +40,7 @@ export default function CreatePodPage() {
   const searchParams = useSearchParams();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [showSafeModal, setShowSafeModal] = useState(false);
+  const [showProfileModal, setShowProfileModal] = useState(false);
   const [safeAddress, setSafeAddress] = useState("");
   
   // URL参数
@@ -90,11 +92,10 @@ export default function CreatePodPage() {
   // 检查用户信息是否完善
   useEffect(() => {
     if (userProfile && !userProfile.isComplete) {
-      alert("请先完善个人信息（姓名、邮箱、描述）后再创建Pod");
-      router.push("/profile");
+      setShowProfileModal(true);
       return;
     }
-  }, [userProfile, router]);
+  }, [userProfile]);
 
   // 处理预选的GP和RFP
   useEffect(() => {
@@ -207,14 +208,19 @@ export default function CreatePodPage() {
     setFormData(prev => ({ ...prev, [field]: value }));
   };
 
-
-  if (profileLoading) {
-    return <div className="container px-4 py-8 mx-auto">Loading...</div>;
-  }
+  const handleNavigateToProfile = () => {
+    setShowProfileModal(false);
+    router.push("/profile");
+  };
 
   return (
     <div className="container px-4 py-8 mx-auto">
       <div className="max-w-4xl mx-auto">
+        {/* GP 创建者检查组件 */}
+        {formData.grantsPoolId && (
+          <GpOwnerCheck gpId={parseInt(formData.grantsPoolId)} />
+        )}
+        
         <div className="mb-8">
           <h1 className="text-3xl font-bold text-foreground">Create Pod Project</h1>
           <p className="mt-2 text-default-500">Fill in the following information to create your Pod project</p>
@@ -239,17 +245,12 @@ export default function CreatePodPage() {
             <div className="space-y-6">
 
               {/* Pod头像 */}
-              <Input
-                  variant="bordered"
-                  type="url"
-                  label="Pod Avatar URL"
-                  value={formData.avatar}
-                  onChange={(e) => handleInputChange("avatar", e.target.value)}
-                  placeholder="https://example.com/avatar.jpg"
-                  description="Enter the URL of the Pod avatar image"
-                />
-
-                
+              <AvatarInput
+                value={formData.avatar}
+                onChange={(value) => handleInputChange("avatar", value)}
+                label="Pod Avatar URL"
+                description="Enter the URL of the Pod avatar image"
+              />
                 
               {/* 项目标题 */}
               <Input
@@ -349,6 +350,13 @@ export default function CreatePodPage() {
           isOpen={showSafeModal}
           onClose={() => setShowSafeModal(false)}
           onConfirm={handleSafeCreated}
+        />
+
+        {/* 个人信息完善提示模态框 */}
+        <ProfileCompleteModal
+          isOpen={showProfileModal}
+          onClose={() => setShowProfileModal(false)}
+          onNavigateToProfile={handleNavigateToProfile}
         />
       </div>
     </div>

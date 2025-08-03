@@ -17,7 +17,7 @@ export default function PodsPage() {
   };
 
   return (
-    <div className="min-h-screen p-6">
+    <div className="p-6 ">
       <div className="container">
 
         {/* breadcrumb */}

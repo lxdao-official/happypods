@@ -30,6 +30,13 @@ export const podQueries = {
       const grantsPool = await ctx.db.grantsPool.findUnique({
         where: { id: input.id },
         include: {
+          owner: {
+            select: {
+              id: true,
+              name: true,
+              walletAddress: true,
+            },
+          },
           rfps: {
             orderBy: { createdAt: "asc" },
           },

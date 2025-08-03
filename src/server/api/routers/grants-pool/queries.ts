@@ -34,7 +34,11 @@ export const grantsPoolQueries = {
               avatar: true,
             },
           },
-          rfps: true,
+          rfps: {
+            where: {
+              inactiveTime: null,
+            },
+          },
           _count: {
             select: {
               pods: true,
@@ -63,7 +67,11 @@ export const grantsPoolQueries = {
         where: { id: input.id },
         include: {
           owner: true,
-          rfps: true,
+          rfps: {
+            where: {
+              inactiveTime: null,
+            }
+          },
           pods: {
             include: {
               applicant: {
@@ -92,7 +100,11 @@ export const grantsPoolQueries = {
       where: { ownerId: ctx.user.id },
       orderBy: { createdAt: "desc" },
       include: {
-        rfps: true,
+        rfps: {
+          where: {
+            inactiveTime: null,
+          }
+        },
         _count: {
           select: {
             pods: true,
@@ -113,7 +125,11 @@ export const grantsPoolQueries = {
         id: true,
         name: true,
         avatar: true,
-        rfps: true,
+        rfps: {
+          where: {
+            inactiveTime: null,
+          }
+        },
         chainType: true,
       },
     });

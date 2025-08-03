@@ -43,11 +43,18 @@ export const grantsPoolMutations = {
   update: protectedProcedure
     .input(updateGrantsPoolSchema)
     .mutation(async ({ ctx, input }) => {
-      const { id, ...updateData } = input;
+      const { id, rfps, ...updateData } = input;
 
       // 检查GrantsPool是否存在且属于当前用户
       const existingGrantsPool = await ctx.db.grantsPool.findUnique({
         where: { id },
+        include: {
+          rfps: {
+            where: {
+              inactiveTime: null, // 只获取活跃的 RFP
+            },
+          },
+        },
       });
 
       if (!existingGrantsPool) {
@@ -61,14 +68,54 @@ export const grantsPoolMutations = {
         throw new Error("没有权限修改此GrantsPool");
       }
 
-      const updatedGrantsPool = await ctx.db.grantsPool.update({
+      // 处理 RFP 更新
+      if (rfps && rfps.length > 0) {
+        const existingRfpIds = existingGrantsPool.rfps.map(rfp => rfp.id);
+        const inputRfpIds = rfps
+          .filter(rfp => 'id' in rfp && rfp.id !== undefined)
+          .map(rfp => (rfp as any).id);
+
+        // 逻辑删除不在输入列表中的现有 RFP
+        const rfpsToDelete = existingRfpIds.filter(id => !inputRfpIds.includes(id));
+        if (rfpsToDelete.length > 0) {
+          await ctx.db.rfps.updateMany({
+            where: {
+              id: { in: rfpsToDelete },
+              grantsPoolId: id,
+            },
+            data: {
+              inactiveTime: new Date(),
+            },
+          });
+        }
+
+        // 处理 RFP 的创建和更新
+        for (const rfp of rfps) {
+          if ('id' in rfp && rfp.id !== undefined) {
+            // 更新现有 RFP
+            await ctx.db.rfps.update({
+              where: { id: (rfp as any).id },
+              data: {
+                title: rfp.title,
+                description: rfp.description,
+              },
+            });
+          } else {
+            // 创建新 RFP
+            await ctx.db.rfps.create({
+              data: {
+                title: rfp.title,
+                description: rfp.description,
+                grantsPoolId: id,
+              },
+            });
+          }
+        }
+      }
+
+      // 返回更新后的 GrantsPool 及其关联数据
+      return ctx.db.grantsPool.findUnique({
         where: { id },
-        data: {
-          ...updateData,
-          modInfo: updateData.modInfo
-            ? (updateData.modInfo as Prisma.InputJsonValue)
-            : undefined,
-        },
         include: {
           owner: {
             select: {
@@ -77,10 +124,14 @@ export const grantsPoolMutations = {
               avatar: true,
             },
           },
+          rfps: {
+            where: {
+              inactiveTime: null, // 只返回活跃的 RFP
+            },
+            orderBy: { createdAt: "asc" },
+          },
         },
       });
-
-      return updatedGrantsPool;
     }),
 
   // 删除GrantsPool
@@ -115,6 +166,53 @@ export const grantsPoolMutations = {
 
       await ctx.db.grantsPool.delete({
         where: { id: input.id },
+      });
+
+      return { success: true };
+    }),
+
+  // 逻辑删除 RFP
+  deleteRfp: protectedProcedure
+    .input(z.object({ 
+      rfpId: z.number(),
+      grantsPoolId: z.number() 
+    }))
+    .mutation(async ({ ctx, input }) => {
+      // 首先检查 GrantsPool 是否属于当前用户
+      const grantsPool = await ctx.db.grantsPool.findUnique({
+        where: { id: input.grantsPoolId },
+      });
+
+      if (!grantsPool) {
+        throw new Error("GrantsPool不存在");
+      }
+
+      if (
+        grantsPool.ownerId !== ctx.user.id &&
+        ctx.user.role !== "ADMIN"
+      ) {
+        throw new Error("没有权限删除此RFP");
+      }
+
+      // 检查 RFP 是否存在且属于指定的 GrantsPool
+      const rfp = await ctx.db.rfps.findFirst({
+        where: {
+          id: input.rfpId,
+          grantsPoolId: input.grantsPoolId,
+          inactiveTime: null, // 确保RFP当前是活跃的
+        },
+      });
+
+      if (!rfp) {
+        throw new Error("RFP不存在或已被删除");
+      }
+
+      // 逻辑删除 RFP
+      await ctx.db.rfps.update({
+        where: { id: input.rfpId },
+        data: {
+          inactiveTime: new Date(),
+        },
       });
 
       return { success: true };

@@ -12,17 +12,10 @@ import {
 import CornerFrame from "~/components/corner-frame";
 import AppBtn from "~/components/app-btn";
 import RelatedLinksSection from "~/components/related-links-section";
+import AvatarInput from "~/components/avatar-input";
 import { api } from "~/trpc/react";
 import { getUser } from "~/lib/auth-storage";
 import { toast } from "sonner";
-
-// Define user role options
-const USER_ROLES = [
-  { value: "ADMIN", label: "System Administrator" },
-  { value: "GP_MOD", label: "GP Administrator" },
-  { value: "APPLICANT", label: "Applicant" },
-  { value: "VIEWER", label: "Viewer" },
-] as const;
 
 // 定义链接类型
 interface UserLinks {
@@ -68,6 +61,7 @@ export default function ProfilePage() {
     onSuccess: async () => {
       await utils.user.invalidate();
       toast.success("Profile updated successfully!");
+      router.back();
     },
     onError: (error: unknown) => {
       const errorMessage = error instanceof Error ? error.message : String(error);
@@ -192,26 +186,9 @@ export default function ProfilePage() {
             <h2 className="mb-6 text-xl">Basic Information</h2>
             <div className="space-y-6">
               {/* Avatar */}
-              <Input
-                variant="bordered"
-                type="url"
-                label="Avatar URL"
+              <AvatarInput
                 value={formData.avatar}
-                onChange={(e) => handleInputChange("avatar", e.target.value)}
-                placeholder="https://example.com/avatar.jpg"
-                description="Enter the URL for your avatar image."
-                endContent={
-                  formData.avatar && (
-                    <img
-                      src={formData.avatar}
-                      alt="Avatar Preview"
-                      className="object-cover w-8 h-8 rounded-full"
-                      onError={(e) => {
-                        (e.target as HTMLImageElement).style.display = 'none';
-                      }}
-                    />
-                  )
-                }
+                onChange={(value) => handleInputChange("avatar", value)}
               />
 
               {/* Username */}

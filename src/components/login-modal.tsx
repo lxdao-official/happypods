@@ -190,7 +190,7 @@ export function LoginModal() {
         // 已登录用户显示下拉菜单
         <Dropdown className="text-black bg-foreground" placement="bottom-end">
           <DropdownTrigger>
-            <Button variant="bordered" className="flex items-center space-x-2">
+            <Button variant="bordered" className="flex items-center space-x-1">
             <i className="text-xl ri-wallet-line"></i>
               <span>{username}</span>
               <i className="text-xl ri-arrow-down-s-line"></i>

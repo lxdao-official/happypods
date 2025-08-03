@@ -5,6 +5,8 @@ import { DataDisplayGrid } from "~/components/data-display-grid";
 import EdgeLine from "~/components/edge-line";
 import { api } from "~/trpc/react";
 import { useAccount } from "wagmi";
+import LoadingSkeleton from "~/components/LoadingSkeleton";
+import Empty from "~/components/Empty";
 
 const GrantsPoolDetailPage = () => {
   const params = useParams();
@@ -20,38 +22,15 @@ const GrantsPoolDetailPage = () => {
   );
 
   // 加载状态
-  if (isLoading) {
+  if (isLoading || error) {
     return (
-      <div className="container flex items-center justify-center min-h-[400px]">
-        <div className="text-center">
-          <div className="w-8 h-8 mx-auto border-b-2 border-gray-900 rounded-full animate-spin"></div>
-          <p className="mt-2 text-gray-600">加载中...</p>
-        </div>
-      </div>
-    );
-  }
-
-  // 错误状态
-  if (error) {
-    return (
-      <div className="container flex items-center justify-center min-h-[400px]">
-        <div className="text-center">
-          <h2 className="mb-2 text-xl font-bold text-red-600">加载失败</h2>
-          <p className="text-gray-600">{error.message}</p>
-        </div>
-      </div>
+      <div className="container py-8"><LoadingSkeleton/></div>
     );
   }
 
   // 数据不存在
   if (!grantsPool) {
-    return (
-      <div className="container flex items-center justify-center min-h-[400px]">
-        <div className="text-center">
-          <h2 className="mb-2 text-xl font-bold text-gray-600">GrantsPool不存在</h2>
-        </div>
-      </div>
-    );
+    return <div className="container py-8"><Empty/></div>;
   }
 
 
@@ -76,11 +55,11 @@ const GrantsPoolDetailPage = () => {
 
 
   return (
-    <div className="container">
+    <div className="container py-8">
       <GrantspoolItem grantsPool={transformedGrantsPool} type="detail">
         <div className="mt-20">
           <EdgeLine color="black"/>
-          <DataDisplayGrid title="Pods" sortClassName="text-black" type="gp" grantsPoolId={grantsPoolId}/>
+          <DataDisplayGrid title="Pods" sortClassName="text-black" type="gp" grantsPoolId={grantsPoolId} theme="light"/>
         </div>
       </GrantspoolItem> 
     </div>

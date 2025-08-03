@@ -93,7 +93,7 @@ const GrantspoolItem = ({ grantsPool, className = "", children, type = "list" }:
               <AppBtn>View More</AppBtn>
             </NextLink>:
             grantsPool.isOwner && (
-              <NextLink href={`/grants-pool/create?id=${grantsPool.id}`}>
+              <NextLink href={`/grants-pool/${grantsPool.id}/edit`}>
                 <AppBtn btnProps={{color:"warning"}}>Eidt</AppBtn>
               </NextLink>
             )
@@ -131,14 +131,14 @@ const GrantspoolItem = ({ grantsPool, className = "", children, type = "list" }:
             </div>
             <div className="grid grid-cols-3 gap-8">
               {Object.entries(grantsPool.treasuryBalances).map(([currency, amount]) => (
-                <div key={currency} className="relative flex items-start gap-10 p-2 pt-10 border border-black rounded-lg">
+                <div key={currency} className="relative grid items-start grid-cols-3 gap-10 p-2 pt-10 border border-black rounded-lg">
                   <div className="absolute top-[-20px] left-[-10px] inline-flex items-center gap-2 p-2 border border-black rounded-full bg-pink">
                     <img src={`/tokens/${currency.toLowerCase()}.svg`} alt={currency} className="w-6 h-6" />
                     <b>{currency}</b>
                   </div>
-                  <div className="flex flex-col"><b>{amount.available}</b><small>Fundable</small></div>
-                  <div className="flex flex-col"><b>{amount.used}</b><small>Funded</small></div>
-                  <div className="flex flex-col"><b>{amount.locked}</b><small>Locked</small></div>
+                  <div className="flex flex-col items-center"><b>{amount.available}</b><small>Fundable</small></div>
+                  <div className="flex flex-col items-center"><b>{amount.used}</b><small>Funded</small></div>
+                  <div className="flex flex-col items-center"><b>{amount.locked}</b><small>Locked</small></div>
                 </div>
               ))}
             </div>

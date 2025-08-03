@@ -19,6 +19,13 @@ export const createGrantsPoolSchema = z.object({
   treasuryBalances: z.any().optional(),
 });
 
+// 更新时的 RFP schema，支持现有和新增的 RFP
+export const updateRfpSchema = z.object({
+  id: z.number().optional(), // 现有 RFP 有 ID，新增的没有
+  title: z.string().min(1, "RFP标题不能为空"),
+  description: z.string().min(1, "RFP描述不能为空"),
+});
+
 export const updateGrantsPoolSchema = z.object({
   id: z.number(),
   avatar: z.string().url().optional(),
@@ -26,6 +33,7 @@ export const updateGrantsPoolSchema = z.object({
   description: z.string().min(1, "GP描述不能为空").optional(),
   links: z.record(z.string()).optional(),
   tags: z.string().optional(),
+  rfps: z.array(updateRfpSchema).optional(),
   modInfo: z.any().optional(),
   treasuryWallet: z.string().min(1, "国库钱包地址不能为空").optional(),
   chainType: z.enum(["ETHEREUM", "OPTIMISM"]).optional(),

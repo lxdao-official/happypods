@@ -36,7 +36,7 @@ model GrantsPool {
   tags             String?
   modInfo          Json
   treasuryWallet   String
-  treasuryBalances Json? @default("{}") //{"USDC": {"available": "0", "used": "0", "locked": "0"},"USDT": {available: "0", used: "0", locked: "0"}}
+  treasuryBalances Json? @default("{}") //{"USDC": {"available": "0", "used": "0", "locked": "0"},"USDT": {"available": "0", "used": "0", "locked": "0"}}
   chainType        ChainType
   status           GrantsPoolStatus @default(ACTIVE)
   metadata         Json?
@@ -145,10 +145,10 @@ enum PodStatus {
 }
 
 enum MilestoneStatus {
-  ACTIVE
-  INACTIVE
-  COMPLETED
-  REJECTED
-  APPROVED
-  REVIEWING
+  ACTIVE // 活跃
+  INACTIVE // 失效
+  COMPLETED // 完成
+  REJECTED // 拒绝
+  APPROVED // 批准
+  REVIEWING // 审核中
 }

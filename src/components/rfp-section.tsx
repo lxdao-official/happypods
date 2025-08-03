@@ -2,6 +2,8 @@ import { useState } from "react";
 import { Input, Textarea, Button } from "@heroui/react";
 import CornerFrame from "~/components/corner-frame";
 import EdgeLine from "./edge-line";
+import { api } from "~/trpc/react";
+import { toast } from "sonner";
 
 interface RFP {
   id: string;
@@ -12,20 +14,48 @@ interface RFP {
 interface RFPSectionProps {
   rfps: RFP[];
   onRfpsChange: (rfps: RFP[]) => void;
+  isEdit?: boolean;
+  grantsPoolId?: number;
 }
 
-const RFPSection = ({ rfps, onRfpsChange }: RFPSectionProps) => {
+const RFPSection = ({ rfps, onRfpsChange, isEdit = false, grantsPoolId }: RFPSectionProps) => {
+  const [deletingRfpId, setDeletingRfpId] = useState<string | null>(null);
+
+  // 删除 RFP 的 mutation
+  const deleteRfpMutation = api.grantsPool.deleteRfp.useMutation();
+
   const addRFP = () => {
     const newRFP: RFP = {
-      id: Date.now().toString(),
+      id: `new-${Date.now()}`,
       title: "",
       description: ""
     };
     onRfpsChange([...rfps, newRFP]);
   };
 
-  const removeRFP = (id: string) => {
-    if (rfps.length > 1) {
+  const removeRFP = async (id: string) => {
+    if (rfps.length <= 1) {
+      toast.error("至少需要保留一个RFP");
+      return;
+    }
+
+    // 如果是编辑模式且是现有的 RFP（不是以 'new-' 开头的ID）
+    if (isEdit && grantsPoolId && !id.startsWith('new-')) {
+      try {
+        setDeletingRfpId(id);
+        await deleteRfpMutation.mutateAsync({
+          rfpId: parseInt(id),
+          grantsPoolId: grantsPoolId,
+        });
+        toast.success("RFP删除成功");
+        onRfpsChange(rfps.filter(rfp => rfp.id !== id));
+      } catch (error: any) {
+        toast.error(error.message || "删除RFP失败");
+      } finally {
+        setDeletingRfpId(null);
+      }
+    } else {
+      // 对于新创建的 RFP 或创建模式，直接从本地状态中移除
       onRfpsChange(rfps.filter(rfp => rfp.id !== id));
     }
   };
@@ -66,9 +96,10 @@ const RFPSection = ({ rfps, onRfpsChange }: RFPSectionProps) => {
                   variant="bordered"
                   size="sm"
                   onPress={() => removeRFP(rfp.id)}
-                  startContent={<i className="ri-delete-bin-line"></i>}
+                  isLoading={deletingRfpId === rfp.id}
+                  startContent={!deletingRfpId && <i className="ri-delete-bin-line"></i>}
                 >
-                  Remove
+                  {deletingRfpId === rfp.id ? "删除中..." : "Remove"}
                 </Button>
               )}
             </div>
