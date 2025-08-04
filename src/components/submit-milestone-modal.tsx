@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { Button, Modal, ModalBody, ModalContent, ModalHeader, ModalFooter, Textarea, useDisclosure } from "@heroui/react";
 import RelatedLinksSection from "./related-links-section";
+import { api } from "~/trpc/react";
 
 interface SubmitMilestoneModalProps {
   milestoneId: string | number;
@@ -13,6 +14,27 @@ export default function SubmitMilestoneModal({ milestoneId, onSubmit }: SubmitMi
   const [links, setLinks] = useState<Record<string, string>>({});
   const [isSubmitting, setIsSubmitting] = useState(false);
 
+  const submitMilestoneDeliveryMutation = api.pod.submitMilestoneDelivery.useMutation({
+    onSuccess: () => {
+      // 重置表单
+      setDescription("");
+      setLinks({});
+      onClose();
+      
+      // 调用父组件的回调
+      onSubmit?.({ description: description.trim(), links });
+      
+      alert("Milestone交付提交成功！");
+    },
+    onError: (error) => {
+      console.error("提交失败:", error);
+      alert(`提交失败: ${error.message}`);
+    },
+    onSettled: () => {
+      setIsSubmitting(false);
+    },
+  });
+
   const handleSubmit = async () => {
     if (!description.trim()) {
       alert("请输入milestone描述");
@@ -20,22 +42,15 @@ export default function SubmitMilestoneModal({ milestoneId, onSubmit }: SubmitMi
     }
 
     setIsSubmitting(true);
+    
     try {
-      // 模拟提交
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      
-      onSubmit?.({ description: description.trim(), links });
-      
-      // 重置表单
-      setDescription("");
-      setLinks({});
-      onClose();
-      
-      alert("Milestone提交成功！");
+      await submitMilestoneDeliveryMutation.mutateAsync({
+        milestoneId: Number(milestoneId),
+        content: description.trim(),
+        links: links,
+      });
     } catch (error) {
-      alert("提交失败，请重试");
-    } finally {
-      setIsSubmitting(false);
+      // 错误处理在mutation的onError中
     }
   };
 
@@ -53,7 +68,7 @@ export default function SubmitMilestoneModal({ milestoneId, onSubmit }: SubmitMi
         variant="flat"
         onPress={onOpen}
       >
-        Submit Milestone
+提交交付
       </Button>
       
       <Modal 
@@ -65,22 +80,22 @@ export default function SubmitMilestoneModal({ milestoneId, onSubmit }: SubmitMi
       >
         <ModalContent>
           <ModalHeader className="text-xl font-bold">
-            Submit Milestone
+            提交 Milestone 交付
           </ModalHeader>
           <ModalBody>
             <div className="space-y-6">
               {/* Description Input */}
               <div>
                 <Textarea
-                variant="bordered"
-                  label="Milestone Description"
-                  placeholder="Describe what you have accomplished in this milestone, including deliverables, progress, and any relevant details..."
+                  variant="bordered"
+                  label="Milestone交付内容"
+                  placeholder="详细描述您在此里程碑中完成的工作，包括交付物、进度和任何相关细节..."
                   value={description}
                   onChange={(e) => setDescription(e.target.value)}
                   minRows={6}
                   maxRows={12}
                   isRequired
-                  description="Provide a detailed description of your milestone completion"
+                  description="请提供详细的里程碑完成描述"
                 />
               </div>
 
@@ -100,14 +115,14 @@ export default function SubmitMilestoneModal({ milestoneId, onSubmit }: SubmitMi
               onPress={handleClose}
               isDisabled={isSubmitting}
             >
-              Cancel
+              取消
             </Button>
             <Button 
               color="primary" 
               onPress={handleSubmit}
               isLoading={isSubmitting}
             >
-              {isSubmitting ? "Submitting..." : "Submit Milestone"}
+              {isSubmitting ? "提交中..." : "提交交付"}
             </Button>
           </ModalFooter>
         </ModalContent>

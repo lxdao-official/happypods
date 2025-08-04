@@ -15,12 +15,14 @@ model User {
   role             UserRole?
   description      String?
   links            Json?
-  metadata         Json?
+  metadata         Json?        @default("{}")
   createdAt        DateTime     @default(now())
   updatedAt        DateTime     @updatedAt
   walletAddress    String
   ownedGrantsPools GrantsPool[] @relation("UserGrantsPools")
   pods             Pod[]        @relation("UserPods")
+  sentNotifications     Notification[] @relation("SentNotifications")
+  receivedNotifications Notification[] @relation("ReceivedNotifications")
 
   @@index([email])
   @@index([role])
@@ -39,7 +41,7 @@ model GrantsPool {
   treasuryBalances Json?            @default("{}") //{"USDC": {"available": "0", "used": "0", "locked": "0"},"USDT": {"available": "0", "used": "0", "locked": "0"}}
   chainType        ChainType
   status           GrantsPoolStatus @default(ACTIVE)
-  metadata         Json?
+  metadata         Json?            @default("{}")
   createdAt        DateTime         @default(now())
   updatedAt        DateTime         @updatedAt
   ownerId          Int
@@ -59,7 +61,7 @@ model Rfps {
   grantsPoolId Int
   title        String
   description  String
-  metadata     Json?
+  metadata     Json?      @default("{}")
   createdAt    DateTime   @default(now())
   updatedAt    DateTime   @updatedAt
   inactiveTime DateTime?
@@ -83,7 +85,7 @@ model Pod {
   tags          String?
   currency      String
   status        PodStatus   @default(REVIEWING)
-  metadata      Json?
+  metadata      Json?       @default("{}") // {rejectReason: string}
   createdAt     DateTime    @default(now())
   updatedAt     DateTime    @updatedAt
   inactiveTime  DateTime? // 失效时间，null 表示当前活跃版本
@@ -109,8 +111,8 @@ model Milestone {
   deadline     DateTime
   status       MilestoneStatus @default(ACTIVE)
   currentPhase String          @default("PENDING")
-  deliveryInfo Json? //{content: string, links: string[], deadline: string}
-  metadata     Json?
+  deliveryInfo Json? // {content: string, links: string[], deadline: string}
+  metadata     Json?           @default("{}") // {rejectReason: string}
   createdAt    DateTime        @default(now())
   updatedAt    DateTime        @updatedAt
   pod          Pod             @relation("PodMilestones", fields: [podId], references: [id], onDelete: Cascade)
@@ -148,10 +150,36 @@ enum PodStatus {
 }
 
 enum MilestoneStatus {
-  ACTIVE // 活跃
+  ACTIVE // 有效
   INACTIVE // 失效
   COMPLETED // 完成
   REJECTED // 拒绝
   APPROVED // 批准
   REVIEWING // 审核中
+  PENDING_DELIVERY // 待交付
+}
+
+
+model Notification {
+  id          Int              @id @default(autoincrement())
+  type        NotificationType
+  senderId    Int
+  receiverId  Int
+  params      Json?
+  content     String
+  createdAt   DateTime         @default(now())
+  updatedAt   DateTime         @updatedAt
+  metadata    Json?
+  sender      User             @relation("SentNotifications", fields: [senderId], references: [id])
+  receiver    User             @relation("ReceivedNotifications", fields: [receiverId], references: [id])
+
+  @@index([senderId])
+  @@index([receiverId])
+}
+
+enum NotificationType {
+  POD_REVIEW
+  MILESTONE_REVIEW
+  EXTENSION_REVIEW
+  MILESTONE_CHANGE_REVIEW
 }

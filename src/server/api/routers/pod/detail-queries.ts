@@ -49,14 +49,52 @@ export const podDetailQueries = {
       return pod;
     }),
 
-  // 获取Pod的里程碑详情
+  // 获取Pod的里程碑详情（包含待交付状态判断）
   getPodMilestones: publicProcedure
     .input(z.object({ podId: z.number() }))
     .query(async ({ ctx, input }) => {
       const milestones = await ctx.db.milestone.findMany({
         where: { podId: input.podId },
-        orderBy: { createdAt: "asc" },
+        orderBy: { deadline: "asc" },
       });
+
+      // 为milestones添加待交付状态判断
+      const now = new Date();
+      let foundPendingDelivery = false; // 标记是否已找到待交付的milestone
+      
+      const milestonesWithDeliveryStatus = milestones.map((milestone, index) => {
+        // 判断是否为待交付状态：
+        // 1. 状态为ACTIVE
+        // 2. 当前时间已超过deadline  
+        // 3. 是第一个符合条件的milestone（前面的milestone必须已完成）
+        const isOverdue = milestone.status === "ACTIVE" && new Date(milestone.deadline) < now;
+        
+        // 检查前面的milestone是否都已完成
+        const previousMilestonesCompleted = milestones
+          .slice(0, index)
+          .every(m => m.status === "COMPLETED");
+        
+        const isPendingDelivery = isOverdue && previousMilestonesCompleted && !foundPendingDelivery;
+        
+        // 如果找到第一个待交付的milestone，标记为已找到
+        if (isPendingDelivery) {
+          foundPendingDelivery = true;
+        }
+
+        // 返回milestone，如果是第一个待交付的，将状态改为PENDING_DELIVERY
+        return {
+          ...milestone,
+          status: isPendingDelivery ? "PENDING_DELIVERY" : milestone.status,
+          isPendingDelivery,
+        };
+      });
+
+      milestones.forEach((v,index)=>{
+        if(v.status === "ACTIVE" && new Date(v.deadline) < now && milestones.slice(0,index).every(m=>m.status === "COMPLETED")){
+          // @ts-ignore
+          v.status = "PENDING_DELIVERY";
+        }
+      })
 
       return milestones;
     }),

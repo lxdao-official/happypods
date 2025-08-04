@@ -5,7 +5,6 @@ import { formatDate } from "~/lib/utils";
 interface ProgressMilestoneBarProps {
   milestones: {
     name: string;
-    progress: number;
     amount: number;
     createdAt: string;
     deadline: string;
@@ -15,7 +14,6 @@ interface ProgressMilestoneBarProps {
 
 export default function ProgressMilestoneBar({ milestones = [] }: ProgressMilestoneBarProps) {
   milestones = milestones.sort((a, b) => new Date(a.deadline).getTime() - new Date(b.deadline).getTime());
-  console.log('milestones-progress', milestones);
   // 计算时间进度
   const calculateTimeProgress = () => {
     if (milestones.length === 0) return 0;
@@ -26,7 +24,7 @@ export default function ProgressMilestoneBar({ milestones = [] }: ProgressMilest
     if (!firstMilestone?.createdAt || !lastMilestone?.deadline) return 0;
     
     const startTime = new Date(firstMilestone.createdAt).getTime();
-    const endTime = new Date(lastMilestone.deadline).getTime();
+    const endTime = new Date(lastMilestone.deadline).getTime()+(3600*24*1000);
     const currentTime = Date.now();
     
     // 计算时间进度百分比
@@ -69,11 +67,11 @@ export default function ProgressMilestoneBar({ milestones = [] }: ProgressMilest
                 <small>{milestone.name}</small>
               </div>
             } placement="top" showArrow={true}>
-              <span className="font-bold text-center cursor-pointer progress-milestone hover:scale-105">
-                <small>{`${formatDate(milestone.deadline,'MM.DD')}`}-{milestone.amount}U</small>
+              <span className="gap-2 font-bold text-center cursor-pointer progress-milestone hover:scale-105">
                 {
-                  milestone.status === 'Completed' && <i className="text-green-500 ri-check-line"></i>
+                  milestone.status === 'COMPLETED' && <i className="mr-1 text-green-500 ri-check-line"></i>
                 }
+                <small>{`${formatDate(milestone.deadline,'MM.DD')}`}-{milestone.amount}U</small>
               </span>
             </Tooltip>
           </div>

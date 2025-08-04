@@ -1,12 +1,5 @@
 'use client';
 
-import { Chip } from "@heroui/react";
-
-interface LinkDisplayProps {
-  links: Record<string, string>;
-  className?: string;
-}
-
 // 链接类型到图标的映射
 const LINK_ICONS: Record<string, string> = {
   website: 'ri-global-line',
@@ -59,7 +52,14 @@ const getLinkType = (key: string, url: string): string => {
 export const LinkDisplay = ({
   links,
   className = '',
-}: Readonly<LinkDisplayProps>) => {
+  type = 'tag',
+  theme = 'dark'
+}: Readonly<{
+  links: Record<string, string>;
+  className?: string;
+  type?:'tag'|'list';
+  theme?:'dark'|'light';
+}>) => {
   if (!links || Object.keys(links).length === 0) {
     return null;
   }
@@ -80,6 +80,7 @@ export const LinkDisplay = ({
           >
             <i className={`text-lg ${iconClass}`}></i>
             <small className="text-xs capitalize">{key}</small>
+            <i className="ri-external-link-line"></i>
           </a>
         );
       })}
