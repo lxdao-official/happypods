@@ -14,6 +14,8 @@ interface ProgressMilestoneBarProps {
 }
 
 export default function ProgressMilestoneBar({ milestones = [] }: ProgressMilestoneBarProps) {
+  milestones = milestones.sort((a, b) => new Date(a.deadline).getTime() - new Date(b.deadline).getTime());
+  console.log('milestones-progress', milestones);
   // 计算时间进度
   const calculateTimeProgress = () => {
     if (milestones.length === 0) return 0;

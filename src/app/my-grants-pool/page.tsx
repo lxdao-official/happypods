@@ -6,6 +6,8 @@ import AppBtn from "~/components/app-btn";
 import GrantspoolItem from "~/components/grantspool-item";
 import NextLink from 'next/link';
 import { api } from "~/trpc/react";
+import LoadingSkeleton from "~/components/LoadingSkeleton";
+import Empty from "~/components/Empty";
 
 export default function MyGrantsPoolPage() {
   // 获取当前用户创建的 grants pools 数据
@@ -44,25 +46,17 @@ export default function MyGrantsPoolPage() {
     });
   }, [grantsPoolsData]);
 
-  if (isLoading) {
+  if (isLoading || error) {
     return (
-      <div className="flex items-center justify-center min-h-screen p-6">
-        <div className="text-xl">Loading My Grants Pools...</div>
-      </div>
-    );
-  }
-
-  if (error) {
-    return (
-      <div className="flex items-center justify-center min-h-screen p-6">
-        <div className="text-xl text-red-500">Failed to load: {error.message}</div>
+      <div className="container py-6 mx-auto">
+        <LoadingSkeleton/>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen p-6">
-      <div className="mx-auto max-w-7xl">
+    <div className="p-6">
+      <div className="container mx-auto">
         {/* Grants Pool 列表 */}
         <div className="space-y-8">
           {transformedGrantsPools.length > 0 ? (
@@ -73,12 +67,7 @@ export default function MyGrantsPoolPage() {
               />
             ))
           ) : (
-            <div className="py-12 text-center">
-              <div className="text-xl text-gray-500">You haven't created any Grants Pool yet</div>
-              <NextLink href="/grants-pool/create" className="mt-4">
-                <AppBtn btnProps={{color:"primary"}}>Create Your First Grant Pool</AppBtn>
-              </NextLink>
-            </div>
+           <Empty/>
           )}
         </div>
       </div>

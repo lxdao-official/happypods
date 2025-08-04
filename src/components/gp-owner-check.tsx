@@ -4,38 +4,30 @@ import { useAccount } from "wagmi";
 import { Modal, ModalContent, ModalHeader, ModalBody, ModalFooter, Button } from "@heroui/react";
 import { api } from "~/trpc/react";
 
-interface GpOwnerCheckProps {
-  gpId: number;
-}
 
-export default function GpOwnerCheck({ gpId }: GpOwnerCheckProps) {
+export default function GpOwnerCheck() {
   const router = useRouter();
   const { address } = useAccount();
   const [showModal, setShowModal] = useState(false);
 
-  // 获取 GP 详情，包含创建者信息
-  const { data: grantsPoolDetails, isLoading } = api.pod.getGrantsPoolDetails.useQuery(
-    { id: gpId },
-    { enabled: !!gpId }
-  );
+  // 获取当前用户的 GP 列表
+  const { data: myGrantsPools } = api.grantsPool.isUserHasGrantsPool.useQuery();
 
-  // 检查当前用户是否为 GP 创建者
+
+  // 检查当前用户是否创建了任何 GP（GP 创建者不能申请任何 Pod）
   useEffect(() => {
     console.log('GpOwnerCheck useEffect:', {
-      grantsPoolDetails,
+      myGrantsPools,
       address,
-      ownerWalletAddress: grantsPoolDetails?.owner?.walletAddress,
-      isMatch: grantsPoolDetails?.owner?.walletAddress?.toLowerCase() === address?.toLowerCase()
+      hasCreatedGp: myGrantsPools
     });
     
-    if (grantsPoolDetails && address) {
-      // 检查钱包地址是否匹配
-      if (grantsPoolDetails.owner?.walletAddress?.toLowerCase() === address.toLowerCase()) {
-        console.log('Setting showModal to true');
-        setShowModal(true);
-      }
+    if (myGrantsPools) {
+      // 如果用户创建了任何 GP，则不允许申请 Pod
+      console.log('Setting showModal to true - User has created GP');
+      setShowModal(true);
     }
-  }, [grantsPoolDetails, address]);
+  }, [myGrantsPools]);
 
   const handleCloseModal = () => {
     setShowModal(false);
@@ -47,37 +39,26 @@ export default function GpOwnerCheck({ gpId }: GpOwnerCheckProps) {
     router.back();
   };
 
-  console.log('GpOwnerCheck render:', {
-    gpId,
-    isLoading,
-    grantsPoolDetails: !!grantsPoolDetails,
-    address,
-    showModal
-  });
-
-  // 如果正在加载或没有数据，不渲染任何内容
-  if (isLoading || !grantsPoolDetails) {
-    return null;
-  }
-
   return (
-    <Modal isOpen={showModal} onClose={handleCloseModal} size="md" isDismissable={false}>
-      <ModalContent>
-        <ModalHeader className="text-xl font-bold">
-          无法申请自己的 Grants Pool
-        </ModalHeader>
-        <ModalBody>
-          <small>作为 Grants Pool 的创建者，您不能申请自己创建的 Grants Pool。请选择其他 Grants Pool 进行申请。</small>
-        </ModalBody>
-        <ModalFooter>
-          <Button variant="light" onPress={handleCloseModal}>
-            关闭
-          </Button>
-          <Button color="primary" onPress={handleConfirm}>
-            确定
-          </Button>
-        </ModalFooter>
-      </ModalContent>
-    </Modal>
+    <div>
+      <Modal isOpen={showModal} onClose={handleCloseModal} size="md" isDismissable={false}>
+        <ModalContent>
+          <ModalHeader className="text-xl font-bold">
+            GP 创建者无法申请 Pod
+          </ModalHeader>
+          <ModalBody>
+            <small>您已经创建了 Grants Pool，作为 GP 创建者，您不能申请任何 Pod 项目。GP 创建者的职责是管理和审核 Pod 申请，而不是申请 Pod。</small>
+          </ModalBody>
+          <ModalFooter>
+            <Button variant="light" onPress={handleCloseModal}>
+              关闭
+            </Button>
+            <Button color="primary" onPress={handleConfirm}>
+              确定
+            </Button>
+          </ModalFooter>
+        </ModalContent>
+      </Modal>
+    </div>
   );
 } 

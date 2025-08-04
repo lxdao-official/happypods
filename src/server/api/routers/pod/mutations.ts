@@ -48,7 +48,7 @@ export const podMutations = {
       const pod = await ctx.db.pod.create({
         data: {
           grantsPoolId: podData.grantsPoolId,
-          rfpIndex: podData.rfpIndex,
+          rfpId: podData.rfpId,
           walletAddress: podData.walletAddress,
           avatar: podData.avatar,
           title: podData.title,
@@ -61,6 +61,7 @@ export const podMutations = {
         include: {
           applicant: true,
           grantsPool: true,
+          rfp: true,
         },
       });
 

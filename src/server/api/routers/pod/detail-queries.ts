@@ -15,6 +15,9 @@ export const podDetailQueries = {
               name: true,
               avatar: true,
               walletAddress: true,
+              email: true,
+              description: true,
+              links: true,
             },
           },
           grantsPool: {
@@ -23,6 +26,14 @@ export const podDetailQueries = {
               name: true,
               avatar: true,
               treasuryBalances: true,
+              ownerId: true,
+            },
+          },
+          rfp: {
+            select: {
+              id: true,
+              title: true,
+              description: true,
             },
           },
           milestones: {

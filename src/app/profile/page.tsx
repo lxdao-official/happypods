@@ -16,6 +16,7 @@ import AvatarInput from "~/components/avatar-input";
 import { api } from "~/trpc/react";
 import { getUser } from "~/lib/auth-storage";
 import { toast } from "sonner";
+import LoadingSkeleton from "~/components/LoadingSkeleton";
 
 // 定义链接类型
 interface UserLinks {
@@ -139,37 +140,9 @@ export default function ProfilePage() {
     setFormData(prev => ({ ...prev, [field]: value }));
   };
 
-  if (!currentUser) {
-    return (
-      <div className="container px-4 py-8 mx-auto">
-        <div className="text-center">
-          <div className="mb-4 text-lg text-red-600">
-            Please log in first
-          </div>
-          <Link
-            href="/"
-            className="text-blue-600 hover:text-blue-700"
-          >
-            Back to Home
-          </Link>
-        </div>
-      </div>
-    );
-  }
 
-  if (isLoading || userLoading) {
-    return (
-      <div className="container px-4 py-8 mx-auto">
-        <div className="max-w-4xl mx-auto">
-          <div className="p-6 bg-white rounded-lg shadow-md animate-pulse">
-            <div className="h-8 mb-4 bg-gray-200 rounded"></div>
-            <div className="h-4 mb-2 bg-gray-200 rounded"></div>
-            <div className="h-4 mb-4 bg-gray-200 rounded"></div>
-            <div className="h-32 bg-gray-200 rounded"></div>
-          </div>
-        </div>
-      </div>
-    );
+  if (isLoading || userLoading || !userData) {
+    return <div className="container px-4 py-8 mx-auto"><LoadingSkeleton/></div>;
   }
 
   return (

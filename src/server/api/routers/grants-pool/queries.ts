@@ -116,6 +116,14 @@ export const grantsPoolQueries = {
     return grantsPools;
   }),
 
+  // 判断当前用户是否存在GrantsPool
+  isUserHasGrantsPool: protectedProcedure.query(async ({ ctx }) => {
+    const grantsPool = await ctx.db.grantsPool.findFirst({
+      where: { ownerId: ctx.user.id },
+    });
+    return !!grantsPool;
+  }),
+
   // 获取活跃的GrantsPool（用于Pod创建时选择）
   getActiveGrantsPools: publicProcedure.query(async ({ ctx }) => {
     const grantsPools = await ctx.db.grantsPool.findMany({

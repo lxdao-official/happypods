@@ -9,13 +9,17 @@ import MilestonesSection from "~/components/milestones-section";
 import CardBox from "~/components/card-box";
 import EdgeLine from "~/components/edge-line";
 import AppBtn from "~/components/app-btn";
+import { ShareButton } from "~/components/share-button";
 import type { PodHistoryItem } from "~/components/pod-history-section";
 import PodHistorySection from "~/components/pod-history-section";
+import ApplicantInfoModal from "~/components/applicant-info-modal";
+import GpReviewActions from "~/components/gp-review-actions";
 import { api } from "~/trpc/react";
 import { MilestoneStatus } from "@prisma/client";
 import StatusChip from "~/components/StatusChip";
 import LoadingSkeleton from "~/components/LoadingSkeleton";
 import Empty from "~/components/Empty";
+import type { JsonObject, JsonValue } from "@prisma/client/runtime/library";
 
 type Status = 'IN_PROGRESS' | 'COMPLETED' | 'REJECTED' | 'WAITLISTED' | 'SUBMITTED' | 'APPROVED' | 'REVIEWING';
 
@@ -65,7 +69,7 @@ export default function PodDetailPage() {
     name: podDetail.title,
     avatar: podDetail.avatar || "",
     status: podDetail.status as Status,
-    rfpIndex: podDetail.rfpIndex,
+    rfpId: podDetail.rfpId,
     currency: podDetail.currency,
     tags: podDetail.tags?.split(',').map(tag => tag.trim()).filter(Boolean) || [],
     createdAt: podDetail.createdAt.toISOString(),
@@ -73,7 +77,8 @@ export default function PodDetailPage() {
     applicant: {
       id: podDetail.applicant.id,
       name: podDetail.applicant.name,
-      avatar: podDetail.applicant.avatar
+      avatar: podDetail.applicant.avatar,
+      links: podDetail.applicant.links  as JsonValue
     },
     grantsPool: {
       id: podDetail.grantsPool.id,
@@ -95,6 +100,7 @@ export default function PodDetailPage() {
     deadline: milestone.deadline.toISOString().split('T')[0] || '',
     amount: milestone.amount,
     description: milestone.description,
+    createdAt: milestone.createdAt.toISOString().split('T')[0] || '',
     phase: milestone.currentPhase || `Phase ${index + 1}`,
     maxSubmissions: 3,
     submissions: [] // 暂时为空数组，因为数据库中没有 submissions 表
@@ -121,18 +127,17 @@ export default function PodDetailPage() {
           </div>
 
          <div className="flex items-center gap-2">
-          {
-            pod.status === 'REVIEWING' && (
-              <>
-                <small>The Pod creator submits changes!</small>
-                <AppBtn btnProps={{size: "sm", color: "success"}}>Approved</AppBtn>
-                <AppBtn btnProps={{size: "sm", color: "danger"}}>Rejected</AppBtn>
-              </>
-            )
-          }
-          <AppBtn btnProps={{size: "sm", color: "primary"}}>
-            <i className="text-xl ri-share-line"></i>
-          </AppBtn>
+          <GpReviewActions 
+            podStatus={pod.status}
+            grantsPoolId={pod.grantsPool.id}
+          />
+          <ShareButton 
+            url={typeof window !== 'undefined' ? window.location.href : ''}
+            title={`${pod.name} - ${pod.description}`}
+            description={pod.description}
+            size="sm"
+            color="primary"
+          />
          </div>
        </div>
       }
@@ -226,7 +231,7 @@ export default function PodDetailPage() {
                       }
                       <span>{pod.applicant.name}</span>
                     </div>
-                    <i className="ri-information-line"></i>
+                    <ApplicantInfoModal applicant={podDetail.applicant} />
                   </div>
                 </div>
                 <div className="flex items-center justify-between space-x-2">
@@ -241,7 +246,9 @@ export default function PodDetailPage() {
                 </div>
                 <div className="flex items-center justify-between space-x-2">
                   <div className="mb-1 text-sm text-secondary">RFP</div>
-                  <span className="text-sm">{pod.rfpIndex}-RPF Title...</span>
+                  <span className="text-sm">
+                    {podDetail.rfp.title}
+                  </span>
                 </div>
               </div>
             </div>

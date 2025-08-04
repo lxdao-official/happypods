@@ -38,6 +38,9 @@ export const podQueries = {
             },
           },
           rfps: {
+            where: {
+              inactiveTime: null, // 只获取活跃的 RFP
+            },
             orderBy: { createdAt: "asc" },
           },
         },
@@ -113,6 +116,12 @@ export const podQueries = {
       if (grantsPoolId) where.grantsPoolId = grantsPoolId;
       if (myOnly) where.applicantId = ctx.user.id;
 
+      // 获取总记录数
+      const totalCount = await ctx.db.pod.count({ where });
+      
+      // 计算总页数
+      const totalPages = Math.ceil(totalCount / limit);
+
       const pods = await ctx.db.pod.findMany({
         take: limit + 1,
         where,
@@ -130,7 +139,7 @@ export const podQueries = {
         const nextItem = pods.pop();
         nextCursor = nextItem!.id;
       }
-      return { pods, nextCursor };
+      return { pods, nextCursor, totalPages, totalCount };
     }),
 
   // 根据ID获取Pod详情

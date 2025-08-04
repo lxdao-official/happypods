@@ -24,6 +24,7 @@ interface Milestone {
   deadline: string;
   amount: number;
   description: string;
+  createdAt: string;
   phase?: string;
   submissions?: SubmissionData[];
   maxSubmissions?: number; // 最大提交次数，默认3次
@@ -59,7 +60,7 @@ export default function MilestonesSection({ milestones }: MilestonesSectionProps
     name: milestone.title,
     progress: milestone.status === 'Progress' ? 100 : milestone.status === 'Submitted' ? 75 : 0,
     amount: milestone.amount,
-    createdAt: milestone.deadline, // 使用 deadline 作为 createdAt，因为原始数据中没有 createdAt
+    createdAt: milestone.createdAt, // 使用 deadline 作为 createdAt，因为原始数据中没有 createdAt
     deadline: milestone.deadline,
     status: milestone.status
   }));

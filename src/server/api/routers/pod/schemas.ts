@@ -9,7 +9,7 @@ export const milestoneSchema = z.object({
 
 export const createPodSchema = z.object({
   grantsPoolId: z.number(),
-  rfpIndex: z.number(),
+  rfpId: z.number(),
   walletAddress: z.string().min(1, "钱包地址不能为空"),
   avatar: z.string().url().optional(),
   title: z.string().min(1, "项目标题不能为空"),

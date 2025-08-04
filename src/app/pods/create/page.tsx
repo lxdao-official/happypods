@@ -51,7 +51,7 @@ export default function CreatePodPage() {
 
   const [formData, setFormData] = useState({
     grantsPoolId: gpId || "",
-    rfpIndex: rfpId || "",
+    rfpId: rfpId || "",
     avatar: "",
     title: "",
     description: "",
@@ -117,7 +117,7 @@ export default function CreatePodPage() {
       setFormData(prev => ({
         ...prev,
         grantsPoolId: gpId,
-        rfpIndex: rfpId,
+        rfpId: rfpId,
       }));
     }
   }, [gpId, rfpId]);
@@ -185,7 +185,7 @@ export default function CreatePodPage() {
 
       await createPodMutation.mutateAsync({
         grantsPoolId: parseInt(formData.grantsPoolId),
-        rfpIndex: parseInt(formData.rfpIndex) || 0,
+        rfpId: parseInt(formData.rfpId) || 0,
         walletAddress: walletAddress,
         avatar: formData.avatar || undefined,
         title: formData.title,
@@ -217,10 +217,7 @@ export default function CreatePodPage() {
   return (
     <div className="container px-4 py-8 mx-auto">
       <div className="max-w-4xl mx-auto">
-        {/* GP 创建者检查组件 */}
-        {formData.grantsPoolId && (
-          <GpOwnerCheck gpId={parseInt(formData.grantsPoolId)} />
-        )}
+        
         
         <div className="mb-8">
           <h1 className="text-3xl font-bold text-foreground">Create Pod Project</h1>
@@ -231,10 +228,10 @@ export default function CreatePodPage() {
           {/* GP信息 */}
           <GrantsPoolInfoSection
             grantsPoolId={formData.grantsPoolId}
-            rfpIndex={formData.rfpIndex}
+            rfpId={formData.rfpId}
             currency={formData.currency}
             onGrantsPoolChange={(grantsPoolId) => handleInputChange("grantsPoolId", grantsPoolId)}
-            onRfpChange={(rfpIndex) => handleInputChange("rfpIndex", rfpIndex)}
+            onRfpChange={(rfpId) => handleInputChange("rfpId", rfpId)}
             onCurrencyChange={(currency) => handleInputChange("currency", currency)}
             isPreselected={isPreselected}
           />
@@ -341,6 +338,10 @@ export default function CreatePodPage() {
           onClose={() => setShowProfileModal(false)}
           onNavigateToProfile={handleNavigateToProfile}
         />
+
+        {/* gp无法参与创建模态框 */}
+        <GpOwnerCheck/>
+      
       </div>
     </div>
   );

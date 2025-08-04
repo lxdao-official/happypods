@@ -6,6 +6,7 @@ import AppBtn from "./app-btn";
 import NextLink from "next/link";
 import { QRCodeTooltip } from "./qr-code-tooltip";
 import { useAccount } from "wagmi";
+import { ShareButton } from "./share-button";
 
 interface GrantspoolItemProps {
   grantsPool: {
@@ -87,6 +88,7 @@ const GrantspoolItem = ({ grantsPool, className = "", children, type = "list" }:
               <i className={`${iconMap[key] || "ri-link"} text-2xl`}></i>
             </NextLink>
           ))}
+          <ShareButton/>
           {
             type === "list" ?
             <NextLink href={`/grants-pool/${grantsPool.id}`}>

@@ -65,6 +65,7 @@ export const DataDisplayGrid = ({
   // 分页逻辑
   const pods = data?.pods || [];
   const nextCursor = data?.nextCursor;
+  const totalPages = data?.totalPages || 1;
 
   console.log('data',data);
 
@@ -181,12 +182,12 @@ export const DataDisplayGrid = ({
       </div>
 
       {/* 分页 */}
-      {showPagination && podsForDisplay.length > 0 && (
+      {showPagination && totalPages > 1 && (
         <div className="flex justify-center py-10">
           <Pagination
             showControls
             page={currentPage}
-            total={nextCursor ? currentPage + 1 : currentPage}
+            total={totalPages}
             onChange={handlePageChange}
           />
         </div>

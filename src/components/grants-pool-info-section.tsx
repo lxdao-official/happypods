@@ -5,17 +5,17 @@ import { useMemo } from "react";
 
 interface GrantsPoolInfoSectionProps {
   grantsPoolId: string;
-  rfpIndex: string;
+  rfpId: string;
   currency: string;
   onGrantsPoolChange: (grantsPoolId: string) => void;
-  onRfpChange: (rfpIndex: string) => void;
+  onRfpChange: (rfpId: string) => void;
   onCurrencyChange: (currency: string) => void;
   isPreselected: boolean;
 }
 
 const GrantsPoolInfoSection = ({
   grantsPoolId,
-  rfpIndex,
+  rfpId,
   currency,
   onGrantsPoolChange,
   onRfpChange,
@@ -31,7 +31,7 @@ const GrantsPoolInfoSection = ({
 
   // 获取选中GP的RFP
   const selectedPool = grantsPools?.find(gp => gp.id.toString() === grantsPoolId);
-  const selectedRfp = grantsPoolDetails?.rfps?.find(rfp => rfp.id.toString() === rfpIndex);
+  const selectedRfp = grantsPoolDetails?.rfps?.find(rfp => rfp.id.toString() === rfpId);
 
   // 获取可用的currency选项
   const currencyOptions = grantsPoolDetails?.availableTokens || [];
@@ -40,9 +40,12 @@ const GrantsPoolInfoSection = ({
     return grantsPools?.map(v=>({key:v.id.toString(),label:`${v.name} (${v.chainType})`}))
   },[grantsPools])
 
-  const rfpOptions = useMemo(()=>{
-    return grantsPoolDetails?.rfps?.map((rfp, index)=>({key:index.toString(),label:rfp.title})) || []
-  },[grantsPoolDetails?.rfps])
+  const rfpOptions = useMemo(() => {
+    return grantsPoolDetails?.rfps?.map((rfp) => ({
+      key: rfp.id.toString(),
+      label: rfp.title
+    })) || []
+  }, [grantsPoolDetails?.rfps])
 
   const currencyOptionsRes = useMemo(()=>{
     return currencyOptions?.map(token=>({key:token.symbol,label:`${token.symbol} (Available: ${token.available})`})) || []
@@ -102,7 +105,7 @@ const GrantsPoolInfoSection = ({
             label="Select RFP"
             isRequired
             placeholder="Please select an RFP"
-            selectedKeys={rfpIndex ? new Set([rfpIndex]) : new Set()}
+            selectedKeys={rfpId ? new Set([rfpId]) : new Set()}
             onSelectionChange={(keys) => {
               const newRfpIndex = Array.from(keys)[0] as string;
               onRfpChange(newRfpIndex || "");
