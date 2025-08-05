@@ -52,7 +52,6 @@ export const DataDisplayGrid = ({
   const {
     data,
     isLoading,
-    refetch,
   } = api.pod.getList.useQuery({
     limit: itemsPerPage,
     cursor: pageCursor ?? undefined,
@@ -98,45 +97,6 @@ export const DataDisplayGrid = ({
     />
   );
 
-  // 适配后端数据为PodsItem所需结构
-  const podsForDisplay = pods.map((pod: any) => {
-    // tags: 逗号分隔字符串转数组
-    const tags = pod.tags ? pod.tags.split(',').map((t: string) => t.trim()).filter(Boolean) : [];
-    // milestones: 真实数据
-    const milestones = (pod.milestones || []).map((m: any, i: number) => ({
-      name: m.title || `M${i+1}`,
-      progress: m.status === 'COMPLETED' ? 100 : 0,
-      amount: m.amount,
-      createdAt: m.createdAt,
-      deadline: m.deadline,
-      status: m.status,
-    }));
-    // progress/totalFunding: 由milestones计算
-    const totalFunding = milestones.reduce((sum: number, m: any) => sum + (m.amount || 0), 0);
-    const unlocked = milestones.filter((m: any) => m.status === 'COMPLETED').reduce((sum: number, m: any) => sum + (m.amount || 0), 0);
-    // 时间进度百分比
-    let percent = 0;
-    if (milestones.length > 0) {
-      const start = new Date(milestones[0].createdAt).getTime();
-      const end = new Date(milestones[milestones.length-1].deadline).getTime();
-      const now = Date.now();
-      percent = end > start ? Math.min(100, Math.max(0, ((now - start) / (end - start)) * 100)) : 0;
-    }
-    return {
-      id: pod.id,
-      name: pod.title,
-      avatar: pod.avatar,
-      tags,
-      description: pod.description,
-      progress: Math.round(percent),
-      totalFunding,
-      currency: pod.currency,
-      status: pod.status,
-      milestones,
-      lastUpdate: pod.updatedAt ? new Date(pod.updatedAt).toLocaleDateString() : '',
-      unlocked,
-    };
-  });
 
   return (
     <div className={className}>
@@ -167,12 +127,12 @@ export const DataDisplayGrid = ({
 
       {
         isLoading ? <LoadingSkeleton theme={theme}/> : 
-        podsForDisplay.length === 0 ? <Empty/> : null
+        pods.length === 0 ? <Empty/> : null
       }
 
       {/* 数据网格 */}
       <div className={gridClassName}>
-        {podsForDisplay.map((pod) => (
+        {pods.map((pod) => (
           <PodsItem
             key={pod.id}
             pod={pod}

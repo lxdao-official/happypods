@@ -9,13 +9,6 @@ import NextLink from "next/link";
 
 
 export default function PodsPage() {
-  // 处理卡片点击
-  const handlePodClick = (pod: any) => {
-    console.log(`Clicked on pod: ${pod.id}`);
-    // 这里可以添加导航到详情页的逻辑
-    // router.push(`/pods/${pod.id}`);
-  };
-
   return (
     <div className="p-6 ">
       <div className="container">

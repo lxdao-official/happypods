@@ -64,26 +64,75 @@ export const LinkDisplay = ({
     return null;
   }
 
-  return (
-    <div className={`flex items-center flex-wrap gap-2 ${className}`}>
-      {Object.entries(links).map(([key, url]) => {
-        const linkType = getLinkType(key, url);
-        const iconClass = LINK_ICONS[linkType] || LINK_ICONS.default;
+  // 主题样式配置
+  const themeStyles = {
+    dark: {
+      tag: "text-gray-400 border-gray-400 hover:text-white hover:border-white",
+      list: "text-gray-300 hover:text-white hover:bg-gray-800"
+    },
+    light: {
+      tag: "text-gray-600 border-gray-400 hover:text-gray-800 hover:border-gray-500",
+      list: "text-gray-700 hover:text-gray-900 hover:bg-gray-100"
+    }
+  };
 
-        return (
-          <a
-            key={key}
-            href={url}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="flex items-center gap-2 px-4 py-1 text-sm text-gray-400 border-gray-400 rounded-full hover:text-white border-1 hover:border-white"
-          >
-            <i className={`text-lg ${iconClass}`}></i>
-            <small className="text-xs capitalize">{key}</small>
-            <i className="ri-external-link-line"></i>
-          </a>
-        );
-      })}
-    </div>
-  );
+  const currentTheme = themeStyles[theme];
+
+  // Tag 类型渲染
+  if (type === 'tag') {
+    return (
+      <div className={`flex items-center flex-wrap gap-2 ${className}`}>
+        {Object.entries(links).map(([key, url]) => {
+          const linkType = getLinkType(key, url);
+          const iconClass = LINK_ICONS[linkType] || LINK_ICONS.default;
+
+          return (
+            <a
+              key={key}
+              href={url}
+              target="_blank"
+              rel="noopener noreferrer"
+              className={`flex items-center gap-2 px-2 py-0.5 text-sm rounded-full border-1 transition-colors ${currentTheme.tag}`}
+            >
+              <i className={`text-lg ${iconClass}`}></i>
+              <small className="text-xs capitalize">{key}</small>
+              <i className="ri-external-link-line"></i>
+            </a>
+          );
+        })}
+      </div>
+    );
+  }
+
+  // List 类型渲染
+  if (type === 'list') {
+    return (
+      <div className={`space-y-2 ${className}`}>
+        {Object.entries(links).map(([key, url]) => {
+          const linkType = getLinkType(key, url);
+          const iconClass = LINK_ICONS[linkType] || LINK_ICONS.default;
+
+          return (
+            <div key={key} className="flex items-center gap-3">
+              <a
+                href={url}
+                target="_blank"
+                rel="noopener noreferrer"
+                className={`flex items-center gap-3 px-3 py-2 rounded-lg transition-colors w-full ${currentTheme.list}`}
+              >
+                <i className={`text-xl ${iconClass} flex-shrink-0`}></i>
+                <div className="flex-1 min-w-0">
+                  <div className="text-sm font-medium capitalize">{key}</div>
+                  <div className="text-xs truncate opacity-70">{url}</div>
+                </div>
+                <i className="flex-shrink-0 ri-external-link-line"></i>
+              </a>
+            </div>
+          );
+        })}
+      </div>
+    );
+  }
+
+  return null;
 }; 

@@ -339,8 +339,8 @@ export default function CreatePodPage() {
           onNavigateToProfile={handleNavigateToProfile}
         />
 
-        {/* gp无法参与创建模态框 */}
-        <GpOwnerCheck/>
+        {/* 当前gp创建者无法参与创建模态框 */}
+        <GpOwnerCheck onwerId={grantsPoolDetails?.owner.id}/>
       
       </div>
     </div>

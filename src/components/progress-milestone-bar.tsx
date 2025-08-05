@@ -6,8 +6,8 @@ interface ProgressMilestoneBarProps {
   milestones: {
     name: string;
     amount: number;
-    createdAt: string;
-    deadline: string;
+    createdAt: Date;
+    deadline: Date;
     status: string;
   }[]
 }

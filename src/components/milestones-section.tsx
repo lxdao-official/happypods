@@ -1,4 +1,3 @@
-import { Button, Chip } from "@heroui/react";
 import ApplyExtensionModal from "./apply-extension-modal";
 import SubmitMilestoneModal from "./submit-milestone-modal";
 import MilestoneSubmissionDisplay from "./milestone-submission-display";
@@ -6,40 +5,7 @@ import ReviewMilestoneModal from "./review-milestone-modal";
 import ProgressMilestoneBar from "./progress-milestone-bar";
 import StatusChip from "./StatusChip";
 import { formatDate } from "~/lib/utils";
-
-interface SubmissionData {
-  description: string;
-  links: Record<string, string>;
-  submittedAt: string;
-  review?: {
-    action: 'approve' | 'reject';
-    comment: string;
-    reviewedAt?: string;
-    reviewer?: string;
-  };
-}
-
-interface Milestone {
-  id: number | string;
-  title: string;
-  status: string;
-  deadline: string;
-  amount: number;
-  description: string;
-  createdAt: string;
-  phase?: string;
-  submissions?: SubmissionData[];
-  maxSubmissions?: number; // 最大提交次数，默认3次
-  isPendingDelivery?: boolean; // 是否为待交付状态
-  deliveryInfo?: Array<{
-    content: string;
-    links: Record<string, string>;
-    submittedAt: string;
-    approved: boolean | null;
-    reviewComment: string | null;
-    reviewedAt: string | null;
-  }>;
-}
+import type { Milestone } from "@prisma/client";
 
 interface MilestonesSectionProps {
   milestones: Milestone[];
@@ -70,32 +36,18 @@ export default function MilestonesSection({ milestones }: MilestonesSectionProps
     window.location.reload(); // 临时解决方案，实际应该通过更优雅的方式刷新
   };
 
-  const getRemainingSubmissions = (milestone: Milestone) => {
-    const maxSubmissions = milestone.maxSubmissions || 3;
-    const currentSubmissions = milestone.submissions?.length || 0;
-    return Math.max(0, maxSubmissions - currentSubmissions);
-  };
-
-  const canSubmit = (milestone: Milestone) => {
-    return getRemainingSubmissions(milestone) > 0;
-  };
-
   return (
     <div>
-      
-      <div className="flex items-center justify-between mb-6">
-        <h2 className="text-xl font-bold">Milestones</h2>
-        <div className="flex-1 max-w-[500px]">
-          <ProgressMilestoneBar milestones={progressMilestones} />
-        </div>
-      </div>
+      <div className="mb-6 text-xl font-bold">Milestones</div>
 
+      <ProgressMilestoneBar milestones={progressMilestones} />
+      
       <div className="space-y-4">
         {milestones.map((milestone, index) => {
-          const remainingSubmissions = Math.max(0, 3 - (milestone.deliveryInfo?.length || 0));
+          const remainingSubmissions = Math.max(0, 3 - (milestone.deliveryInfo.length || 0));
           
           return (
-            <div key={milestone.id} className="p-4 border border-black rounded-lg">
+            <div key={milestone.id} className="p-4 border border-black rounded-md">
               <div className="flex items-center justify-between mb-3">
                 <div className="flex items-center gap-3">
                   <h3 className="font-semibold">{milestone.title}</h3>
@@ -123,7 +75,7 @@ export default function MilestonesSection({ milestones }: MilestonesSectionProps
                   {milestone.status === 'REVIEWING' && (
                     <ReviewMilestoneModal 
                       milestoneId={milestone.id}
-                      deliveryInfo={milestone.deliveryInfo || []}
+                      deliveryInfo={milestone.deliveryInfo as any[]}
                       onReview={(data) => handleMilestoneReview(milestone.id, data)}
                     />
                   )}

@@ -3,6 +3,21 @@ import { publicProcedure } from "~/server/api/trpc";
 import { getAllSchema, checkEmailExistsSchema } from "./schemas";
 
 export const userQueries = {
+  // 获取当前用户的数据
+  getMe: publicProcedure.query(async ({ ctx }) => {
+    const user = await ctx.db.user.findUnique({
+      where: { id: ctx.user.id },
+      select: {
+        id: true,
+        email: true,
+        name: true,
+        role: true,
+        avatar: true,
+      },
+    });
+    return user;
+  }),
+
   // 根据 ID 获取用户
   getById: publicProcedure
     .input(z.object({ id: z.number() }))

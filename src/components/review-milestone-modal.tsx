@@ -80,16 +80,6 @@ export default function ReviewMilestoneModal({ milestoneId, deliveryInfo, onRevi
 
   // 找到最新的待审核的提交
   const latestPendingDeliveryIndex = deliveryInfo.findIndex(delivery => delivery.approved === null);
-  
-  // 链接名称映射
-  const linkNameMapping = {
-    github: "GitHub链接",
-    demo: "演示链接", 
-    docs: "文档链接",
-    website: "网站链接",
-    video: "视频链接",
-    other: "其他链接"
-  };
 
   return (
     <>

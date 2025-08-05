@@ -17,6 +17,7 @@ import { api } from "~/trpc/react";
 import { getUser } from "~/lib/auth-storage";
 import { toast } from "sonner";
 import LoadingSkeleton from "~/components/LoadingSkeleton";
+import { useUserInfo } from "../hooks/useUserInfo";
 
 // 定义链接类型
 interface UserLinks {
@@ -36,6 +37,8 @@ interface FormData {
 }
 
 export default function ProfilePage() {
+  const { fetchAndStoreUserInfo } = useUserInfo();
+
   const router = useRouter();
   const [formData, setFormData] = useState<FormData>({
     avatar: "",
@@ -63,6 +66,7 @@ export default function ProfilePage() {
       await utils.user.invalidate();
       toast.success("Profile updated successfully!");
       router.back();
+      fetchAndStoreUserInfo();
     },
     onError: (error: unknown) => {
       const errorMessage = error instanceof Error ? error.message : String(error);

@@ -112,7 +112,7 @@ model Milestone {
   deadline     DateTime
   status       MilestoneStatus @default(ACTIVE)
   currentPhase String          @default("PENDING")
-  deliveryInfo Json? // {content: string, links: string[], deadline: string}
+  deliveryInfo Json[]          // [{content: string, links: string[], deadline: string}]
   metadata     Json?           @default("{}") // {rejectReason: string}
   createdAt    DateTime        @default(now())
   updatedAt    DateTime        @updatedAt

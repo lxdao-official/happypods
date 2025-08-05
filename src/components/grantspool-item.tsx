@@ -7,49 +7,18 @@ import NextLink from "next/link";
 import { QRCodeTooltip } from "./qr-code-tooltip";
 import { useAccount } from "wagmi";
 import { ShareButton } from "./share-button";
+import type { GrantsPool, Rfps } from "@prisma/client";
+import useStore from "~/store";
 
-interface GrantspoolItemProps {
-  grantsPool: {
-    avatar?: string | null;
-    id: number;
-    name: string;
-    description: string;
-    logo?: string;
-    links?: Record<string, string>;
-    socialIcons?: string[]; // 不再直接用
-    fundingAmounts?: Array<{
-      amount: string;
-      currency: string;
-    }>; // 不再直接用
-    treasuryBalances?: Record<string, {available: string, used: string, locked: string}>;
-    categories: string[];
-    proposals: Array<{
-      id: number;
-      title: string;
-      description: string;
-      avatar?: string | null;
-    }>;
-    owner?: {
-      id: number;
-      name: string | null;
-      avatar: string | null;
-      walletAddress: string;
-    };
-    isOwner?: boolean;
-  };
+
+const GrantspoolItem = ({ grantsPool, className = "", children, type = "list" }: {
+  grantsPool: GrantsPool & {rfps: Rfps[]};
   className?: string;
   children?: React.ReactNode;
   type?: "list" | "detail";
-}
+}) => {
 
-const GrantspoolItem = ({ grantsPool, className = "", children, type = "list" }: GrantspoolItemProps) => {
-  const [isMounted, setIsMounted] = useState(false);
-  const { address: account } = useAccount();
-  
-  // 避免SSR问题，只在客户端渲染后执行
-  useEffect(() => {
-    setIsMounted(true);
-  }, []);
+  const { userInfo } = useStore();
 
   const handleProposalClick = (proposalId: number) => {
     console.log(`Clicked on proposal: ${proposalId}`);
@@ -65,8 +34,11 @@ const GrantspoolItem = ({ grantsPool, className = "", children, type = "list" }:
     website: "ri-global-line",
   };
 
-  // 头像逻辑
-  const avatarSrc = grantsPool.avatar || grantsPool.logo || "/logo.svg";
+  // 在组件内部处理数据转换
+  const categories = grantsPool.tags ? grantsPool.tags.split(',').map(tag => tag.trim()).filter(Boolean) : ["Default"];
+  const avatarSrc = grantsPool.avatar || "/logo.svg";
+
+  const isOwner = userInfo && userInfo?.id === grantsPool.ownerId;
 
   return (
     <CardBox 
@@ -94,9 +66,9 @@ const GrantspoolItem = ({ grantsPool, className = "", children, type = "list" }:
             <NextLink href={`/grants-pool/${grantsPool.id}`}>
               <AppBtn>View More</AppBtn>
             </NextLink>:
-            grantsPool.isOwner && (
+            isOwner && (
               <NextLink href={`/grants-pool/${grantsPool.id}/edit`}>
-                <AppBtn btnProps={{color:"warning"}}>Eidt</AppBtn>
+                <AppBtn btnProps={{color:"warning"}}>Edit</AppBtn>
               </NextLink>
             )
           }
@@ -108,7 +80,7 @@ const GrantspoolItem = ({ grantsPool, className = "", children, type = "list" }:
       <div className="p-4 space-y-6">
         {/* 导航标签 */}
         <div className="flex mb-6 space-x-2">
-          {grantsPool.categories.map((category) => (
+          {categories.map((category) => (
             <button
               key={category}
               className="px-3 py-1 text-xs text-black border border-black rounded-full"
@@ -150,12 +122,12 @@ const GrantspoolItem = ({ grantsPool, className = "", children, type = "list" }:
         <div>
           <h2 className="mb-4 text-2xl font-bold">Request-For-Proposal</h2>
           <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-4">
-            {grantsPool.proposals.map((proposal) => (
+            {grantsPool.rfps.map((rfp) => (
               <GrantspoolRFPItem
-                key={proposal.id}
+                key={rfp.id}
                 gpId={grantsPool.id}
-                proposal={proposal}
-                onClick={() => handleProposalClick(proposal.id)}
+                proposal={rfp}
+                onClick={() => handleProposalClick(rfp.id)}
               />
             ))}
           </div>

@@ -14,6 +14,7 @@ import {
 } from "@heroui/react";
 import { formatDate } from "~/lib/utils";
 import useNotifcation from "~/app/hooks/useNotifcation";
+import Empty from "../Empty";
 
 export function NotificationDrawer() {
   const {notifications, readAll, read} = useNotifcation();
@@ -58,17 +59,14 @@ export function NotificationDrawer() {
                 </div>
               </DrawerHeader>
               <DrawerBody className="px-0">
-                {notifications.length === 0 ? (
-                  <div className="flex flex-col items-center justify-center py-12 text-center">
-                    <i className="mb-4 text-4xl ri-inbox-line text-default-300"></i>
-                    <p className="text-default-500">暂无通知</p>
-                  </div>
-                ) : (
+                {notifications.length === 0 ? 
+                <Empty/>
+                : (
                   <div>
                     {notifications.map((notification) => (
                       <div
                         key={notification.id}
-                        className={`relative cursor-default border-b border-border p-4 transition-colors hover:opacity-80 ${
+                        className={`relative cursor-default border-b border-border py-4 transition-colors hover:opacity-80 ${
                           !notification.read ? "bg-[#ffffff18]" : ""
                         }`}
                         onClick={()=> !notification.read && read(notification.id)}

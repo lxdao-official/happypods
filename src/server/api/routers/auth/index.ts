@@ -110,13 +110,6 @@ export const authRouter = createTRPCRouter({
         return {
           success: true,
           token,
-          user: {
-            id: user.id,
-            name: user.name,
-            email: user.email,
-            role: user.role,
-            address: input.address.toLowerCase(),
-          },
         };
       } catch (error) {
         console.error('Signature verification error:', error);

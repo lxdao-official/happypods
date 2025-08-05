@@ -8,7 +8,6 @@ import { QRCodeTooltip } from "~/components/qr-code-tooltip";
 import MilestonesSection from "~/components/milestones-section";
 import CardBox from "~/components/card-box";
 import EdgeLine from "~/components/edge-line";
-import AppBtn from "~/components/app-btn";
 import { ShareButton } from "~/components/share-button";
 import type { PodHistoryItem } from "~/components/pod-history-section";
 import PodHistorySection from "~/components/pod-history-section";
@@ -22,6 +21,7 @@ import Empty from "~/components/Empty";
 import type { JsonObject, JsonValue } from "@prisma/client/runtime/library";
 import JsonInfoDisplay from "~/components/json-info-display";
 import type { Status } from "~/lib/config";
+import { LinkDisplay } from "~/components/link-display";
 
 
 export default function PodDetailPage() {
@@ -67,49 +67,14 @@ export default function PodDetailPage() {
 
   // 转换数据格式以匹配现有 UI
   const pod = {
-    walletAddress: podDetail.walletAddress,
-    id: podDetail.id,
-    name: podDetail.title,
-    avatar: podDetail.avatar || "",
-    status: podDetail.status as Status,
-    rfpId: podDetail.rfpId,
-    currency: podDetail.currency,
+    ...podDetail,
     tags: podDetail.tags?.split(',').map(tag => tag.trim()).filter(Boolean) || [],
-    createdAt: podDetail.createdAt,
-    description: podDetail.description,
-    applicant: {
-      id: podDetail.applicant.id,
-      name: podDetail.applicant.name,
-      avatar: podDetail.applicant.avatar,
-      links: podDetail.applicant.links  as JsonValue
-    },
-    grantsPool: {
-      id: podDetail.grantsPool.id,
-      name: podDetail.grantsPool.name,
-      avatar: podDetail.grantsPool.avatar || ''
-    },
     treasury: {
       locked,
       funded,
       balances: podDetail.treasuryBalances
     },
-    links: podDetail.links as Record<string, string> || {}
   };
-
-  // 转换里程碑数据格式
-  const formattedMilestones = milestones?.map((milestone, index) => ({
-    id: milestone.id,
-    title: milestone.title,
-    status: milestone.status,
-    deadline: milestone.deadline.toISOString().split('T')[0] || '',
-    amount: milestone.amount,
-    description: milestone.description,
-    createdAt: milestone.createdAt.toISOString().split('T')[0] || '',
-    phase: milestone.currentPhase || `Phase ${index + 1}`,
-    maxSubmissions: 3,
-    submissions: [], // 暂时为空数组，因为数据库中没有 submissions 表
-    deliveryInfo: milestone.deliveryInfo as any[] || []
-  })) || [];
 
   // 转换历史记录数据格式
   const formattedHistory: PodHistoryItem[] = podHistory?.versions?.map(item => ({
@@ -127,8 +92,8 @@ export default function PodDetailPage() {
       title={
        <div className="flex items-center justify-between">
          <div className="flex items-center">
-            <img src={pod.avatar} alt="" className="w-10 h-10 rounded-full" />
-            <span className="ml-2 text-2xl font-bold">{pod.name}</span>
+            <img src={pod.avatar || ''} alt="" className="w-10 h-10 rounded-full" />
+            <span className="ml-2 text-2xl font-bold">{pod.title}</span>
           </div>
 
          <div className="flex items-center gap-4">
@@ -136,13 +101,13 @@ export default function PodDetailPage() {
             podStatus={pod.status}
             grantsPoolId={pod.grantsPool.id}
             podId={pod.id}
-            podTitle={pod.name}
+            podTitle={pod.title}
             podWalletAddress={pod.walletAddress}
             podCurrency={pod.currency}
           />
           <ShareButton 
             url={typeof window !== 'undefined' ? window.location.href : ''}
-            title={`${pod.name} - ${pod.description}`}
+            title={`${pod.title} - ${pod.description}`}
             description={pod.description}
             size="sm"
             color="primary"
@@ -182,11 +147,11 @@ export default function PodDetailPage() {
           <EdgeLine color="var(--color-background)"/>
 
           <div>
-            <MilestonesSection milestones={formattedMilestones} />
+            {milestones && <MilestonesSection milestones={milestones} />}
           </div>
         </div>
 
-        <div className="space-y-8">
+        <div className="space-y-6">
           <div>
             <div className="flex items-center justify-between mb-4">
               <div className="flex items-center gap-2">
@@ -205,20 +170,20 @@ export default function PodDetailPage() {
                 </a>
               </div>
             </div>
-            <div className="grid grid-cols-3 gap-1 text-center">
+            <div className="grid grid-cols-3 gap-1 text-left">
             
-              <div className="p-2 text-black border border-black rounded-lg">
-                <div className="text-2xl font-bold">{pod.treasury.balances}</div>
+              <div className="p-2 text-black rounded-md">
+                <div className="text-xl font-bold">{pod.treasury.balances}</div>
                 <div className="text-xs text-secondary">Locked</div>
               </div>
 
-              <div className="p-2 text-red-500 border border-black rounded-lg">
-                <div className="text-2xl font-bold">{pod.treasury.locked}</div>
-                <div className="text-xs text-secondary">application</div>
+              <div className="p-2 text-red-500 rounded-md">
+                <div className="text-xl font-bold">{pod.treasury.locked}</div>
+                <div className="text-xs text-secondary">Application</div>
               </div>
               
-              <div className="p-2 text-green-500 border border-black rounded-lg">
-                <div className="text-2xl font-bold">{pod.treasury.funded}</div>
+              <div className="p-2 text-green-500 rounded-md">
+                <div className="text-xl font-bold">{pod.treasury.funded}</div>
                 <div className="text-xs text-secondary">Funded</div>
               </div>
             </div>
@@ -255,7 +220,7 @@ export default function PodDetailPage() {
                 <div className="flex items-center justify-between space-x-2">
                   <div className="mb-1 text-sm text-secondary shrink-0">Grants Pool</div>
                   <div className="flex items-center gap-2">
-                    <img src={pod.grantsPool.avatar} alt="" className="w-6 h-6 rounded-full" />
+                    <img src={pod.grantsPool.avatar || ''} alt="" className="w-6 h-6 rounded-full" />
                     <span className="text-sm">{pod.grantsPool.name}</span>
                     <NextLink href={`/grants-pool/${pod.grantsPool.id}`} target="_blank">
                       <i className="text-sm ri-external-link-line hover:opacity-70"></i>
@@ -295,22 +260,7 @@ export default function PodDetailPage() {
             {pod.links && (
               <div>
                 <h2 className="mb-4 text-xl font-bold">Links</h2>
-                <div className="flex flex-wrap gap-4">
-                {Object.entries(pod.links).map(([key, value]) => (
-                  <a href={value} target="_blank" rel="noopener noreferrer" key={key} className="flex items-center gap-3 text-sm">
-                      <Chip
-                        key={key}
-                        variant="flat"
-                      >
-                        <div className="flex items-center gap-2 text-black hover:opacity-75">
-                          <i className={`ri-${key === 'website' ? 'global' : key}-line text-lg`}></i>
-                          <span className="capitalize">{key}</span>
-                          <i className="text-xs ri-external-link-line"></i>
-                        </div>
-                      </Chip>
-                    </a>  
-                  ))}
-                </div>
+                <LinkDisplay links={pod.links as Record<string, string>} theme="light" />
                 
                 {/* 历史版本组件 */}
                 <PodHistorySection history={formattedHistory} />

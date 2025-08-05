@@ -33,6 +33,9 @@ export const truncateString = (
 };
 
 // dayjs时间格式为指定格式
-export const formatDate = (date: string, format: string = 'YYYY-MM-DD') => {
+export const formatDate = (date: string|Date, format: string = 'YYYY-MM-DD') => {
   return dayjs(date).format(format);
 };
+
+// 定一个promise的延迟函数
+export const delay_s = (ms: number=300) => new Promise((resolve) => setTimeout(resolve, ms));

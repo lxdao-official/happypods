@@ -4,10 +4,12 @@ import { useState, useEffect, useCallback, useMemo } from "react";
 import { useAccount, useConnect, useDisconnect, useSignTypedData } from "wagmi";
 import Link from "next/link";
 import { api } from "~/trpc/react";
-import { storeToken, storeUser, getUser, logout } from "~/lib/auth-storage";
+import { storeToken, logout } from "~/lib/auth-storage";
 import { ConnectButton } from '@rainbow-me/rainbowkit';
 import { toast } from "sonner";
 import { truncateString } from "~/lib/utils";
+import { useUserInfo } from "~/app/hooks/useUserInfo";
+import useStore from "~/store";
 
 // 定义TypedData结构 - 需要与后端保持一致
 const domain = {
@@ -25,32 +27,10 @@ const types = {
 
 export function LoginModal() {
   const [isLoading, setIsLoading] = useState(false);
-  const [loggedInUser, setLoggedInUser] = useState(getUser());
-
-  // 每次进入组件时拉取后端最新用户信息
-  const { data: latestUser, refetch: refetchUser } = api.user.getById.useQuery(
-    { id: loggedInUser?.id ?? 0 },
-    { enabled: !!loggedInUser?.id }
-  );
-
-  // 拉取到新数据后，更新本地存储和 state
-  useEffect(() => {
-    if (latestUser && latestUser.id) {
-      const userInfo = {
-        id: latestUser.id,
-        name: latestUser.name ?? '',
-        email: latestUser.email ?? '',
-        role: latestUser.role ?? 'APPLICANT',
-        address: latestUser.walletAddress,
-      };
-      storeUser(userInfo);
-      setLoggedInUser(userInfo);
-    }
-  }, [latestUser]);
+  const { userInfo, fetchAndStoreUserInfo, handleLogout } = useUserInfo();
+  const { userInfo: storeUserInfo } = useStore();
 
   const { address, isConnected } = useAccount();
-  const { connect } = useConnect();
-  const { disconnect } = useDisconnect();
   const { signTypedDataAsync } = useSignTypedData();
 
   // 获取nonce
@@ -61,24 +41,20 @@ export function LoginModal() {
 
   // 验证签名
   const verifySignature = api.auth.verifySignature.useMutation({
-    onSuccess: (result) => {
-      // 处理用户信息，确保符合StoredUser接口
-      const userInfo = {
-        id: result.user.id,
-        name: result.user.name ?? ``,
-        email: result.user.email ?? ``,
-        role: result.user.role ?? "APPLICANT",
-        address: result.user.address,
-      };
-      
-      // 存储token和用户信息
+    onSuccess: async (result) => {
+      // 只存储token
       storeToken(result.token);
-      storeUser(userInfo);
-      setLoggedInUser(userInfo);
-      setIsLoading(false);
       toast.success("logged in");
-      // 登录成功后同步一次后端用户信息
-      refetchUser();
+      
+      // 登录成功后获取用户信息
+      try {
+        await fetchAndStoreUserInfo();
+        setIsLoading(false);
+      } catch (error) {
+        console.error('Failed to fetch user info:', error);
+        toast.error('Failed to fetch user info');
+        setIsLoading(false);
+      }
     },
     onError: (error) => {
       setIsLoading(false);
@@ -86,20 +62,7 @@ export function LoginModal() {
     },
   });
 
-  // 检查登录状态
-  useEffect(() => {
-    setLoggedInUser(getUser());
-  }, []);
 
-  // 监听存储变化（跨标签页同步）
-  useEffect(() => {
-    const handleStorageChange = () => {
-      setLoggedInUser(getUser());
-    };
-
-    window.addEventListener('storage', handleStorageChange);
-    return () => window.removeEventListener('storage', handleStorageChange);
-  }, []);
 
   // 处理签名登录流程
   const handleSignLogin = useCallback(async () => {
@@ -152,46 +115,43 @@ export function LoginModal() {
     }
   }, [address, refetchNonce, signTypedDataAsync, verifySignature]);
 
-  // 处理登出
-  const handleLogout = useCallback(() => {
-    logout();
-    disconnect();
-    setLoggedInUser(null);
-    toast.success("logged out");
-  }, [disconnect]);
-
   // 钱包连接成功后自动触发签名流程
   useEffect(() => {
-    if (isConnected && address && !isLoading && !loggedInUser) {
+    if (isConnected && address && !isLoading && !userInfo) {
       console.log('Wallet connected, auto-triggering sign login...');
       void handleSignLogin();
     }
-  }, [isConnected, address, isLoading, loggedInUser, handleSignLogin]);
-
-  // 调试信息
-  console.log('LoginModal render:', { 
-    isLoading, 
-    isConnected, 
-    address: address?.slice(0, 6) + '...' + address?.slice(-4),
-    loggedInUser: loggedInUser?.name 
-  });
+  }, [isConnected, address, isLoading, userInfo, handleSignLogin]);
 
   const username = useMemo(()=>{
-    if(loggedInUser){
-      const wallet  = truncateString(loggedInUser.address, 6);
-      return loggedInUser.name ? `${loggedInUser.name} (${wallet})` : wallet
+    if(userInfo){
+      const wallet = truncateString(userInfo.address, 6);
+      return userInfo.name ? `${userInfo.name} (${wallet})` : wallet
     }
     return ''
-  },[loggedInUser])
+  },[userInfo])
+
+  // 获取用户头像（优先显示头像）
+  const getUserAvatar = () => {
+    return storeUserInfo?.avatar || null;
+  };
 
   return (
     <div>
-      {loggedInUser ? (
+      {userInfo ? (
         // 已登录用户显示下拉菜单
         <Dropdown className="text-black bg-foreground" placement="bottom-end">
           <DropdownTrigger>
             <Button variant="bordered" className="flex items-center space-x-1">
-            <i className="text-xl ri-wallet-line"></i>
+              {getUserAvatar() ? (
+                <img 
+                  src={getUserAvatar()!} 
+                  alt="User Avatar" 
+                  className="w-5 h-5 rounded-full"
+                />
+              ) : (
+                <i className="text-xl ri-wallet-line"></i>
+              )}
               <span>{username}</span>
               <i className="text-xl ri-arrow-down-s-line"></i>
             </Button>

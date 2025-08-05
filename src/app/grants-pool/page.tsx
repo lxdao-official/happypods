@@ -11,45 +11,13 @@ import LoadingSkeleton from "~/components/LoadingSkeleton";
 
 export default function GrantsPoolPage() {
   // 获取所有 grants pools 数据（不使用分页，获取全部）
-  const { data: grantsPoolsData, isLoading, error } = api.grantsPool.getAll.useQuery({
+  const { data: grantsPoolsData, isLoading } = api.grantsPool.getAll.useQuery({
     limit: 100, // 设置一个较大的限制值来获取所有数据
   });
 
 
-  console.log('grantsPoolsData==>',grantsPoolsData);
-
-  // 转换数据格式以适配 GrantspoolItem 组件
-  const transformedGrantsPools = useMemo(() => {
-    if (!grantsPoolsData?.grantsPools) return [];
-
-    return grantsPoolsData.grantsPools.map((pool) => {
-      // links 直接传递
-      const links = pool.links as Record<string, string> | undefined;
-      // 解析 tags 为 categories
-      const categories = pool.tags ? pool.tags.split(',').map(tag => tag.trim()) : [];
-      // treasuryBalances 直接传递
-      const treasuryBalances = pool.treasuryBalances as Record<string, {available: string, used: string, locked: string}> | undefined;
-      // proposals
-      const proposals = pool.rfps.map(rfp => ({
-        id: rfp.id,
-        title: rfp.title,
-        description: rfp.description                           
-      }));
-      return {
-        id: pool.id,
-        avatar: pool.avatar ?? null,
-        name: pool.name,
-        description: pool.description,
-        logo: pool.avatar ?? undefined,
-        links,
-        treasuryBalances,
-        categories: categories.length > 0 ? categories : ["Default"],
-        proposals,
-      };
-    });
-  }, [grantsPoolsData]);
-
-
+  // 优化后：直接使用后端数据，在组件内部处理必要的数据转换
+  const grantsPools = grantsPoolsData?.grantsPools || [];
 
   return (
     <div className="p-6 mb-8">
@@ -67,13 +35,13 @@ export default function GrantsPoolPage() {
 
         {
           isLoading ? <LoadingSkeleton /> : 
-          transformedGrantsPools.length === 0 ? <Empty /> : null
+          grantsPools.length === 0 ? <Empty /> : null
         }
 
         {/* Grants Pool 列表 */}
         <div className="space-y-8">
-          {transformedGrantsPools.length > 0 && (
-            transformedGrantsPools.map((grantsPool) => (
+          {grantsPools.length > 0 && (
+            grantsPools.map((grantsPool) => (
               <GrantspoolItem
                 key={grantsPool.id}
                 grantsPool={grantsPool}
