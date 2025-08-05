@@ -1,8 +1,8 @@
 'use client';
 
 import { LoginModal } from '~/components/login-modal';
+import { NotificationDrawer } from '~/components/layout/notification';
 import NextLink from 'next/link';
-import { useState } from 'react';
 import { usePathname } from 'next/navigation';
 
 export function Header() {
@@ -14,6 +14,8 @@ export function Header() {
     { href: '/grants-pool', label: 'Grants Pool' },
     { href: '/how-it-works', label: 'How It Works' },
   ];
+
+
 
   return (
     <header className="p-4 border-b border-border bg-background">
@@ -42,7 +44,8 @@ export function Header() {
         </nav>
 
         {/* 登录按钮 */}
-        <div className="flex items-center justify-end basis-1/5">
+        <div className="flex items-center justify-end gap-8 basis-1/5">
+          <NotificationDrawer />
           <LoginModal />
         </div>
       </div>

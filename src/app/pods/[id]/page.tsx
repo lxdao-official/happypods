@@ -91,6 +91,7 @@ export default function PodDetailPage() {
     treasury: {
       locked,
       funded,
+      balances: podDetail.treasuryBalances
     },
     links: podDetail.links as Record<string, string> || {}
   };
@@ -204,14 +205,21 @@ export default function PodDetailPage() {
                 </a>
               </div>
             </div>
-            <div className="grid grid-cols-2 gap-4 text-center">
+            <div className="grid grid-cols-3 gap-1 text-center">
+            
+              <div className="p-2 text-black border border-black rounded-lg">
+                <div className="text-2xl font-bold">{pod.treasury.balances}</div>
+                <div className="text-xs text-secondary">Locked</div>
+              </div>
+
               <div className="p-2 text-red-500 border border-black rounded-lg">
                 <div className="text-2xl font-bold">{pod.treasury.locked}</div>
-                <div className="text-sm text-secondary">Locked</div>
+                <div className="text-xs text-secondary">application</div>
               </div>
+              
               <div className="p-2 text-green-500 border border-black rounded-lg">
                 <div className="text-2xl font-bold">{pod.treasury.funded}</div>
-                <div className="text-sm text-secondary">Funded</div>
+                <div className="text-xs text-secondary">Funded</div>
               </div>
             </div>
           </div>

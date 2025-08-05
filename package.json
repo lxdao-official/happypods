@@ -7,7 +7,7 @@
         "build": "next build",
         "check": "next lint && tsc --noEmit",
         "db:generate": "prisma migrate dev",
-        "db:migrate": "prisma migrate deploy",
+        "db:dev": "prisma migrate deploy",
         "db:push": "prisma db push",
         "db:studio": "prisma studio",
         "db:reset": "prisma migrate reset",
@@ -42,12 +42,14 @@
         "react": "^19.0.0",
         "react-dom": "^19.0.0",
         "remixicon": "^4.6.0",
+        "sass": "^1.89.2",
         "server-only": "^0.0.1",
         "sonner": "^2.0.6",
         "superjson": "^2.2.1",
         "viem": "~2.31.4",
         "wagmi": "^2.15.6",
-        "zod": "^3.24.2"
+        "zod": "^3.24.2",
+        "zustand": "^5.0.7"
     },
     "devDependencies": {
         "@eslint/eslintrc": "^3.3.1",

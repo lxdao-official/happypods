@@ -1,6 +1,8 @@
 import { z } from "zod";
 import { protectedProcedure } from "~/server/api/trpc";
 import { createPodSchema, updatePodSchema, rejectPodSchema, approvePodSchema, submitMilestoneDeliverySchema, reviewMilestoneDeliverySchema } from "./schemas";
+import { NotificationService } from "../notification/notification-service";
+import { NotificationType } from "@prisma/client";
 
 export const podMutations = {
   // 创建Pod
@@ -9,7 +11,7 @@ export const podMutations = {
     .mutation(async ({ ctx, input }) => {
       // 验证用户信息是否完善
       const user = await ctx.db.user.findUnique({
-        where: { id: ctx.user.id },
+        where: { id: ctx.user!.id },
         select: { name: true, email: true, description: true },
       });
 
@@ -56,7 +58,7 @@ export const podMutations = {
           links: podData.links as any,
           currency: podData.currency,
           tags: podData.tags,
-          applicantId: ctx.user.id,
+          applicantId: ctx.user!.id as number,
         },
         include: {
           applicant: true,
@@ -81,6 +83,17 @@ export const podMutations = {
         await Promise.all(milestonePromises);
       }
 
+      await NotificationService.createNotification({
+        type: NotificationType.POD_REVIEW,
+        senderId: pod.applicantId,
+        receiverId: pod.grantsPool.ownerId,
+        title: `Pod审核通知`,
+        content: `${user?.name} 向您提交了 <${pod.title}> 的Pod，请及时审核!`,
+        params: {
+          podId: pod.id,
+        }
+      });
+
       return pod;
     }),
 
@@ -99,7 +112,7 @@ export const podMutations = {
         throw new Error("Pod不存在");
       }
 
-      if (existingPod.applicantId !== ctx.user.id && ctx.user.role !== "ADMIN") {
+      if (existingPod.applicantId !== ctx.user!.id) {
         throw new Error("没有权限修改此Pod");
       }
 
@@ -127,7 +140,7 @@ export const podMutations = {
         throw new Error("Pod不存在");
       }
 
-      if (existingPod.applicantId !== ctx.user.id && ctx.user.role !== "ADMIN") {
+      if (existingPod.applicantId !== ctx.user!.id) {
         throw new Error("没有权限删除此Pod");
       }
 
@@ -153,7 +166,7 @@ export const podMutations = {
       }
 
       // 检查当前用户是否是 Grants Pool 的拥有者
-      if (existingPod.grantsPool.ownerId !== ctx.user.id && ctx.user.role !== "ADMIN") {
+      if (existingPod.grantsPool.ownerId !== ctx.user!.id) {
         throw new Error("没有权限拒绝此Pod");
       }
 
@@ -199,7 +212,7 @@ export const podMutations = {
       }
 
       // 检查当前用户是否是 Grants Pool 的拥有者
-      if (existingPod.grantsPool.ownerId !== ctx.user.id && ctx.user.role !== "ADMIN") {
+      if (existingPod.grantsPool.ownerId !== ctx.user!.id) {
         throw new Error("没有权限通过此Pod");
       }
 
@@ -239,7 +252,7 @@ export const podMutations = {
       }
 
       // 检查当前用户是否是Pod的申请者
-      if (milestone.pod.applicantId !== ctx.user.id) {
+      if (milestone.pod.applicantId !== ctx.user!.id) {
         throw new Error("没有权限提交此Milestone");
       }
 
@@ -305,7 +318,7 @@ export const podMutations = {
       }
 
       // 检查当前用户是否是 Grants Pool 的拥有者
-      if (milestone.pod.grantsPool.ownerId !== ctx.user.id && ctx.user.role !== "ADMIN") {
+      if (milestone.pod.grantsPool.ownerId !== ctx.user!.id) {
         throw new Error("没有权限审核此Milestone");
       }
 

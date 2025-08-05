@@ -8,19 +8,19 @@ datasource db {
 }
 
 model User {
-  id               Int          @id @default(autoincrement())
-  avatar           String?
-  name             String?
-  email            String?      @unique
-  role             UserRole?
-  description      String?
-  links            Json?
-  metadata         Json?        @default("{}")
-  createdAt        DateTime     @default(now())
-  updatedAt        DateTime     @updatedAt
-  walletAddress    String
-  ownedGrantsPools GrantsPool[] @relation("UserGrantsPools")
-  pods             Pod[]        @relation("UserPods")
+  id                    Int            @id @default(autoincrement())
+  avatar                String?
+  name                  String?
+  email                 String?        @unique
+  role                  UserRole?
+  description           String?
+  links                 Json?
+  metadata              Json?          @default("{}")
+  createdAt             DateTime       @default(now())
+  updatedAt             DateTime       @updatedAt
+  walletAddress         String
+  ownedGrantsPools      GrantsPool[]   @relation("UserGrantsPools")
+  pods                  Pod[]          @relation("UserPods")
   sentNotifications     Notification[] @relation("SentNotifications")
   receivedNotifications Notification[] @relation("ReceivedNotifications")
 
@@ -72,27 +72,28 @@ model Rfps {
 }
 
 model Pod {
-  id            Int         @id @default(autoincrement())
-  podGroupId    Int         @unique @default(autoincrement()) // 使用自增 ID 作为唯一标识
-  applicantId   Int
-  grantsPoolId  Int
-  rfpId         Int
-  walletAddress String
-  avatar        String?
-  title         String
-  description   String
-  links         Json?
-  tags          String?
-  currency      String
-  status        PodStatus   @default(REVIEWING)
-  metadata      Json?       @default("{}") // {rejectReason: string}
-  createdAt     DateTime    @default(now())
-  updatedAt     DateTime    @updatedAt
-  inactiveTime  DateTime? // 失效时间，null 表示当前活跃版本
-  milestones    Milestone[] @relation("PodMilestones")
-  applicant     User        @relation("UserPods", fields: [applicantId], references: [id])
-  grantsPool    GrantsPool  @relation("GrantsPoolPods", fields: [grantsPoolId], references: [id])
-  rfp           Rfps        @relation("RfpPods", fields: [rfpId], references: [id])
+  id               Int         @id @default(autoincrement())
+  podGroupId       Int         @unique @default(autoincrement()) // 使用自增 ID 作为唯一标识
+  applicantId      Int
+  grantsPoolId     Int
+  rfpId            Int
+  walletAddress    String
+  avatar           String?
+  title            String
+  description      String
+  links            Json?
+  tags             String?
+  treasuryBalances String?     @default("0")
+  currency         String
+  status           PodStatus   @default(REVIEWING)
+  metadata         Json?       @default("{}") // {rejectReason: string}
+  createdAt        DateTime    @default(now())
+  updatedAt        DateTime    @updatedAt
+  inactiveTime     DateTime? // 失效时间，null 表示当前活跃版本
+  milestones       Milestone[] @relation("PodMilestones")
+  applicant        User        @relation("UserPods", fields: [applicantId], references: [id])
+  grantsPool       GrantsPool  @relation("GrantsPoolPods", fields: [grantsPoolId], references: [id])
+  rfp              Rfps        @relation("RfpPods", fields: [rfpId], references: [id])
 
   @@index([applicantId])
   @@index([grantsPoolId])
@@ -159,27 +160,29 @@ enum MilestoneStatus {
   PENDING_DELIVERY // 待交付
 }
 
-
 model Notification {
-  id          Int              @id @default(autoincrement())
-  type        NotificationType
-  senderId    Int
-  receiverId  Int
-  params      Json?
-  content     String
-  createdAt   DateTime         @default(now())
-  updatedAt   DateTime         @updatedAt
-  metadata    Json?
-  sender      User             @relation("SentNotifications", fields: [senderId], references: [id])
-  receiver    User             @relation("ReceivedNotifications", fields: [receiverId], references: [id])
+  id         Int              @id @default(autoincrement())
+  type       NotificationType @default(GENERAL)
+  senderId   Int
+  receiverId Int
+  params     Json?
+  title      String
+  content    String
+  createdAt  DateTime         @default(now())
+  updatedAt  DateTime         @updatedAt
+  metadata   Json?
+  read       Boolean          @default(false)
+  sender     User             @relation("SentNotifications", fields: [senderId], references: [id])
+  receiver   User             @relation("ReceivedNotifications", fields: [receiverId], references: [id])
 
   @@index([senderId])
   @@index([receiverId])
 }
 
 enum NotificationType {
-  POD_REVIEW
-  MILESTONE_REVIEW
-  EXTENSION_REVIEW
-  MILESTONE_CHANGE_REVIEW
+  GENERAL // 通用
+  POD_REVIEW // 项目审核
+  MILESTONE_REVIEW // 里程碑审核
+  EXTENSION_REVIEW // 延期审核
+  MILESTONE_CHANGE_REVIEW // 里程碑变更审核
 }

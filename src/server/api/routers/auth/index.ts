@@ -3,6 +3,8 @@ import { verifyTypedData } from "viem";
 import { createTRPCRouter, publicProcedure } from "~/server/api/trpc";
 import { generateToken, verifyToken } from "./jwt";
 import { verifySignatureSchema, validateTokenSchema } from "./schemas";
+import { NotificationService } from "../notification/notification-service";
+import { NotificationType } from "@prisma/client";
 
 // 定义TypedData结构
 const domain = {
@@ -84,11 +86,20 @@ export const authRouter = createTRPCRouter({
           },
         });
 
-        user ??= await ctx.db.user.create({
+        if (!user) {
+          user = await ctx.db.user.create({
             data: {
               walletAddress: input.address.toLowerCase(),
             },
           });
+          NotificationService.createNotification({
+            title: "欢迎加入 HappyPods",
+            type: NotificationType.GENERAL,
+            senderId: user.id,
+            receiverId: user.id,
+            content: "欢迎加入 HappyPods，我们致力于为开发者提供一个公平、公正、透明的社区，让开发者能够更好地申请Grants!",
+          });
+        }
 
         // 生成JWT token
         const token = generateToken({

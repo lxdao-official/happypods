@@ -58,18 +58,35 @@ button {
     }
 }
 
-.progress-milestone {
-    position: relative;
-    padding-top: 10px;
-    margin-top: -8px;
-    &::after {
-        content: '';
-        position: absolute;
-        height: 10px;
-        width: 1px;
-        background: black;
-        top: 0%;
-        left: 50%;
-        transform: translateX(-50%);
+.progress-bar {
+    .progress-milestone {
+        position: relative;
+        padding-top: 10px;
+        margin-top: -8px;
+        &::after {
+            content: '';
+            position: absolute;
+            height: 10px;
+            width: 1px;
+            background: black;
+            top: 0%;
+            left: 50%;
+            transform: translateX(-50%);
+        }
+    }
+    >div:first-child {
+        .progress-milestone {
+            &::after {
+                left: 1px;
+            }
+        }
+    }
+    >div:last-child {
+        .progress-milestone {
+            &::after {
+                left: auto;
+                right: 0;
+            }
+        }
     }
 }

@@ -12,6 +12,7 @@ import { ZodError } from "zod";
 
 import { db } from "~/server/db";
 import { verifyToken, getTokenFromRequest } from "~/lib/jwt";
+import { PUBLIC_ROUTES } from "./config";
 
 /**
  * 1. CONTEXT
@@ -31,26 +32,11 @@ export const createTRPCContext = async (opts: { headers: Headers }) => {
   const token = getTokenFromRequest(authHeader ?? undefined);
   
   let user = null;
-  if (token) {
-    const payload = verifyToken(token);
-    if (payload) {
-      // 从数据库获取完整的用户信息
-      user = await db.user.findUnique({
-        where: { id: payload.userId },
-        select: {
-          id: true,
-          name: true,
-          email: true,
-          role: true,
-          metadata: true,
-        },
-      });
-    }
-  }
+  const payload = token ? verifyToken(token) : null;
 
   return {
     db,
-    user,
+    user:{ id: payload?.userId },
     token,
     ...opts,
   };
@@ -138,19 +124,22 @@ export const publicProcedure = t.procedure.use(timingMiddleware);
  *
  * @see https://trpc.io/docs/procedures
  */
-const authMiddleware = t.middleware(({ next, ctx }) => {
-  if (!ctx.user) {
+const authMiddleware = t.middleware(({ next, ctx, path }) => {
+  // 不在白名单中，需要认证
+  if (!ctx.user && !PUBLIC_ROUTES.includes(path)) {
     throw new TRPCError({
       code: 'UNAUTHORIZED',
       message: '您需要登录才能访问此功能',
     });
   }
+
   return next({
     ctx: {
       ...ctx,
-      user: ctx.user, // 确保user不为null
+      user: ctx.user, // 可能为null
     },
   });
+  
 });
 
 export const protectedProcedure = t.procedure.use(timingMiddleware).use(authMiddleware);
