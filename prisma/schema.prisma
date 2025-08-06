@@ -188,3 +188,23 @@ enum NotificationType {
   MILESTONE_DELIVERY_SUBMIT // 里程碑交付提交
   MILESTONE_CHANGE_REVIEW // 里程碑变更审核
 }
+
+
+// 交易记录表
+model Transaction {
+  id Int @id @default(autoincrement())
+  type TransactionType
+  amount Int
+  createdAt DateTime @default(now())
+  txHash String
+  metadata Json?
+  fromAddress String
+  toAddress String
+  currency String
+}
+
+enum TransactionType {
+  MILESTONE_PAYMENT // milestone 支付
+  POD_ACTIVATION_PAYMENT // pod激活支付
+  OTHER // 其他
+}
