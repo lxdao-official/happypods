@@ -1,6 +1,9 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Modal, ModalContent, ModalHeader, ModalBody, ModalFooter, Button, Input } from "@heroui/react";
 import CornerFrame from "~/components/corner-frame";
+import useSafeWallet from "~/app/hooks/useSafeWallet";
+import { useAccount } from "wagmi";
+import { toast } from "sonner";
 
 interface CreateSafeModalProps {
   isOpen: boolean;
@@ -9,28 +12,24 @@ interface CreateSafeModalProps {
 }
 
 const CreateSafeModal = ({ isOpen, onClose, onConfirm }: CreateSafeModalProps) => {
-  const [isCreating, setIsCreating] = useState(false);
   const [safeAddress, setSafeAddress] = useState("");
+  const { address } = useAccount();
+  const { deploySafe,status } = useSafeWallet({saltNonce: address||''});
 
   const handleCreateSafe = async () => {
-    setIsCreating(true);
     try {
-      // 模拟创建Safe多签钱包的过程
-      await new Promise(resolve => setTimeout(resolve, 2000));
-      
-      // 模拟生成的Safe地址（实际应该从Safe API获取）
-      const mockSafeAddress = `0x${Math.random().toString(16).substring(2, 42)}`;
-      setSafeAddress(mockSafeAddress);
-      
-      // 自动确认并关闭模态框
-      onConfirm(mockSafeAddress);
+      const { safeAddress } = await deploySafe();
+      setSafeAddress(safeAddress);
     } catch (error) {
       console.error("Failed to create Safe:", error);
-      alert("创建Safe多签钱包失败，请重试");
-    } finally {
-      setIsCreating(false);
     }
   };
+
+  useEffect(() => {
+    if (status === 'success') {
+      onConfirm(safeAddress);
+    }
+  }, [status]);
 
   return (
     <Modal isOpen={isOpen} onClose={onClose} size="2xl">
@@ -46,11 +45,11 @@ const CreateSafeModal = ({ isOpen, onClose, onConfirm }: CreateSafeModalProps) =
               <div className="space-y-4">
                                   <div>
                     <h3 className="mb-2 font-medium">Safe Multi-sig Wallet Information</h3>
-                    <p className="text-sm text-default-500">
-                      Network: Optimism Mainnet<br />
-                      Type: Multi-sig Wallet<br />
-                      Purpose: Grants Pool Treasury Management
-                    </p>
+                    <div className="space-y-2 text-xs text-default-500">
+                      <div>Network: Optimism Mainnet</div>
+                      <div>Type: Multi-sig Wallet</div>
+                      <div>Purpose: Grants Pool Treasury Management</div>
+                    </div>
                   </div>
                 
                 {safeAddress && (
@@ -59,6 +58,7 @@ const CreateSafeModal = ({ isOpen, onClose, onConfirm }: CreateSafeModalProps) =
                     <Input
                       value={safeAddress}
                       readOnly
+                      disabled
                       variant="bordered"
                       className="mt-1"
                     />
@@ -75,9 +75,9 @@ const CreateSafeModal = ({ isOpen, onClose, onConfirm }: CreateSafeModalProps) =
             <Button 
               color="success" 
               onPress={handleCreateSafe}
-              isLoading={isCreating}
+              isLoading={status === 'loading'}
             >
-              {isCreating ? "Creating..." : "Create Safe Multi-sig Wallet"}
+              {status === 'loading' ? "Creating..." : "Create Safe Multi-sig Wallet"}
             </Button>
           </ModalFooter>
         </ModalContent>

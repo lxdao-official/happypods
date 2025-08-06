@@ -95,24 +95,24 @@ const GrantspoolItem = ({ grantsPool, className = "", children, type = "list" }:
         </div>
         {/* 资金池（treasuryBalances） */}
         {grantsPool.treasuryBalances && Object.keys(grantsPool.treasuryBalances).length > 0 && (
-          <div className="space-y-10">
+          <div className="space-y-4">
             <div className="flex items-center space-x-3 text-xl">
               <div className="text-2xl font-bold">Grants Pool</div>
-              <QRCodeTooltip content="https://www.google.com" />
-              <a href="https://www.google.com" target="_blank" className="hover:opacity-70">
+              <QRCodeTooltip content={grantsPool.treasuryWallet} />
+              <a href={`https://app.safe.global/home?safe=oeth:${grantsPool.treasuryWallet}`} target="_blank" className="hover:opacity-70">
                 <i className="ri-external-link-line"></i>
               </a>
             </div>
-            <div className="grid grid-cols-3 gap-8">
+            <div className="flex items-center">
               {Object.entries(grantsPool.treasuryBalances).map(([currency, amount]) => (
-                <div key={currency} className="relative grid items-start grid-cols-3 gap-10 p-2 pt-10 border border-black rounded-lg">
-                  <div className="absolute top-[-20px] left-[-10px] inline-flex items-center gap-2 p-2 border border-black rounded-full bg-pink">
+                <div key={currency} className="relative flex items-start gap-8 pr-8 border border-black rounded-lg">
+                  <div className="flex flex-col items-center gap-1 p-2 px-4 border-r border-black">
                     <img src={`/tokens/${currency.toLowerCase()}.svg`} alt={currency} className="w-6 h-6" />
-                    <b>{currency}</b>
+                    <b className="text-xs">{currency}</b>
                   </div>
-                  <div className="flex flex-col items-center"><b>{amount.available}</b><small>Fundable</small></div>
-                  <div className="flex flex-col items-center"><b>{amount.used}</b><small>Funded</small></div>
-                  <div className="flex flex-col items-center"><b>{amount.locked}</b><small>Locked</small></div>
+                  <div className="flex flex-col items-center p-2"><b>{amount.available}</b><small>Balance</small></div>
+                  <div className="flex flex-col items-center p-2"><b>{amount.used}</b><small>Funded</small></div>
+                  <div className="flex flex-col items-center p-2"><b>{amount.locked}</b><small>Locked</small></div>
                 </div>
               ))}
             </div>

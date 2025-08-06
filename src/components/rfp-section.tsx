@@ -75,14 +75,6 @@ const RFPSection = ({ rfps, onRfpsChange, isEdit = false, grantsPoolId }: RFPSec
           <span>RFP Information</span>
           <i className="ri-question-line"></i>
         </h2>
-        <Button
-          color="success"
-          size="sm"
-          onPress={addRFP}
-          startContent={<i className="ri-add-line"></i>}
-        >
-          Add RFP
-        </Button>
       </div>
       
       <div className="space-y-8">
@@ -132,6 +124,19 @@ const RFPSection = ({ rfps, onRfpsChange, isEdit = false, grantsPoolId }: RFPSec
             )}
           </div>
         ))}
+
+
+          <div className="flex justify-end mt-6">
+            <Button
+              color="success"
+              size="sm"
+              onPress={addRFP}
+              startContent={<i className="ri-add-line"></i>}
+            >
+              Add RFP
+            </Button>
+          </div>
+          
       </div>
     </CornerFrame>
   );
