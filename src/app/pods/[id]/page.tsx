@@ -22,11 +22,14 @@ import type { JsonObject, JsonValue } from "@prisma/client/runtime/library";
 import JsonInfoDisplay from "~/components/json-info-display";
 import type { Status } from "~/lib/config";
 import { LinkDisplay } from "~/components/link-display";
+import { useMemo } from "react";
+import useStore from "~/store";
 
 
 export default function PodDetailPage() {
   const params = useParams();
   const podId = parseInt(params.id as string);
+  const { userInfo } = useStore();
 
   // 查询 Pod 详情
   const { data: podDetail, isLoading: isPodLoading } = api.pod.getPodDetail.useQuery(
@@ -35,7 +38,7 @@ export default function PodDetailPage() {
   );
 
   // 查询里程碑
-  const { data: milestones, isLoading: isMilestonesLoading } = api.pod.getPodMilestones.useQuery(
+  const { data: milestones, isLoading: isMilestonesLoading } = api.milestone.getPodMilestones.useQuery(
     { podId },
     { enabled: !!podId }
   );
@@ -47,6 +50,9 @@ export default function PodDetailPage() {
     { podId },
     { enabled: !!podId }
   );
+
+
+
 
   if (isPodLoading || isMilestonesLoading || isHistoryLoading) {
     return <div className="container px-4 py-8 mx-auto">
@@ -84,6 +90,8 @@ export default function PodDetailPage() {
     description: item.description
   })) || [];
 
+  const isGpOwner = userInfo && userInfo?.id === pod.grantsPool.ownerId
+
   return (
     <div className="container px-4 py-8 mx-auto">
 
@@ -97,14 +105,20 @@ export default function PodDetailPage() {
           </div>
 
          <div className="flex items-center gap-4">
-          <GpReviewActions 
-            podStatus={pod.status}
-            grantsPoolId={pod.grantsPool.id}
-            podId={pod.id}
-            podTitle={pod.title}
-            podWalletAddress={pod.walletAddress}
-            podCurrency={pod.currency}
-          />
+
+          {
+            isGpOwner && (
+              <GpReviewActions 
+                podStatus={pod.status}
+                grantsPoolId={pod.grantsPool.id}
+                podId={pod.id}
+                podTitle={pod.title}
+                podWalletAddress={pod.walletAddress}
+                podCurrency={pod.currency}
+              />
+            ) 
+          }
+          
           <ShareButton 
             url={typeof window !== 'undefined' ? window.location.href : ''}
             title={`${pod.title} - ${pod.description}`}
@@ -116,7 +130,6 @@ export default function PodDetailPage() {
        </div>
       }
       >
-
         
       <div className="grid grid-cols-1 gap-8 lg:grid-cols-3">
         <div className="space-y-8 lg:col-span-2">
@@ -147,7 +160,13 @@ export default function PodDetailPage() {
           <EdgeLine color="var(--color-background)"/>
 
           <div>
-            {milestones && <MilestonesSection milestones={milestones} />}
+            {milestones && 
+            <MilestonesSection 
+              milestones={milestones} 
+              gpOwnerId={pod.grantsPool.ownerId} 
+              podOwnerId={pod.applicant.id} 
+              podCurrency={pod.currency}
+            />}
           </div>
         </div>
 

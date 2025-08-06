@@ -89,6 +89,7 @@ model Pod {
   metadata         Json?       @default("{}") // {rejectReason: string}
   createdAt        DateTime    @default(now())
   updatedAt        DateTime    @updatedAt
+  approvedAt       DateTime?
   inactiveTime     DateTime? // 失效时间，null 表示当前活跃版本
   milestones       Milestone[] @relation("PodMilestones")
   applicant        User        @relation("UserPods", fields: [applicantId], references: [id])
@@ -138,12 +139,12 @@ enum ChainType {
 enum GrantsPoolStatus {
   ACTIVE
   INACTIVE
-  ARCHIVED
 }
 
 enum PodStatus {
   REVIEWING // 审核中
   APPROVED // 批准
+  PENDING_PAYMENT // 待支付
   REJECTED // 拒绝
   IN_PROGRESS // 进行中
   COMPLETED // 完成
@@ -158,6 +159,7 @@ enum MilestoneStatus {
   APPROVED // 批准
   REVIEWING // 审核中
   PENDING_DELIVERY // 待交付
+  PENDING_PAYMENT // 待支付
 }
 
 model Notification {
@@ -183,6 +185,6 @@ enum NotificationType {
   GENERAL // 通用
   POD_REVIEW // 项目审核
   MILESTONE_REVIEW // 里程碑审核
-  EXTENSION_REVIEW // 延期审核
+  MILESTONE_DELIVERY_SUBMIT // 里程碑交付提交
   MILESTONE_CHANGE_REVIEW // 里程碑变更审核
 }

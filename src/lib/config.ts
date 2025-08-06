@@ -11,7 +11,7 @@ export const FEE_CONFIG = {
 } as const;
 
 
-export type Status = 'IN_PROGRESS' | 'COMPLETED' | 'REJECTED' | 'WAITLISTED' | 'SUBMITTED' | 'APPROVED' | 'REVIEWING' | 'TERMINATED' | 'PENDING_DELIVERY' | 'ACTIVE' | 'INACTIVE';
+export type Status = 'IN_PROGRESS' | 'COMPLETED' | 'REJECTED' | 'WAITLISTED' | 'SUBMITTED' | 'APPROVED' | 'REVIEWING' | 'TERMINATED' | 'PENDING_DELIVERY' | 'ACTIVE' | 'INACTIVE' | 'PENDING_PAYMENT';
 
 // @ts-ignore
 export const STATUS_MAP: Record<Status, {label: string, color: string}> = {
@@ -22,13 +22,10 @@ export const STATUS_MAP: Record<Status, {label: string, color: string}> = {
   'IN_PROGRESS': {label: 'In Progress', color: '#008000'},
   'COMPLETED': {label: 'Completed', color: '#008000'},
   'TERMINATED': {label: 'Terminated', color: '#FF0000'},
-  
-  // Milestone 状态
   'ACTIVE': {label: 'Active', color: '#315ece'},
   'INACTIVE': {label: 'Inactive', color: '#FFA500'},
-  
-  // 自定义状态
   "PENDING_DELIVERY": {label: 'Delivery Pending', color: '#FF6B35'},
+  "PENDING_PAYMENT": {label: 'Payment Pending', color: '#7435ff'},
 };  
 
 // 其他配置

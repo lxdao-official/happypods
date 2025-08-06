@@ -6,7 +6,7 @@ export const notificationQueries = {
   // 获取用户的所有通知列表（时间降序）
   getUserNotifications: publicProcedure
     .query(async ({ ctx }) => {
-      if (!ctx.user) {
+      if (!ctx.user.id) {
         return [];
       }
       const notifications = await ctx.db.notification.findMany({

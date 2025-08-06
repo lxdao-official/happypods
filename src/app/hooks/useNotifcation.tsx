@@ -1,6 +1,7 @@
 import { useEffect } from "react";
 import useStore from "~/store";
 import { api } from "~/trpc/react";
+import { useUserInfo } from "./useUserInfo";
 
 const useNotifcation = () => {
     const { data: notifications,refetch:refetchNotification } = api.notification.getUserNotifications.useQuery();
@@ -8,7 +9,8 @@ const useNotifcation = () => {
     const {mutateAsync:readNotification} = api.notification.markNotificationRead.useMutation();
 
     const {setNotificationList} = useStore();
-    
+    const {userInfo} = useUserInfo();
+
     useEffect(() => {
         setNotificationList(notifications ?? []);
     }, [notifications]);
@@ -22,6 +24,11 @@ const useNotifcation = () => {
         await readNotification({id});
         refetchNotification();
     }
+
+    useEffect(()=>{
+        setNotificationList([]);
+        refetchNotification();
+    },[userInfo]);
 
     return {
         notifications:notifications||[],

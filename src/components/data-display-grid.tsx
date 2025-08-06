@@ -7,6 +7,7 @@ import { api } from '~/trpc/react';
 import LoadingSkeleton from './LoadingSkeleton';
 import Empty from './Empty';
 import { PodStatus } from '@prisma/client';
+import { STATUS_MAP } from '~/lib/config';
 
 interface DataDisplayGridProps {
   type?: 'all' | 'gp' | 'my';
@@ -21,15 +22,6 @@ interface DataDisplayGridProps {
   theme?: 'light' | 'dark';
 }
 
-const STATUS_OPTIONS: ({key: PodStatus, label: string} | {key:'ALL', label: string})[] = [
-  { key: 'ALL', label: 'All Status' },
-  { key: PodStatus.REVIEWING, label: 'Reviewing' },
-  { key: PodStatus.APPROVED, label: 'Approved' },
-  { key: PodStatus.REJECTED, label: 'Rejected' },
-  { key: PodStatus.IN_PROGRESS, label: 'In Progress' },
-  { key: PodStatus.COMPLETED, label: 'Completed' },
-  { key: PodStatus.TERMINATED, label: 'Terminated' },
-];
 
 export const DataDisplayGrid = ({
   type = 'all',
@@ -117,8 +109,8 @@ export const DataDisplayGrid = ({
               }}
               className="min-w-[150px] border-1 rounded-xl border-secondary overflow-hidden"
             >
-              {STATUS_OPTIONS.map(opt => (
-                <SelectItem key={opt.key}>{opt.label}</SelectItem>
+              {Object.values(PodStatus).map(opt => (
+                <SelectItem key={opt}>{STATUS_MAP[opt].label}</SelectItem>
               ))}
             </Select>
           </div>

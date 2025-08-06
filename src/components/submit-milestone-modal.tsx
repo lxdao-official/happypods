@@ -2,33 +2,32 @@ import { useState } from "react";
 import { Button, Modal, ModalBody, ModalContent, ModalHeader, ModalFooter, Textarea, useDisclosure } from "@heroui/react";
 import RelatedLinksSection from "./related-links-section";
 import { api } from "~/trpc/react";
+import { toast } from "sonner";
+import { delay_s } from "~/lib/utils";
 
 interface SubmitMilestoneModalProps {
   milestoneId: string | number;
-  onSubmit?: (data: { description: string; links: Record<string, string> }) => void;
 }
 
-export default function SubmitMilestoneModal({ milestoneId, onSubmit }: SubmitMilestoneModalProps) {
+export default function SubmitMilestoneModal({ milestoneId }: SubmitMilestoneModalProps) {
   const { isOpen, onOpen, onClose } = useDisclosure();
   const [description, setDescription] = useState("");
   const [links, setLinks] = useState<Record<string, string>>({});
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const submitMilestoneDeliveryMutation = api.pod.submitMilestoneDelivery.useMutation({
-    onSuccess: () => {
+  const submitMilestoneDeliveryMutation = api.milestone.submitMilestoneDelivery.useMutation({
+    onSuccess: async() => {
       // 重置表单
       setDescription("");
       setLinks({});
       onClose();
-      
-      // 调用父组件的回调
-      onSubmit?.({ description: description.trim(), links });
-      
-      alert("Milestone交付提交成功！");
+      await delay_s(2000);
+      toast.success("Milestone交付提交成功！");
+      window.location.reload();
     },
     onError: (error) => {
-      console.error("提交失败:", error);
-      alert(`提交失败: ${error.message}`);
+      console.error("提交失败:", error);  
+      toast.error(`提交失败: ${error.message}`);
     },
     onSettled: () => {
       setIsSubmitting(false);
@@ -37,7 +36,7 @@ export default function SubmitMilestoneModal({ milestoneId, onSubmit }: SubmitMi
 
   const handleSubmit = async () => {
     if (!description.trim()) {
-      alert("请输入milestone描述");
+      toast.error("请输入milestone描述");
       return;
     }
 
@@ -68,7 +67,7 @@ export default function SubmitMilestoneModal({ milestoneId, onSubmit }: SubmitMi
         variant="flat"
         onPress={onOpen}
       >
-提交交付
+      提交交付
       </Button>
       
       <Modal 

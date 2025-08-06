@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { LinkDisplay } from "./link-display";
 import { formatDate } from "~/lib/utils";
+import { MilestoneStatus } from "@prisma/client";
 
 interface SubmissionData {
   content: string;
@@ -19,11 +20,11 @@ interface SubmissionData {
 
 interface MilestoneSubmissionDisplayProps {
   deliveryInfo: SubmissionData[];
-  milestoneId: string | number;
+  status: MilestoneStatus;
 }
 
-export default function MilestoneSubmissionDisplay({ deliveryInfo }: MilestoneSubmissionDisplayProps) {
-  const [expandedSubmissions, setExpandedSubmissions] = useState<Set<number>>(new Set([0])); // 默认展开最新的(第一个)
+export default function MilestoneSubmissionDisplay({ deliveryInfo, status }: MilestoneSubmissionDisplayProps) {
+  const [expandedSubmissions, setExpandedSubmissions] = useState<Set<number>>(status === 'REVIEWING' ? new Set([0]) : new Set([])); // 默认展开最新的(第一个)
 
   const toggleSubmission = (index: number) => {
     const newExpanded = new Set(expandedSubmissions);
@@ -44,19 +45,22 @@ export default function MilestoneSubmissionDisplay({ deliveryInfo }: MilestoneSu
     <div className="mt-4 space-y-3">
       {sortedSubmissions.map((submission, index) => {
         const isExpanded = expandedSubmissions.has(index);
-        const isLatest = index === 0;
+        const isLatest = index === 0 && status === MilestoneStatus.REVIEWING;
         
         return (
           <div key={index} className="p-4 bg-white border border-black rounded-lg">
             {/* Header */}
             <div
-              className="flex items-center justify-between mb-2 cursor-pointer select-none group"
+              className="flex items-center justify-between cursor-pointer select-none group"
               onClick={() => toggleSubmission(index)}
             >
               <div className="flex items-center gap-4">
-                {/* <i className="ri-file-text-line"></i> */}
                 {
-                  isLatest ? <i className="text-xl text-green-500 ri-file-check-line"></i> : <i className="text-xl text-gray-500 ri-file-close-line"></i>
+                  submission.approved ? 
+                  <i className="text-xl text-green-500 ri-file-check-line"></i> : 
+                  submission.reviewComment ?
+                  <i className="text-xl text-gray-500 ri-file-close-line"></i> :
+                  <i className="text-xl text-purple-500 ri-file-history-line"></i>
                 }
                 <span className="font-medium text-gray-900">
                   Submission • {formatDate(submission.submittedAt)}
@@ -70,7 +74,7 @@ export default function MilestoneSubmissionDisplay({ deliveryInfo }: MilestoneSu
 
             {/* Content */}
             {isExpanded && (
-              <div className="space-y-4">
+              <div className="mt-4 space-y-4">
                 {/* Description */}
                 <div>
                   <p className="text-sm leading-relaxed text-gray-700 whitespace-pre-wrap">
@@ -104,9 +108,6 @@ export default function MilestoneSubmissionDisplay({ deliveryInfo }: MilestoneSu
                           • {formatDate(submission.reviewedAt)}
                         </span>
                       )}
-                      {/* {submission.review.reviewer && (
-                        <span className="ml-2 text-xs text-gray-500">by {submission.review.reviewer}</span>
-                      )} */}
                     </div>
                     <div className="text-sm leading-relaxed text-gray-700 whitespace-pre-wrap">
                       {submission.reviewComment}

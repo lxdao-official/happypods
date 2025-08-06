@@ -55,15 +55,4 @@ export const approvePodSchema = z.object({
   id: z.number(),
 });
 
-export const submitMilestoneDeliverySchema = z.object({
-  milestoneId: z.number(),
-  content: z.string().min(1, "交付内容不能为空"),
-  links: z.record(z.string()).optional().default({}),
-});
-
-export const reviewMilestoneDeliverySchema = z.object({
-  milestoneId: z.number(),
-  deliveryIndex: z.number(), // 第几次提交（0, 1, 2）
-  approved: z.boolean(),
-  comment: z.string().min(1, "审核评价不能为空"),
-}); 
+ 

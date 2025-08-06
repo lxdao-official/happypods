@@ -177,7 +177,7 @@ export function LoginModal() {
       ) : (
         // 未登录用户显示连接按钮
         <div className="flex items-center gap-2">
-          <ConnectButton />
+          <ConnectButton showBalance={false} chainStatus="none" />
         </div>
       )}
     </div>

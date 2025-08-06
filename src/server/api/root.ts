@@ -4,6 +4,7 @@ import { authRouter } from "./routers/auth/index";
 import { podRouter } from "./routers/pod/index";
 import { grantsPoolRouter } from "./routers/grants-pool/index";
 import { notificationRouter } from "./routers/notification/index";
+import { milestoneRouter } from "./routers/milestone/index";
 
 /**
  * This is the primary router for your server.
@@ -16,6 +17,7 @@ export const appRouter = createTRPCRouter({
   pod: podRouter,
   grantsPool: grantsPoolRouter,
   notification: notificationRouter,
+  milestone: milestoneRouter,
 });
 
 // export type definition of API

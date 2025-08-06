@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
-import { useAccount, useDisconnect } from "wagmi";
+import { useAccount, useDisconnect, useSwitchAccount } from "wagmi";
 import { api } from "~/trpc/react";
 import { storeUser, getUser, type StoredUser, logout } from "~/lib/auth-storage";
 import useStore from "~/store";
@@ -91,6 +91,13 @@ const handleLogout = useCallback(async() => {
     await delay_s();
     window.location.reload();
   }, [disconnect]);
+
+  // 监听钱包如果被切换则退出登录
+  useEffect(()=>{
+    if(address && userInfo && address !== userInfo?.address){
+      handleLogout();
+    }
+  },[address]);
 
   return {
     userInfo,

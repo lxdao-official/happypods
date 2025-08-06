@@ -1,8 +1,9 @@
+import { NotificationType } from "@prisma/client";
 import { z } from "zod";
 
 // 创建通知的schema
 export const createNotificationSchema = z.object({
-  type: z.enum(["GENERAL", "POD_REVIEW", "MILESTONE_REVIEW", "EXTENSION_REVIEW", "MILESTONE_CHANGE_REVIEW"]),
+  type: z.enum(Object.values(NotificationType) as [string, ...string[]]),
   senderId: z.number(),
   receiverId: z.number(),
   title: z.string(),

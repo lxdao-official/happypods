@@ -1,6 +1,8 @@
 import { useState } from "react";
 import { Button, Modal, ModalBody, ModalContent, ModalHeader, ModalFooter, Textarea, useDisclosure } from "@heroui/react";
 import { api } from "~/trpc/react";
+import { toast } from "sonner";
+import { delay_s } from "~/lib/utils";
 
 interface DeliveryInfo {
   content: string;
@@ -23,8 +25,8 @@ export default function ReviewMilestoneModal({ milestoneId, deliveryInfo, onRevi
   const [comment, setComment] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const reviewMilestoneDeliveryMutation = api.pod.reviewMilestoneDelivery.useMutation({
-    onSuccess: () => {
+  const reviewMilestoneDeliveryMutation = api.milestone.reviewMilestoneDelivery.useMutation({
+    onSuccess: async() => {
       setComment("");
       onClose();
       
@@ -32,11 +34,13 @@ export default function ReviewMilestoneModal({ milestoneId, deliveryInfo, onRevi
       onReview?.({ action: reviewAction, comment: comment.trim() });
       
       const actionText = reviewAction === 'approve' ? '通过' : '拒绝';
-      alert(`Milestone审核${actionText}成功！`);
+      toast.success(`Milestone审核${actionText}成功！`);
+      await delay_s(2000);
+      window.location.reload();
     },
     onError: (error) => {
       console.error("审核失败:", error);
-      alert(`审核失败: ${error.message}`);
+      toast.error(`审核失败: ${error.message}`);  
     },
     onSettled: () => {
       setIsSubmitting(false);
@@ -51,7 +55,7 @@ export default function ReviewMilestoneModal({ milestoneId, deliveryInfo, onRevi
 
   const handleSubmit = async () => {
     if (!comment.trim()) {
-      alert("请输入评价内容");
+      toast.error("请输入评价内容");
       return;
     }
 

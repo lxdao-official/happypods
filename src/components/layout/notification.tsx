@@ -73,7 +73,7 @@ export function NotificationDrawer() {
                       >
                         {/* 未读标识 */}
                         {!notification.read && (
-                          <div className="absolute w-2 h-2 rounded-full left-4 top-5 bg-primary"></div>
+                          <div className="absolute w-2 h-2 rounded-full left-2 top-5 bg-primary"></div>
                         )}
 
                         <div className="flex gap-3 pl-6">

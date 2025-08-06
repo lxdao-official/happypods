@@ -72,8 +72,8 @@ export const LinkDisplay = ({
     },
     light: {
       tag: "text-gray-600 border-gray-400 hover:text-gray-800 hover:border-gray-500",
-      list: "text-gray-700 hover:text-gray-900 hover:bg-gray-100"
-    }
+      list: "text-gray-700 bg-gray-100 hover:text-gray-900 hover:bg-gray-200"
+    },
   };
 
   const currentTheme = themeStyles[theme];
@@ -107,7 +107,7 @@ export const LinkDisplay = ({
   // List 类型渲染
   if (type === 'list') {
     return (
-      <div className={`space-y-2 ${className}`}>
+      <div className={`gap-2 grid grid-cols-2 ${className}`}>
         {Object.entries(links).map(([key, url]) => {
           const linkType = getLinkType(key, url);
           const iconClass = LINK_ICONS[linkType] || LINK_ICONS.default;
@@ -120,10 +120,13 @@ export const LinkDisplay = ({
                 rel="noopener noreferrer"
                 className={`flex items-center gap-3 px-3 py-2 rounded-lg transition-colors w-full ${currentTheme.list}`}
               >
-                <i className={`text-xl ${iconClass} flex-shrink-0`}></i>
-                <div className="flex-1 min-w-0">
-                  <div className="text-sm font-medium capitalize">{key}</div>
-                  <div className="text-xs truncate opacity-70">{url}</div>
+                
+                <div className="flex-1 space-y-1 overflow-hidden">
+                  <div className="flex items-center gap-2 text-sm font-medium capitalize">
+                    <i className={`text-xl ${iconClass} flex-shrink-0`}></i>
+                    <span>{key}</span>
+                  </div>
+                  <div className="overflow-hidden text-xs truncate opacity-70 text-ellipsis">{url}</div>
                 </div>
                 <i className="flex-shrink-0 ri-external-link-line"></i>
               </a>

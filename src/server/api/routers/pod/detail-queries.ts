@@ -1,3 +1,4 @@
+import { MilestoneStatus, PodStatus } from "@prisma/client";
 import { z } from "zod";
 import { createTRPCRouter, protectedProcedure, publicProcedure } from "~/server/api/trpc";
 
@@ -47,31 +48,6 @@ export const podDetailQueries = {
       }
 
       return pod;
-    }),
-
-  // 获取Pod的里程碑详情（包含待交付状态判断）
-  getPodMilestones: publicProcedure
-    .input(z.object({ podId: z.number() }))
-    .query(async ({ ctx, input }) => {
-      const milestones = await ctx.db.milestone.findMany({
-        where: { podId: input.podId },
-        orderBy: { deadline: "asc" },
-      });
-
-      // 为milestones添加待交付状态判断
-      const now = new Date();
-
-      milestones.forEach((v,index)=>{
-        if(v.status === "ACTIVE" && new Date(v.deadline) < now && milestones.slice(0,index).every(m=>m.status === "COMPLETED")){
-          // @ts-ignore
-          v.status = "PENDING_DELIVERY";
-        }
-        if(!v.deliveryInfo){
-          v.deliveryInfo = [];
-        }
-      })
-
-      return milestones;
     }),
 
   // 获取Pod历史记录（查询相同podGroupId的所有版本）

@@ -4,15 +4,21 @@ import MilestoneSubmissionDisplay from "./milestone-submission-display";
 import ReviewMilestoneModal from "./review-milestone-modal";
 import ProgressMilestoneBar from "./progress-milestone-bar";
 import StatusChip from "./StatusChip";
+import PayMilestoneModal from "./pay-milestone-modal";
 import { formatDate } from "~/lib/utils";
-import type { Milestone } from "@prisma/client";
+import { MilestoneStatus, type Milestone } from "@prisma/client";
+import { useMemo } from "react";
+import useStore from "~/store";
 
 interface MilestonesSectionProps {
   milestones: Milestone[];
+  gpOwnerId: number;
+  podOwnerId: number;
+  podCurrency: string;
 }
 
-export default function MilestonesSection({ milestones }: MilestonesSectionProps) {
-
+export default function MilestonesSection({ milestones, gpOwnerId, podOwnerId, podCurrency }: MilestonesSectionProps) {
+  const { userInfo } = useStore();
   // 转换里程碑数据格式以适配 ProgressMilestoneBar 组件
   const progressMilestones = milestones.map((milestone, index) => ({
     name: milestone.title,
@@ -22,19 +28,15 @@ export default function MilestonesSection({ milestones }: MilestonesSectionProps
     status: milestone.status
   }));
 
-  const handleMilestoneSubmit = (milestoneId: string | number, data: { description: string; links: Record<string, string> }) => {
-    // 提交成功后刷新页面或重新获取数据
-    console.log(`Milestone ${milestoneId} submitted:`, data);
-    // 这里可以调用父组件的刷新函数或重新获取数据
-    window.location.reload(); // 临时解决方案，实际应该通过更优雅的方式刷新
-  };
+  // gp创建
+  const isGpOwner = useMemo(()=>{
+    return userInfo && userInfo?.id === gpOwnerId
+  },[userInfo, gpOwnerId])
 
-  const handleMilestoneReview = (milestoneId: string | number, data: { action: 'approve' | 'reject'; comment: string }) => {
-    // 审核成功后刷新页面或重新获取数据
-    console.log(`Milestone ${milestoneId} reviewed:`, data);
-    // 这里可以调用父组件的刷新函数或重新获取数据
-    window.location.reload(); // 临时解决方案，实际应该通过更优雅的方式刷新
-  };
+  // pod创建者
+  const isPodOwner = useMemo(()=>{
+    return userInfo && userInfo?.id === podOwnerId
+  },[userInfo, podOwnerId])
 
   return (
     <div>
@@ -54,7 +56,7 @@ export default function MilestonesSection({ milestones }: MilestonesSectionProps
                   {
                     milestone.status !== 'ACTIVE' && <StatusChip status={milestone.status as any} />
                   }
-                  {remainingSubmissions<3 && milestone.status!=='COMPLETED' && (
+                  {remainingSubmissions<3 && milestone.status===MilestoneStatus.PENDING_DELIVERY && (
                     <span className="text-xs text-gray-500">
                       ({remainingSubmissions} submissions left)
                     </span>
@@ -62,27 +64,35 @@ export default function MilestonesSection({ milestones }: MilestonesSectionProps
                 </div>
                 <div className="flex items-center gap-2">
                   {/* 只有PENDING_DELIVERY状态才显示提交按钮 */}
-                  {milestone.status === 'PENDING_DELIVERY' && remainingSubmissions > 0 && (
+                  {milestone.status === 'PENDING_DELIVERY' && remainingSubmissions > 0 && isPodOwner && (
                     <div className="flex items-center gap-2">
-                      <ApplyExtensionModal milestoneId={milestone.id} />
                       <SubmitMilestoneModal 
                         milestoneId={milestone.id} 
-                        onSubmit={(data) => handleMilestoneSubmit(milestone.id, data)}
                       />
                     </div>
                   )}
                   {/* 审核中状态显示审核按钮 */}
-                  {milestone.status === 'REVIEWING' && (
+                  {milestone.status === 'REVIEWING' && isGpOwner && (
                     <ReviewMilestoneModal 
                       milestoneId={milestone.id}
                       deliveryInfo={milestone.deliveryInfo as any[]}
-                      onReview={(data) => handleMilestoneReview(milestone.id, data)}
                     />
+                  )}
+                  {/* 当前状态是待支付，并且是pg创建者，则显示支付按钮 */}
+                  {milestone.status === MilestoneStatus.PENDING_PAYMENT && isGpOwner && (
+                    <PayMilestoneModal  milestoneId={milestone.id}/>
                   )}
                 </div>
               </div>
-              <div className="mb-2 text-xs text-gray-600">
-                <span className="font-medium">Deadline:</span> {formatDate(milestone.deadline)}
+              <div className="flex items-center gap-4 mb-4 text-xs text-gray-600">
+                
+                <div className="flex items-center gap-1">
+                  <img src={`/tokens/${podCurrency}.svg`} alt={podCurrency} className="w-4 h-4" />
+                  <b>{milestone.amount} {podCurrency}</b>
+                </div>
+                
+                <b>Deadline: {formatDate(milestone.deadline)}</b>
+
               </div>
               <p className="text-sm text-gray-700">
                 {milestone.description}
@@ -92,7 +102,7 @@ export default function MilestonesSection({ milestones }: MilestonesSectionProps
               {milestone.deliveryInfo && milestone.deliveryInfo.length > 0 && (
                 <MilestoneSubmissionDisplay 
                   deliveryInfo={milestone.deliveryInfo as any[]}
-                  milestoneId={milestone.id}
+                  status={milestone.status}
                 />
               )}
             </div>
