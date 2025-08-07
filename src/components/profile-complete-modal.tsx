@@ -29,7 +29,7 @@ export default function ProfileCompleteModal({
           <Button variant="light" onPress={onCloseModal}>
             稍后处理
           </Button>
-          <Button  onPress={onNavigateToProfile}>
+          <Button color="success" onPress={onNavigateToProfile}>
             立即完善
           </Button>
         </ModalFooter>

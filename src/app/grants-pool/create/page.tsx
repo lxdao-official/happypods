@@ -35,7 +35,7 @@ interface RelatedLinks {
 export default function CreateGrantsPoolPage() {
   const router = useRouter();
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [showSafeModal, setShowSafeModal] = useState(true);
+  const [showSafeModal, setShowSafeModal] = useState(false);
   const [safeAddress, setSafeAddress] = useState("");
   const [formData, setFormData] = useState({
     avatar: "",

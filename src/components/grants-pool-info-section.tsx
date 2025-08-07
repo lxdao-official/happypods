@@ -1,7 +1,8 @@
 import { Chip, Select, SelectItem } from "@heroui/react";
 import CornerFrame from "~/components/corner-frame";
 import { api } from "~/trpc/react";
-import { useMemo } from "react";
+import { useMemo, useEffect } from "react";
+import type { ChainType } from "@prisma/client";
 
 interface GrantsPoolInfoSectionProps {
   grantsPoolId: string;
@@ -10,7 +11,9 @@ interface GrantsPoolInfoSectionProps {
   onGrantsPoolChange: (grantsPoolId: string) => void;
   onRfpChange: (rfpId: string) => void;
   onCurrencyChange: (currency: string) => void;
+  onBalanceChange: (balance: number) => void; // 新增余额回调
   isPreselected: boolean;
+  setGpWalletAddress: (walletAddress: string) => void;
 }
 
 const GrantsPoolInfoSection = ({
@@ -20,7 +23,9 @@ const GrantsPoolInfoSection = ({
   onGrantsPoolChange,
   onRfpChange,
   onCurrencyChange,
+  onBalanceChange,
   isPreselected,
+  setGpWalletAddress,
 }: GrantsPoolInfoSectionProps) => {
   // API queries
   const { data: grantsPools, isLoading: grantsPoolsLoading } = api.grantsPool.getActiveGrantsPools.useQuery();
@@ -29,12 +34,35 @@ const GrantsPoolInfoSection = ({
     { enabled: !!grantsPoolId }
   );
 
-  // 获取选中GP的RFP
+  // 获取选中GP的RFP和信息
   const selectedPool = grantsPools?.find(gp => gp.id.toString() === grantsPoolId);
   const selectedRfp = grantsPoolDetails?.rfps?.find(rfp => rfp.id.toString() === rfpId);
 
-  // 获取可用的currency选项
-  const currencyOptions = grantsPoolDetails?.availableTokens || [];
+  // 设置当前gp的owner钱包地址
+  useEffect(()=>{
+    if(selectedPool?.owner?.walletAddress) {
+      setGpWalletAddress(selectedPool.owner.walletAddress);
+    }
+  },[selectedPool?.owner?.walletAddress])
+
+  // 使用 tokens 数组作为币种选项
+  const currencyOptions = selectedPool?.tokens || [];
+
+  // 查询余额（当币种和GP都选择后）
+  const { data: balanceData, isLoading: balanceLoading } = api.wallet.getBalance.useQuery({
+    address: selectedPool?.treasuryWallet || '',
+    chainType: selectedPool?.chainType as ChainType,
+    tokenType: currency as any
+  }, {
+    enabled: !!(selectedPool?.treasuryWallet && currency && selectedPool?.chainType)
+  });
+
+  // 当余额数据变化时，通知父组件
+  useEffect(() => {
+    if (balanceData?.formattedBalance) {
+      onBalanceChange(Number(balanceData.formattedBalance));
+    }
+  }, [balanceData?.formattedBalance, onBalanceChange]);
 
   const grantsPoolsRes = useMemo(()=>{
     return grantsPools?.map(v=>({key:v.id.toString(),label:`${v.name} (${v.chainType})`}))
@@ -48,7 +76,10 @@ const GrantsPoolInfoSection = ({
   }, [grantsPoolDetails?.rfps])
 
   const currencyOptionsRes = useMemo(()=>{
-    return currencyOptions?.map(token=>({key:token.symbol,label:`${token.symbol} (Available: ${token.available})`})) || []
+    return currencyOptions?.map(token=>({
+      key: token, 
+      label: token
+    })) || []
   },[currencyOptions])
   
 
@@ -71,7 +102,7 @@ const GrantsPoolInfoSection = ({
                 <div className="flex items-center gap-2 font-bold">
                     <span>{selectedRfp?.title || "Loading..."}</span>
                     <Chip color="success" variant="flat" size="sm">
-                        {selectedPool?.chainType || "N/A"}
+                        {selectedPool?.chainType || "~"}
                     </Chip>
                 </div>
                 <div className="text-sm text-secondary">{selectedPool?.name || "Loading..."}</div>
@@ -133,7 +164,12 @@ const GrantsPoolInfoSection = ({
             onCurrencyChange(newCurrency || "");
           }}
           isDisabled={!grantsPoolId}
-          description="Available tokens with balance > 0"
+          description={
+            balanceLoading ? "Loading..." : 
+            balanceData?.formattedBalance 
+            ? `Available: ${balanceData.formattedBalance} ${currency}` 
+            : "Available: 0.00"
+          }
         >
           {currencyOptionsRes.map((token) => (
             <SelectItem key={token.key}>

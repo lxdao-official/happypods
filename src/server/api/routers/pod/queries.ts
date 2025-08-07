@@ -3,26 +3,6 @@ import { createTRPCRouter, protectedProcedure, publicProcedure } from "~/server/
 import { getListSchema, validateMilestonesSchema } from "./schemas";
 
 export const podQueries = {
-  // 检查用户信息是否完善
-  checkUserProfile: protectedProcedure
-    .query(async ({ ctx }) => {
-      const user = await ctx.db.user.findUnique({
-        where: { id: ctx.user.id },
-        select: {
-          name: true,
-          email: true,
-          description: true,
-        },
-      });
-
-      if (!user) {
-        throw new Error("用户不存在");
-      }
-
-      const isComplete = !!(user.name && user.email && user.description);
-      return { isComplete, user };
-    }),
-
   // 获取Grants Pool详细信息（包含RFP和token信息）
   getGrantsPoolDetails: publicProcedure
     .input(z.object({ id: z.number() }))
@@ -49,19 +29,10 @@ export const podQueries = {
       if (!grantsPool) {
         throw new Error("Grants Pool不存在");
       }
-
-      // 解析treasury balances获取可用token
-      const treasuryBalances = grantsPool.treasuryBalances as Record<string, any> || {};
-      const availableTokens = Object.entries(treasuryBalances)
-        .filter(([_, balance]) => parseFloat(balance.available || "0") > 0)
-        .map(([token, balance]) => ({
-          symbol: token,
-          available: balance.available,
-        }));
-
+      
       return {
         ...grantsPool,
-        availableTokens,
+        availableTokens:{},
       };
     }),
 
@@ -77,14 +48,7 @@ export const podQueries = {
         throw new Error("Grants Pool不存在");
       }
 
-      const treasuryBalances = grantsPool.treasuryBalances as Record<string, any> || {};
-      const tokenBalance = treasuryBalances[input.currency];
-      
-      if (!tokenBalance) {
-        throw new Error(`未找到币种 ${input.currency} 的余额信息`);
-      }
-
-      const available = parseFloat(tokenBalance.available || "0");
+      const available = 0;
       const totalAmount = input.milestones.reduce((sum, milestone) => sum + milestone.amount, 0);
 
       const isValid = totalAmount <= available;

@@ -1,26 +1,12 @@
 import NextLink from 'next/link';
 import ProgressMilestoneBar from './progress-milestone-bar';
-import { Chip } from '@heroui/react';
-import type { Status } from '~/lib/config';
 import StatusChip from './StatusChip';
 import { formatDate } from '~/lib/utils';
+import type { Milestone, Pod } from '@prisma/client';
+import Decimal from "decimal.js"
 interface PodsItemProps {
-  pod: {
-    id: number;
-    title: string; // 直接使用后端字段
-    avatar: string | null;
-    tags: string | null; // 后端返回的可能为 null
-    description: string;
-    currency: string;
-    status: Status;
-    milestones?: Array<{
-      title: string; // 后端字段
-      amount: number;
-      createdAt: Date;
-      deadline: Date;
-      status: Status;
-    }>; // milestones 可能为空
-    updatedAt: Date; // 直接使用后端字段
+  pod: Pod & {
+    milestones: Milestone[];
   };
   onClick?: () => void;
   className?: string;
@@ -31,8 +17,8 @@ const PodsItem = ({ pod, onClick, className = "" }: PodsItemProps) => {
   const tags = pod.tags ? pod.tags.split(',').map(tag => tag.trim()).filter(Boolean) : [];
   
   // 计算总资金和已解锁资金
-  const totalFunding = pod.milestones?.reduce((sum, milestone) => sum + milestone.amount, 0) || 0;
-  const unlocked = pod.milestones?.filter(milestone => milestone.status === 'COMPLETED').reduce((sum, milestone) => sum + milestone.amount, 0) || 0;
+  const totalFunding = pod.milestones?.reduce((sum, milestone) => Decimal(sum).plus(milestone.amount).toNumber(), 0) || 0;
+  const unlocked = pod.milestones?.filter(milestone => milestone.status === 'COMPLETED').reduce((sum, milestone) => Decimal(sum).plus(milestone.amount).toNumber(), 0) || 0;
   
 
   // 格式化最后更新时间
@@ -41,7 +27,7 @@ const PodsItem = ({ pod, onClick, className = "" }: PodsItemProps) => {
   // 转换里程碑数据以适配 ProgressMilestoneBar 组件
   const milestonesForProgress = pod.milestones?.map((milestone, index) => ({
     name: milestone.title || `M${index + 1}`,
-    amount: milestone.amount,
+    amount: Number(milestone.amount),
     createdAt: milestone.createdAt,
     deadline: milestone.deadline,
     status: milestone.status as string,

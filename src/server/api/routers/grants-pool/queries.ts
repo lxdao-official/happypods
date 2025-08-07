@@ -1,6 +1,7 @@
 import { z } from "zod";
 import { createTRPCRouter, protectedProcedure, publicProcedure } from "~/server/api/trpc";
 import { getAllSchema } from "./schemas";
+import type { ChainType, GrantsPoolStatus } from "@prisma/client";
 
 export const grantsPoolQueries = {
   // 获取GrantsPool列表
@@ -17,8 +18,8 @@ export const grantsPoolQueries = {
             { description: { contains: search, mode: "insensitive" as const } },
           ],
         }),
-        ...(status && { status }),
-        ...(chainType && { chainType }),
+        ...(status && { status: status as GrantsPoolStatus }),
+        ...(chainType && { chainType: chainType as ChainType }),
       };
 
       const grantsPools = await ctx.db.grantsPool.findMany({
@@ -133,15 +134,75 @@ export const grantsPoolQueries = {
         id: true,
         name: true,
         avatar: true,
+        tokens: true,
+        treasuryWallet: true,
+        chainType: true,
+        owner: {
+          select: {
+            walletAddress: true,
+          },
+        },
         rfps: {
           where: {
             inactiveTime: null,
           }
         },
-        chainType: true,
       },
     });
 
     return grantsPools;
   }),
+
+  // 获取资金池余额信息
+  getPoolBalance: publicProcedure
+    .input(z.object({ id: z.number() }))
+    .query(async ({ ctx, input }) => {
+      // 获取 GrantsPool 信息
+      const grantsPool = await ctx.db.grantsPool.findUnique({
+        where: { id: input.id },
+        select: {
+          id: true,
+          chainType: true,
+          treasuryWallet: true,
+        },
+      });
+
+      if (!grantsPool) {
+        throw new Error("GrantsPool不存在");
+      }
+
+      // 获取所有已完成的milestone金额总和
+      const completedMilestones = await ctx.db.milestone.aggregate({
+        where: {
+          pod: {
+            grantsPoolId: input.id,
+          },
+          status: "COMPLETED",
+        },
+        _sum: {
+          amount: true,
+        },
+      });
+
+      // 获取所有milestone金额总和
+      const totalMilestones = await ctx.db.milestone.aggregate({
+        where: {
+          pod: {
+            grantsPoolId: input.id,
+          },
+        },
+        _sum: {
+          amount: true,
+        },
+      });
+
+      const completedAmount = completedMilestones._sum.amount || 0;
+      const totalAmount = totalMilestones._sum.amount || 0;
+
+      return {
+        grantsPool,
+        completedAmount,
+        totalAmount,
+      };
+    }),
 }; 

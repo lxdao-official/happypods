@@ -5,7 +5,7 @@ import { optimism } from 'viem/chains';
 import { keccak256 } from "viem";
 import { toast } from "sonner";
 
-const useSafeWallet = ({saltNonce}:{saltNonce:string}) => {
+const useSafeWallet = () => {
   const { address } = useAccount();
   const { data: walletClient } = useWalletClient();
   const publicClient = usePublicClient();
@@ -13,11 +13,16 @@ const useSafeWallet = ({saltNonce}:{saltNonce:string}) => {
   const { sendTransaction,status:sendTransactionStatus } = useSendTransaction();
 
   useEffect(() => {
+    if(sendTransactionStatus === 'error') {
+      toast.error('多签钱包未创建！');
+      setStatus('idle');
+    }
     if (sendTransactionStatus === 'success') {
       setStatus('success');
     }
   }, [sendTransactionStatus]);
 
+  // 部署多签钱包合约
   const deploySafe = async (owners: string[] = [], threshold: number = 1) => {
     if (!address || !walletClient || !publicClient) {
       throw new Error("请先连接钱包");
@@ -30,9 +35,9 @@ const useSafeWallet = ({saltNonce}:{saltNonce:string}) => {
     };
 
     
-    const customString = `safe-deploy-${saltNonce}`;
+    const customString = `safe-deploy-${Date.now()}`;
     const saltNonceHash = keccak256(Buffer.from(customString)); // 哈希为十六进制
-    console.log('saltNonce==>',saltNonce,saltNonceHash);
+    console.log('saltNonce==>',saltNonceHash);
 
     const predictedSafe: PredictedSafeProps = {
       safeAccountConfig,

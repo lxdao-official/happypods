@@ -26,7 +26,6 @@ export const podDetailQueries = {
               id: true,
               name: true,
               avatar: true,
-              treasuryBalances: true,
               ownerId: true,
             },
           },

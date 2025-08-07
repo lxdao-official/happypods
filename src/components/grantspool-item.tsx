@@ -4,15 +4,14 @@ import GrantspoolRFPItem from "./grantspool-rfp-item";
 import CardBox from "./card-box";
 import AppBtn from "./app-btn";
 import NextLink from "next/link";
-import { QRCodeTooltip } from "./qr-code-tooltip";
-import { useAccount } from "wagmi";
 import { ShareButton } from "./share-button";
-import type { GrantsPool, Rfps } from "@prisma/client";
+import GrantsPoolBalance from "./grants-pool-balance";
+import type { ChainType, GrantsPool, GrantsPoolTokens, Rfps } from "@prisma/client";
 import useStore from "~/store";
 
 
 const GrantspoolItem = ({ grantsPool, className = "", children, type = "list" }: {
-  grantsPool: GrantsPool & {rfps: Rfps[]};
+  grantsPool: GrantsPool & {rfps?: Rfps[]};
   className?: string;
   children?: React.ReactNode;
   type?: "list" | "detail";
@@ -93,36 +92,20 @@ const GrantspoolItem = ({ grantsPool, className = "", children, type = "list" }:
         <div className="md:col-span-2">
           <p className="leading-relaxed text-gray-700">{grantsPool.description}</p>
         </div>
-        {/* 资金池（treasuryBalances） */}
-        {grantsPool.treasuryBalances && Object.keys(grantsPool.treasuryBalances).length > 0 && (
-          <div className="space-y-4">
-            <div className="flex items-center space-x-3 text-xl">
-              <div className="text-2xl font-bold">Grants Pool</div>
-              <QRCodeTooltip content={grantsPool.treasuryWallet} />
-              <a href={`https://app.safe.global/home?safe=oeth:${grantsPool.treasuryWallet}`} target="_blank" className="hover:opacity-70">
-                <i className="ri-external-link-line"></i>
-              </a>
-            </div>
-            <div className="flex items-center">
-              {Object.entries(grantsPool.treasuryBalances).map(([currency, amount]) => (
-                <div key={currency} className="relative flex items-start gap-8 pr-8 border border-black rounded-lg">
-                  <div className="flex flex-col items-center gap-1 p-2 px-4 border-r border-black">
-                    <img src={`/tokens/${currency.toLowerCase()}.svg`} alt={currency} className="w-6 h-6" />
-                    <b className="text-xs">{currency}</b>
-                  </div>
-                  <div className="flex flex-col items-center p-2"><b>{amount.available}</b><small>Balance</small></div>
-                  <div className="flex flex-col items-center p-2"><b>{amount.used}</b><small>Funded</small></div>
-                  <div className="flex flex-col items-center p-2"><b>{amount.locked}</b><small>Locked</small></div>
-                </div>
-              ))}
-            </div>
-          </div>
+        {/* 资金池余额 */}
+        {type==='detail' && (
+          grantsPool.tokens.map(token => <GrantsPoolBalance 
+            gpId={grantsPool.id}
+            treasuryWallet={grantsPool.treasuryWallet}
+            chainType={grantsPool.chainType as ChainType}
+            token={token as GrantsPoolTokens}
+          />)
         )}
         {/* Request-For-Proposal 部分 */}
         <div>
           <h2 className="mb-4 text-2xl font-bold">Request-For-Proposal</h2>
           <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-4">
-            {grantsPool.rfps.map((rfp) => (
+            {grantsPool.rfps && grantsPool.rfps.map((rfp) => (
               <GrantspoolRFPItem
                 key={rfp.id}
                 gpId={grantsPool.id}

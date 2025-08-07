@@ -40,6 +40,7 @@ export type RouterInputs = inferRouterInputs<AppRouter>;
 export type RouterOutputs = inferRouterOutputs<AppRouter>;
 
 export function TRPCReactProvider(props: { children: React.ReactNode }) {
+
   const queryClient = getQueryClient();
 
   const [trpcClient] = useState(() =>

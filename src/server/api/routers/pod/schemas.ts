@@ -18,6 +18,7 @@ export const createPodSchema = z.object({
   currency: z.string().min(1, "币种不能为空"),
   tags: z.string().optional(),
   milestones: z.array(milestoneSchema).min(1, "至少需要一个里程碑"),
+  isCheck: z.boolean().optional(),
 });
 
 export const updatePodSchema = z.object({

@@ -24,6 +24,7 @@ import type { Status } from "~/lib/config";
 import { LinkDisplay } from "~/components/link-display";
 import { useMemo } from "react";
 import useStore from "~/store";
+import Decimal from "decimal.js";
 
 
 export default function PodDetailPage() {
@@ -52,8 +53,6 @@ export default function PodDetailPage() {
   );
 
 
-
-
   if (isPodLoading || isMilestonesLoading || isHistoryLoading) {
     return <div className="container px-4 py-8 mx-auto">
       <LoadingSkeleton />
@@ -68,8 +67,8 @@ export default function PodDetailPage() {
     );
   }
 
-  const funded = podDetail.milestones.filter(milestone => milestone.status === MilestoneStatus.COMPLETED).reduce((acc, milestone) => acc + milestone.amount, 0);
-  const locked = podDetail.milestones.filter(milestone => milestone.status !== MilestoneStatus.COMPLETED).reduce((acc, milestone) => acc + milestone.amount, 0);
+  const funded = podDetail.milestones.filter(milestone => milestone.status === MilestoneStatus.COMPLETED).reduce((acc, milestone) => Decimal(acc).plus(milestone.amount).toNumber(), 0);
+  const locked = podDetail.milestones.filter(milestone => milestone.status !== MilestoneStatus.COMPLETED).reduce((acc, milestone) => Decimal(acc).plus(milestone.amount).toNumber(), 0);
 
   // 转换数据格式以匹配现有 UI
   const pod = {
@@ -184,7 +183,7 @@ export default function PodDetailPage() {
               </div>
               <div className="flex items-center gap-1 space-x-2">
                 <QRCodeTooltip content={pod.walletAddress}/>
-                <a href={`https://app.safe.global/home?${pod.walletAddress}`} target="_blank" rel="noopener noreferrer">
+                <a href={`https://app.safe.global/home?safe=oeth:${pod.walletAddress}`} target="_blank" rel="noopener noreferrer">
                   <i className="text-xl ri-external-link-line hover:opacity-70"></i>
                 </a>
               </div>

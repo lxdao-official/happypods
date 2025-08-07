@@ -16,7 +16,6 @@ export default function AvatarInput({
   onChange,
   label = "Avatar URL",
   placeholder = "https://example.com/avatar.jpg",
-  description = "Enter the URL for your avatar image.",
   isRequired = false,
   size = "md",
   previewSize = "md"
@@ -40,7 +39,6 @@ export default function AvatarInput({
       value={value}
       onChange={(e) => onChange(e.target.value)}
       placeholder={placeholder}
-      description={description}
       isRequired={isRequired}
       size={size}
       endContent={
@@ -51,6 +49,9 @@ export default function AvatarInput({
             className={`object-cover rounded-full ${getPreviewSizeClass()}`}
             onError={(e) => {
               (e.target as HTMLImageElement).style.display = 'none';
+            }}
+            onLoad={(e) => {
+              (e.target as HTMLImageElement).style.display = 'block';
             }}
           />
         )

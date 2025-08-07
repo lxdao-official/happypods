@@ -14,9 +14,6 @@ import { db } from "~/server/db";
 import { verifyToken, getTokenFromRequest } from "~/lib/jwt";
 import { PUBLIC_ROUTES } from "./config";
 
-// 导入监控服务
-import "~/server/monitor";
-
 /**
  * 1. CONTEXT
  *

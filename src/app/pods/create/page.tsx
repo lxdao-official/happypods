@@ -4,9 +4,7 @@ import { useState, useEffect } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { 
   Input, 
-  Textarea, 
-  Select, 
-  SelectItem
+  Textarea,
 } from "@heroui/react";
 import CornerFrame from "~/components/corner-frame";
 import AppBtn from "~/components/app-btn";
@@ -20,6 +18,7 @@ import TagsSelect from "~/components/tags-select";
 import GpOwnerCheck from "~/components/gp-owner-check";
 import { api } from "~/trpc/react";
 import { toast } from "sonner";
+import { zeroAddress, type Address } from "viem";
 
 interface RelatedLinks {
   website: string;
@@ -41,8 +40,9 @@ export default function CreatePodPage() {
   const searchParams = useSearchParams();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [showSafeModal, setShowSafeModal] = useState(false);
+  const [gpWalletAddress, setGpWalletAddress] = useState<Address>();
   const [showProfileModal, setShowProfileModal] = useState(false);
-  const [safeAddress, setSafeAddress] = useState("");
+  const [availableBalance, setAvailableBalance] = useState(0); // 可用余额
   
   // URL参数
   const gpId = searchParams.get("gpId");
@@ -82,7 +82,7 @@ export default function CreatePodPage() {
   ]);
 
   // API queries
-  const { data: userProfile, isLoading: profileLoading } = api.pod.checkUserProfile.useQuery();
+  const { data: userProfile, isLoading: profileLoading } = api.user.checkUserProfile.useQuery();
   const { data: grantsPoolDetails, isLoading: poolDetailsLoading } = api.pod.getGrantsPoolDetails.useQuery(
     { id: parseInt(formData.grantsPoolId) },
     { enabled: !!formData.grantsPoolId }
@@ -97,19 +97,6 @@ export default function CreatePodPage() {
       return;
     }
   }, [userProfile]);
-
-  // 处理预选的GP和RFP
-  useEffect(() => {
-    if (isPreselected && grantsPoolDetails) {
-      // 设置默认币种为第一个可用token
-      if (grantsPoolDetails.availableTokens.length > 0 && !formData.currency) {
-        setFormData(prev => ({ 
-          ...prev, 
-          currency: grantsPoolDetails.availableTokens[0]?.symbol || "" 
-        }));
-      }
-    }
-  }, [isPreselected, grantsPoolDetails, formData.currency]);
 
   // 确保URL参数正确设置到formData
   useEffect(() => {
@@ -140,31 +127,21 @@ export default function CreatePodPage() {
     }
 
     // 验证里程碑总额
-    if (grantsPoolDetails) {
-      const processedMilestones = milestones.map(milestone => ({
-        title: milestone.title,
-        description: milestone.description,
-        amount: parseFloat(milestone.amount) || 0,
-        deadline: milestone.deadline
-      }));
-
-      const totalAmount = processedMilestones.reduce((sum, milestone) => sum + milestone.amount, 0);
-      const availableToken = grantsPoolDetails.availableTokens.find(token => token.symbol === formData.currency);
-      const available = parseFloat(availableToken?.available || "0");
-
-      if (totalAmount > available) {
-        toast.error(`里程碑总额 ${totalAmount} ${formData.currency} 超过了可用资金 ${available} ${formData.currency}`);
-        return;
-      }
+    if (!isBalanceSufficient) {
+      toast.error(`里程碑总额 ${totalMilestoneAmount.toFixed(6)} ${formData.currency} 超过了可用资金 ${availableBalance.toFixed(6)} ${formData.currency}`);
+      return;
     }
+
+    // 先检查是否可以模拟创建成功，避免钱包生成后无法创建
+    const isCheck = await handleSafeCreated(zeroAddress,true);
+    if(!isCheck) return;
 
     // 显示Safe创建模态框
     setShowSafeModal(true);
   };
 
-  const handleSafeCreated = async (walletAddress: string) => {
+  const handleSafeCreated = async (walletAddress: string,isCheck:boolean=false) => {
     setShowSafeModal(false);
-    setSafeAddress(walletAddress);
     setIsSubmitting(true);
 
     try {
@@ -184,6 +161,7 @@ export default function CreatePodPage() {
       }));
 
       await createPodMutation.mutateAsync({
+        isCheck,
         grantsPoolId: parseInt(formData.grantsPoolId),
         rfpId: parseInt(formData.rfpId) || 0,
         walletAddress: walletAddress,
@@ -196,9 +174,12 @@ export default function CreatePodPage() {
         milestones: processedMilestones,
       });
 
+      if(isCheck) return true;
+
       toast.success("Pod创建成功！");
       router.push("/pods");
     } catch (error) {
+      if(isCheck) return false;
       toast.error("创建失败，请重试");
     } finally {
       setIsSubmitting(false);
@@ -207,6 +188,19 @@ export default function CreatePodPage() {
 
   const handleInputChange = (field: string, value: string) => {
     setFormData(prev => ({ ...prev, [field]: value }));
+  };
+
+  // 计算里程碑总金额
+  const totalMilestoneAmount = milestones.reduce((sum, milestone) => {
+    return sum + (parseFloat(milestone.amount) || 0);
+  }, 0);
+
+  // 检查余额是否充足
+  const isBalanceSufficient = totalMilestoneAmount <= availableBalance;
+  
+  // 余额变化回调
+  const handleBalanceChange = (balance: number) => {
+    setAvailableBalance(balance);
   };
 
   const handleNavigateToProfile = () => {
@@ -233,7 +227,9 @@ export default function CreatePodPage() {
             onGrantsPoolChange={(grantsPoolId) => handleInputChange("grantsPoolId", grantsPoolId)}
             onRfpChange={(rfpId) => handleInputChange("rfpId", rfpId)}
             onCurrencyChange={(currency) => handleInputChange("currency", currency)}
+            onBalanceChange={handleBalanceChange}
             isPreselected={isPreselected}
+            setGpWalletAddress={(walletAddress: string) => setGpWalletAddress(walletAddress)}
           />
 
           {/* 项目描述 */}
@@ -247,7 +243,6 @@ export default function CreatePodPage() {
                 value={formData.avatar}
                 onChange={(value) => handleInputChange("avatar", value)}
                 label="Pod Avatar URL"
-                description="Enter the URL of the Pod avatar image"
               />
                 
               {/* 项目标题 */}
@@ -259,7 +254,6 @@ export default function CreatePodPage() {
                 onChange={(e) => handleInputChange("title", e.target.value)}
                 placeholder="Enter project title"
                 isRequired
-                description="Concise title of your project"
               />
 
               {/* 详细描述 */}
@@ -271,7 +265,6 @@ export default function CreatePodPage() {
                 placeholder="Describe your project in detail, including goals, implementation plan, expected outcomes, etc."
                 isRequired
                 minRows={8}
-                description="Detailed description of project background, goals, technical approach and expected outcomes"
               />
 
               {/* Tags选择 */}
@@ -280,7 +273,6 @@ export default function CreatePodPage() {
                 onTagsChange={setSelectedTags}
                 label="Project Tags"
                 placeholder="Select tags for your project"
-                description="Choose relevant tags to help others discover your project"
               />
             </div>
           </CornerFrame>
@@ -314,13 +306,19 @@ export default function CreatePodPage() {
             <AppBtn
               btnProps={{
                 type: "submit",
-                color: "primary",
+                color: isBalanceSufficient ? "primary" : "danger",
                 isLoading: isSubmitting,
                 className: "flex-1",
                 size: "lg",
+                isDisabled: !isBalanceSufficient,
               }}
             >
-              {isSubmitting ? "Creating..." : "Create Pod"}
+              {isSubmitting 
+                ? "Creating..." 
+                : !isBalanceSufficient 
+                  ? "GP Available Balance Insufficient" 
+                  : "Create Pod"
+              }
             </AppBtn>
           </div>
         </form>
@@ -328,6 +326,7 @@ export default function CreatePodPage() {
         {/* Safe 创建模态框 */}
         <CreateSafeModal
           isOpen={showSafeModal}
+          gpAddress={gpWalletAddress}
           onClose={() => setShowSafeModal(false)}
           onConfirm={handleSafeCreated}
         />

@@ -3,22 +3,30 @@ import { Modal, ModalContent, ModalHeader, ModalBody, ModalFooter, Button, Input
 import CornerFrame from "~/components/corner-frame";
 import useSafeWallet from "~/app/hooks/useSafeWallet";
 import { useAccount } from "wagmi";
+import { PLATFORM_MOD_ADDRESS } from "~/lib/config";
+import { type Address } from "viem";
 import { toast } from "sonner";
+import useStore from "~/store";
 
 interface CreateSafeModalProps {
   isOpen: boolean;
   onClose: () => void;
   onConfirm: (safeAddress: string) => void;
+  gpAddress?: Address;
 }
 
-const CreateSafeModal = ({ isOpen, onClose, onConfirm }: CreateSafeModalProps) => {
+const CreateSafeModal = ({ isOpen, onClose, onConfirm, gpAddress }: CreateSafeModalProps) => {
   const [safeAddress, setSafeAddress] = useState("");
   const { address } = useAccount();
   const { deploySafe,status } = useSafeWallet({saltNonce: address||''});
+  const { userInfo } = useStore();
 
   const handleCreateSafe = async () => {
+    if(!address || !gpAddress || !userInfo?.walletAddress) return toast.error("多签钱包成员不足！");
+    if(address.toLocaleLowerCase() !== userInfo?.walletAddress.toLocaleLowerCase()) return toast.error(`请使用钱包 ${userInfo?.walletAddress} 创建多签钱包！`);
     try {
-      const { safeAddress } = await deploySafe();
+      //! 三方共同管理，2/3权限可以动账
+      const { safeAddress } = await deploySafe([userInfo?.walletAddress,PLATFORM_MOD_ADDRESS,gpAddress], 2);
       setSafeAddress(safeAddress);
     } catch (error) {
       console.error("Failed to create Safe:", error);
@@ -67,21 +75,21 @@ const CreateSafeModal = ({ isOpen, onClose, onConfirm }: CreateSafeModalProps) =
               </div>
             </CornerFrame>
           </div>
-                  </ModalBody>
-          <ModalFooter>
-            <Button variant="light" onPress={onClose}>
-              Cancel
-            </Button>
-            <Button 
-              color="success" 
-              onPress={handleCreateSafe}
-              isLoading={status === 'loading'}
-            >
-              {status === 'loading' ? "Creating..." : "Create Safe Multi-sig Wallet"}
-            </Button>
-          </ModalFooter>
-        </ModalContent>
-      </Modal>
+          </ModalBody>
+            <ModalFooter>
+              <Button variant="light" onPress={onClose}>
+                Cancel
+              </Button>
+              <Button 
+                color="success" 
+                onPress={handleCreateSafe}
+                isLoading={status === 'loading'}
+              >
+                {status === 'loading' ? "Creating..." : "Create Safe Multi-sig Wallet"}
+              </Button>
+            </ModalFooter>
+          </ModalContent>
+        </Modal>
   );
 };
 

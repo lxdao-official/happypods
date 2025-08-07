@@ -3,6 +3,7 @@ import { protectedProcedure } from "~/server/api/trpc";
 import { createPodSchema, updatePodSchema, rejectPodSchema, approvePodSchema } from "./schemas";
 import { NotificationService } from "../notification/notification-service";
 import { MilestoneStatus, NotificationType, PodStatus } from "@prisma/client";
+import { getBalance, walletQueries } from "../wallet/queries";
 
 export const podMutations = {
   // 创建Pod
@@ -29,22 +30,32 @@ export const podMutations = {
         throw new Error("Grants Pool不存在");
       }
 
-      // 验证milestone总额
-      const treasuryBalances = grantsPool.treasuryBalances as Record<string, any> || {};
-      const tokenBalance = treasuryBalances[input.currency];
-      
-      if (!tokenBalance) {
-        throw new Error(`未找到币种 ${input.currency} 的余额信息`);
+      // 当前用户是否有其他正在审核中的pod
+      const existingReviewingPod = await ctx.db.pod.findFirst({
+        where: {
+          applicantId: ctx.user!.id,
+          status: "REVIEWING"
+        }
+      });
+      if (existingReviewingPod) {
+        throw new Error("您已有正在审核中的Pod，请等待审核完成后再创建新的Pod");
       }
 
-      const available = parseFloat(tokenBalance.available || "0");
-      const totalAmount = input.milestones.reduce((sum, milestone) => sum + milestone.amount, 0);
-
-      if (totalAmount > available) {
-        throw new Error(`里程碑总额 ${totalAmount} 超过了可用资金 ${available} ${input.currency}`);
+      // 当前milestone的总额是否超过可用总额
+      const totalMilestoneAmount = input.milestones.reduce((sum, milestone) => sum + Number(milestone.amount), 0);
+      const { formattedBalance } = await getBalance({
+        address: grantsPool.treasuryWallet,
+        chainType: grantsPool.chainType,
+        tokenType: input.currency,
+      });
+      if(totalMilestoneAmount > Number(formattedBalance)) {
+        throw new Error(`可用余额不足!`);
       }
 
-      const { milestones, ...podData } = input;
+      const { milestones, isCheck, ...podData } = input;
+
+      // 创建前检查参数是否正确，正确才弹窗多签钱包创建
+      if(isCheck) return true;
 
       // 创建Pod
       const pod = await ctx.db.pod.create({
@@ -202,10 +213,12 @@ export const podMutations = {
       const updatedPod = await ctx.db.pod.update({
         where: { id: input.id },
         data: {
-          status: PodStatus.PENDING_PAYMENT,
+          status: PodStatus.IN_PROGRESS,
           approvedAt: new Date(),
         }
       });
+
+      //!todo 消息通知
 
       return updatedPod;
     }),

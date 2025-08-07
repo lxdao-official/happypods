@@ -1,8 +1,26 @@
 import { z } from "zod";
-import { publicProcedure } from "~/server/api/trpc";
+import { protectedProcedure, publicProcedure } from "~/server/api/trpc";
 import { getAllSchema, checkEmailExistsSchema } from "./schemas";
 
-export const userQueries = {
+export const userQueries = {  // 检查用户信息是否完善
+  checkUserProfile: protectedProcedure
+    .query(async ({ ctx }) => {
+      const user = await ctx.db.user.findUnique({
+        where: { id: ctx.user.id },
+        select: {
+          name: true,
+          email: true,
+          description: true,
+        },
+      });
+
+      if (!user) {
+        throw new Error("用户不存在");
+      }
+
+      const isComplete = !!(user.name && user.email && user.description);
+      return { isComplete, user };
+    }),
   // 获取当前用户的数据
   getMe: publicProcedure.query(async ({ ctx }) => {
     const user = await ctx.db.user.findUnique({

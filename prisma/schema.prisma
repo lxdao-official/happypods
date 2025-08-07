@@ -36,10 +36,10 @@ model GrantsPool {
   description      String
   links            Json?
   tags             String?
+  tokens           GrantsPoolTokens[] @default([USDT])
   modInfo          Json
   treasuryWallet   String
-  treasuryBalances Json?            @default("{\"USDC\": {\"available\": \"0\", \"used\": \"0\", \"locked\": \"0\"}}") //{"USDC": {"available": "10000", "used": "0", "locked": "0"},"USDT": {"available": "0", "used": "0", "locked": "0"}}
-  chainType        ChainType
+  chainType        ChainType        @default(OPTIMISM)
   status           GrantsPoolStatus @default(ACTIVE)
   metadata         Json?            @default("{}")
   createdAt        DateTime         @default(now())
@@ -54,6 +54,16 @@ model GrantsPool {
   @@index([status])
   @@index([ownerId])
   @@index([treasuryWallet])
+}
+
+enum GrantsPoolStatus {
+  ACTIVE
+  INACTIVE
+}
+
+enum GrantsPoolTokens {
+  USDC
+  USDT
 }
 
 model Rfps {
@@ -109,7 +119,7 @@ model Milestone {
   podId        Int
   title        String
   description  String
-  amount       Int
+  amount       Decimal
   deadline     DateTime
   status       MilestoneStatus @default(ACTIVE)
   currentPhase String          @default("PENDING")
@@ -136,10 +146,6 @@ enum ChainType {
   OPTIMISM
 }
 
-enum GrantsPoolStatus {
-  ACTIVE
-  INACTIVE
-}
 
 enum PodStatus {
   REVIEWING // 审核中
@@ -193,18 +199,21 @@ enum NotificationType {
 // 交易记录表
 model Transaction {
   id Int @id @default(autoincrement())
-  type TransactionType
-  amount Int
+  status TransactionStatus @default(PENDING)
+  amount String
   createdAt DateTime @default(now())
   txHash String
-  metadata Json?
+  metadata Json? @default("{}")
   fromAddress String
   toAddress String
   currency String
+  blockNumber Int
+  blockTimestamp DateTime
 }
 
-enum TransactionType {
-  MILESTONE_PAYMENT // milestone 支付
-  POD_ACTIVATION_PAYMENT // pod激活支付
+enum TransactionStatus {
+  PENDING // 待处理
+  COMPLETED // 已完成
+  ERROR // 异常
   OTHER // 其他
 }

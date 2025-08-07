@@ -1,5 +1,6 @@
 import { z } from "zod";
 import type { Prisma } from "@prisma/client";
+import { TRPCError } from "@trpc/server";
 import { protectedProcedure } from "~/server/api/trpc";
 import { createGrantsPoolSchema, updateGrantsPoolSchema } from "./schemas";
 
@@ -8,6 +9,15 @@ export const grantsPoolMutations = {
   create: protectedProcedure
     .input(createGrantsPoolSchema)
     .mutation(async ({ ctx, input }) => {
+      // 检查用户是否已经创建过 GrantsPool
+      const existingGrantsPool = await ctx.db.grantsPool.findFirst({
+        where: { ownerId: ctx.user.id }
+      });
+
+      if (existingGrantsPool) {
+        throw new Error("您已经创建了一个 GrantsPool，无法再创建其他 GrantsPool");
+      }
+
       const { rfps, ...poolData } = input;
       const grantsPool = await ctx.db.grantsPool.create({
         data: {
@@ -19,8 +29,7 @@ export const grantsPoolMutations = {
           tags: poolData.tags,
           links: poolData.links,
           modInfo: poolData.modInfo as Prisma.InputJsonValue,
-          treasuryBalances: poolData.treasuryBalances as Prisma.InputJsonValue,
-          ownerId: ctx.user.id,
+          ownerId: ctx.user.id as number,
         },
       });
       // 批量插入RFPs
@@ -61,10 +70,7 @@ export const grantsPoolMutations = {
         throw new Error("GrantsPool不存在");
       }
 
-      if (
-        existingGrantsPool.ownerId !== ctx.user.id &&
-        ctx.user.role !== "ADMIN"
-      ) {
+      if (existingGrantsPool.ownerId !== ctx.user.id) {
         throw new Error("没有权限修改此GrantsPool");
       }
 
@@ -154,8 +160,7 @@ export const grantsPoolMutations = {
       }
 
       if (
-        existingGrantsPool.ownerId !== ctx.user.id &&
-        ctx.user.role !== "ADMIN"
+        existingGrantsPool.ownerId !== ctx.user.id
       ) {
         throw new Error("没有权限删除此GrantsPool");
       }
@@ -188,8 +193,7 @@ export const grantsPoolMutations = {
       }
 
       if (
-        grantsPool.ownerId !== ctx.user.id &&
-        ctx.user.role !== "ADMIN"
+        grantsPool.ownerId !== ctx.user.id
       ) {
         throw new Error("没有权限删除此RFP");
       }

@@ -73,16 +73,6 @@ const MilestoneSection = ({ milestones, onMilestonesChange }: MilestoneSectionPr
         <h2 className="flex items-center gap-2 text-xl">
           <span>Milestone Information</span>
         </h2>
-        {milestones.length < 3 && (
-          <Button
-            color="success"
-            size="sm"
-            onPress={addMilestone}
-            startContent={<i className="ri-add-line"></i>}
-          >
-            Add Milestone
-          </Button>
-        )}
       </div>
       <div className="space-y-8">
         {milestones.map((milestone, index) => (
@@ -110,7 +100,6 @@ const MilestoneSection = ({ milestones, onMilestonesChange }: MilestoneSectionPr
                 value={milestone.title}
                 onChange={e => updateMilestone(milestone.id, "title", e.target.value)}
                 placeholder="Enter milestone title"
-                description="Brief title for this milestone"
               />
               
               {/* Deadline & Amount in one row */}
@@ -120,7 +109,6 @@ const MilestoneSection = ({ milestones, onMilestonesChange }: MilestoneSectionPr
                   label="Deadline"
                   value={milestone.deadline ? parseDate(milestone.deadline.split("T")[0] ?? "") : null}
                   onChange={date => handleDateChange(milestone.id, date)}
-                  description="Select milestone deadline"
                   showMonthAndYearPickers
                 />
                 {/* Amount */}
@@ -131,10 +119,9 @@ const MilestoneSection = ({ milestones, onMilestonesChange }: MilestoneSectionPr
                   value={milestone.amount}
                   onChange={e => handleAmountChange(milestone.id, e.target.value)}
                   placeholder="Enter amount"
-                  description="Amount between 0-500 USDC"
                   min="0"
                   max="500"
-                  step="0.01"
+                  step="0.0001"
                   endContent={
                     <div className="flex gap-2">
                       {PRESET_AMOUNTS.map(amount => (
@@ -159,12 +146,26 @@ const MilestoneSection = ({ milestones, onMilestonesChange }: MilestoneSectionPr
                 onChange={e => updateMilestone(milestone.id, "description", e.target.value)}
                 placeholder="Describe the specific goals and deliverables for this milestone"
                 minRows={3}
-                description="Detailed description of the work to be completed in this milestone"
               />
             </div>
             {index < milestones.length - 1 && <EdgeLine className="mt-6" />}
           </div>
         ))}
+
+        <div className="flex justify-end">
+          {milestones.length < 3 && (
+            <Button
+              color="success"
+              size="sm"
+              onPress={addMilestone}
+              startContent={<i className="ri-add-line"></i>}
+            >
+              Add Milestone
+            </Button>
+          )}
+        </div>
+
+
       </div>
     </CornerFrame>
   );
