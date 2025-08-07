@@ -7,23 +7,20 @@ import { FEE_CONFIG } from "~/lib/config";
 import Decimal from "decimal.js";
 import { toast } from "sonner";
 import useSafeWallet from "~/app/hooks/useSafeWallet";
+import type { Milestone } from "@prisma/client";
 
-interface Milestone {
-  id: number;
-  title: string;
-  amount: number;
-  deadline: Date;
-}
+
 
 interface ApprovePodModalProps {
   isOpen: boolean;
   onClose: () => void;
   podId: number;
   podTitle: string;
-  milestones: Milestone[];
+  appliedAmount: number;
   currency: string;
   walletAddress: string;
   onSuccess?: () => void;
+  onlyTransfer: boolean;
 }
 
 export default function ApprovePodModal({
@@ -31,10 +28,11 @@ export default function ApprovePodModal({
   onClose,
   podId,
   podTitle,
-  milestones,
+  appliedAmount,
   currency,
   walletAddress,
   onSuccess,
+  onlyTransfer,
 }: ApprovePodModalProps) {
   const [isTransferring, setIsTransferring] = useState(false);
   const [isApproving, setIsApproving] = useState(false);
@@ -57,17 +55,15 @@ export default function ApprovePodModal({
 
   // 计算总金额和手续费
   const financialInfo = useMemo(() => {
-    const totalAmount = milestones.reduce((sum, milestone) => Decimal(sum).plus(milestone.amount).toNumber(), 0);
-    const fee = Math.max(Decimal(totalAmount).mul(FEE_CONFIG.TRANSACTION_FEE_RATE).toNumber(), FEE_CONFIG.MIN_TRANSACTION_FEE);
-    const totalWithFee = Decimal(totalAmount).plus(fee).toNumber(); 
-
+    const fee = Math.max(Decimal(appliedAmount).mul(FEE_CONFIG.TRANSACTION_FEE_RATE).toNumber(), FEE_CONFIG.MIN_TRANSACTION_FEE);
+    const totalWithFee = Decimal(appliedAmount).plus(fee).toNumber(); 
     return {
-      totalAmount,
+      appliedAmount,
       fee,
       totalWithFee,
       feeRate: FEE_CONFIG.TRANSACTION_FEE_RATE * 100, // 转换为百分比
     };
-  }, [milestones]);
+  }, [appliedAmount]);
 
   const handleClose = () => {
     setIsTransferring(false);
@@ -79,15 +75,18 @@ export default function ApprovePodModal({
   const handleTransfer = async () => {
     try {
       // 状态变更
-      setIsApproving(true);
-      await approvePodMutation.mutateAsync({id: podId});
-      setIsApproving(false);
+      if(!onlyTransfer){
+        setIsApproving(true);
+        await approvePodMutation.mutateAsync({id: podId});
+        setIsApproving(false);
+      }
 
 
       // 转账发起
       setIsTransferring(true);
       await new Promise(resolve => setTimeout(resolve, 2000));
       setIsTransferring(false);
+      onClose();
       
     } catch (error) {
       setIsApproving(false);
@@ -106,7 +105,10 @@ export default function ApprovePodModal({
     >
       <ModalContent>
         <ModalHeader className="flex flex-col gap-1">
-            您即将通过 【{podTitle}】 的提案申请
+          {
+            onlyTransfer ? `您即将向 【${podTitle}】 Pod 发起多签转账` : `您即将通过 【${podTitle}】 Pod 的申请`
+          }
+            
         </ModalHeader>
         <ModalBody>
           <div className="space-y-6">
@@ -124,7 +126,7 @@ export default function ApprovePodModal({
                   <div className="flex justify-between">
                     <span className="text-sm">里程碑总额</span>
                     <span className="font-mono text-sm">
-                      {financialInfo.totalAmount} {currency}
+                      {financialInfo.appliedAmount} {currency}
                     </span>
                   </div>
                   <div className="flex justify-between">
@@ -169,9 +171,9 @@ export default function ApprovePodModal({
             color="success" 
             onPress={handleTransfer}
             isLoading={isTransferring || isApproving}
-            isDisabled={isTransferring || isApproving || milestones.length === 0}
+            isDisabled={isTransferring || isApproving || appliedAmount === 0}
           >
-            {isTransferring ? "转账中..." : isApproving ? "更新状态中..." : "确认通过，并创建多签转账"}
+            {isTransferring ? "转账中..." : isApproving ? "更新状态中..." : onlyTransfer ? "发起多签转账" : "确认通过，并发起多签转账"}
           </Button>
         </ModalFooter>
       </ModalContent>

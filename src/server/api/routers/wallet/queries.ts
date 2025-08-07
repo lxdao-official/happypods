@@ -43,7 +43,7 @@ export const getBalance = async (input: {
 
     return {
       rawBalance: rawBalance || 0n,
-      formattedBalance: formattedBalance || 0,
+      formattedBalance: Number(formattedBalance) || 0,
       decimals: token.decimals,
       tokenType,
       address,

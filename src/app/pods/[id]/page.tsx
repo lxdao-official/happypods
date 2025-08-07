@@ -1,7 +1,7 @@
 "use client";
 
 import { useParams } from "next/navigation";
-import { Chip } from "@heroui/react";
+import { Alert, Chip } from "@heroui/react";
 import NextLink from 'next/link';
 import { formatDate, truncateString } from "~/lib/utils";
 import { QRCodeTooltip } from "~/components/qr-code-tooltip";
@@ -25,6 +25,7 @@ import { LinkDisplay } from "~/components/link-display";
 import { useMemo } from "react";
 import useStore from "~/store";
 import Decimal from "decimal.js";
+import Tag from "~/components/tag";
 
 
 export default function PodDetailPage() {
@@ -44,38 +45,38 @@ export default function PodDetailPage() {
     { enabled: !!podId }
   );
 
-  console.log('milestones==>',milestones);
-
   // 查询历史记录
   const { data: podHistory, isLoading: isHistoryLoading } = api.pod.getPodHistory.useQuery(
     { podId },
     { enabled: !!podId }
   );
 
+   // 我是GP owner
+   const isGPOwner = useMemo(()=>{
+      return userInfo && userInfo?.id === podDetail?.grantsPool.ownerId;
+    },[userInfo,podDetail]);
 
-  if (isPodLoading || isMilestonesLoading || isHistoryLoading) {
+    // 我是pod owner
+    const isPodOwner = useMemo(()=>{
+      return userInfo && userInfo?.id === podDetail?.applicantId;
+    },[userInfo,podDetail]);
+
+
+  if (isPodLoading || isMilestonesLoading || isHistoryLoading || !podDetail) {
     return <div className="container px-4 py-8 mx-auto">
       <LoadingSkeleton />
     </div>
   }
 
-  if (!podDetail) {
-    return (
-      <div className="container px-4 py-8 mx-auto">
-        <Empty/>
-      </div>
-    );
-  }
-
   const funded = podDetail.milestones.filter(milestone => milestone.status === MilestoneStatus.COMPLETED).reduce((acc, milestone) => Decimal(acc).plus(milestone.amount).toNumber(), 0);
-  const locked = podDetail.milestones.filter(milestone => milestone.status !== MilestoneStatus.COMPLETED).reduce((acc, milestone) => Decimal(acc).plus(milestone.amount).toNumber(), 0);
+  const appliedAmount = podDetail.milestones.filter(milestone => milestone.status !== MilestoneStatus.COMPLETED).reduce((acc, milestone) => Decimal(acc).plus(milestone.amount).toNumber(), 0);
 
   // 转换数据格式以匹配现有 UI
   const pod = {
     ...podDetail,
     tags: podDetail.tags?.split(',').map(tag => tag.trim()).filter(Boolean) || [],
     treasury: {
-      locked,
+      appliedAmount,
       funded,
       balances: podDetail.treasuryBalances
     },
@@ -89,10 +90,21 @@ export default function PodDetailPage() {
     description: item.description
   })) || [];
 
-  const isGpOwner = userInfo && userInfo?.id === pod.grantsPool.ownerId
-
   return (
-    <div className="container px-4 py-8 mx-auto">
+    <div className="container px-4 py-8 mx-auto space-y-4">
+
+      {
+        isGPOwner && <GpReviewActions 
+            podStatus={pod.status}
+            grantsPoolId={pod.grantsPool.id}
+            podId={pod.id}
+            podTitle={pod.title}
+            podWalletAddress={pod.walletAddress}
+            podCurrency={pod.currency}
+            podTreasuryBalances={pod.podTreasuryBalances}
+            appliedAmount={pod.treasury.appliedAmount}
+          />
+      }
 
       <CardBox
       titleBg="var(--color-primary)"
@@ -103,21 +115,6 @@ export default function PodDetailPage() {
             <span className="ml-2 text-2xl font-bold">{pod.title}</span>
           </div>
 
-         <div className="flex items-center gap-4">
-
-          {
-            isGpOwner && (
-              <GpReviewActions 
-                podStatus={pod.status}
-                grantsPoolId={pod.grantsPool.id}
-                podId={pod.id}
-                podTitle={pod.title}
-                podWalletAddress={pod.walletAddress}
-                podCurrency={pod.currency}
-              />
-            ) 
-          }
-          
           <ShareButton 
             url={typeof window !== 'undefined' ? window.location.href : ''}
             title={`${pod.title} - ${pod.description}`}
@@ -125,7 +122,6 @@ export default function PodDetailPage() {
             size="sm"
             color="primary"
           />
-         </div>
        </div>
       }
       >
@@ -137,14 +133,13 @@ export default function PodDetailPage() {
 
             {/* 标签 */}
             <div className="flex flex-wrap gap-2 mb-3">
-              {pod.tags.map((tag, index) => (
-                <span 
-                  key={index}
-                  className="px-3 py-1 text-xs text-black border border-black rounded-full"
-                >
-                  {tag}
-                </span>
-              ))}
+              {
+                isPodOwner && <Tag color="primary">Pod Owner</Tag>
+              }
+              {
+                isGPOwner && <Tag color="success">GP Owner</Tag>
+              }
+              {pod.tags.map((tag, index) => <Tag key={index}>{tag}</Tag>)}
             </div>
             
             <div className="space-y-6">
@@ -191,12 +186,12 @@ export default function PodDetailPage() {
             <div className="grid grid-cols-3 gap-1 text-left">
             
               <div className="p-2 text-black rounded-md">
-                <div className="text-xl font-bold">{pod.treasury.balances}</div>
+                <div className="text-xl font-bold">{pod.podTreasuryBalances}</div>
                 <div className="text-xs text-secondary">Locked</div>
               </div>
 
               <div className="p-2 text-red-500 rounded-md">
-                <div className="text-xl font-bold">{pod.treasury.locked}</div>
+                <div className="text-xl font-bold">{pod.treasury.appliedAmount}</div>
                 <div className="text-xs text-secondary">Application</div>
               </div>
               

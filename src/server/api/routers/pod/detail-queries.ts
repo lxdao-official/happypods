@@ -1,6 +1,7 @@
 import { MilestoneStatus, PodStatus } from "@prisma/client";
 import { z } from "zod";
 import { createTRPCRouter, protectedProcedure, publicProcedure } from "~/server/api/trpc";
+import { getBalance } from "../wallet/queries";
 
 export const podDetailQueries = {
   // 获取Pod详情（包含完整信息）
@@ -27,6 +28,7 @@ export const podDetailQueries = {
               name: true,
               avatar: true,
               ownerId: true,
+              chainType: true,
             },
           },
           rfp: {
@@ -46,7 +48,16 @@ export const podDetailQueries = {
         throw new Error("Pod不存在");
       }
 
-      return pod;
+      const balances = await getBalance({
+        address: pod.walletAddress,
+        chainType: pod.grantsPool.chainType,
+        tokenType: pod.currency,
+      });
+
+      return {
+        ...pod,
+        podTreasuryBalances: balances.formattedBalance,
+      };
     }),
 
   // 获取Pod历史记录（查询相同podGroupId的所有版本）

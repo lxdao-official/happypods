@@ -93,7 +93,7 @@ model Pod {
   description      String
   links            Json?
   tags             String?
-  treasuryBalances String?     @default("0")
+  treasuryBalances String?
   currency         String
   status           PodStatus   @default(REVIEWING)
   metadata         Json?       @default("{}") // {rejectReason: string}

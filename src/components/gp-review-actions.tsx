@@ -7,6 +7,9 @@ import AppBtn from "~/components/app-btn";
 import RejectPodModal from "~/components/reject-pod-modal";
 import ApprovePodModal from "~/components/approve-pod-modal";
 import { api } from "~/trpc/react";
+import { PodStatus, type Milestone } from "@prisma/client";
+import { Alert } from "@heroui/react";
+import Decimal from "decimal.js";
 
 interface GpReviewActionsProps {
   podStatus: string;
@@ -15,6 +18,8 @@ interface GpReviewActionsProps {
   podTitle: string;
   podWalletAddress: string;
   podCurrency: string;
+  podTreasuryBalances: number;
+  appliedAmount: number;
 }
 
 export default function GpReviewActions({ 
@@ -23,18 +28,14 @@ export default function GpReviewActions({
   podId,
   podTitle,
   podWalletAddress,
-  podCurrency
+  podCurrency,
+  podTreasuryBalances,
+  appliedAmount
 }: GpReviewActionsProps) {
-  const { address } = useAccount();
   const router = useRouter();
   const [isRejectModalOpen, setIsRejectModalOpen] = useState(false);
   const [isApproveModalOpen, setIsApproveModalOpen] = useState(false);
-
-  // 查询 GP 详情获取所有者信息
-  const { data: grantsPoolDetail } = api.grantsPool.getById.useQuery(
-    { id: grantsPoolId },
-    { enabled: !!grantsPoolId }
-  );
+  const [onlyTransfer, setOnlyTransfer] = useState(false);//弹窗是否只是转账
 
   // 查询 Pod 的 milestones 信息
   const { data: podDetail } = api.pod.getById.useQuery(
@@ -42,17 +43,9 @@ export default function GpReviewActions({
     { enabled: !!podId }
   );
 
-  // 检查当前用户是否是 GP 创建者
-  const isGpOwner = address && grantsPoolDetail?.owner?.walletAddress && 
-    address.toLowerCase() === grantsPoolDetail.owner.walletAddress.toLowerCase();
-
-  // 只有当 Pod 状态为 REVIEWING 且当前用户是 GP 创建者时才显示操作按钮
-  if (podStatus !== 'REVIEWING' || !isGpOwner) {
-    return null;
-  }
-
-  const handleApprove = () => {
+  const handleApprove = (onlyTransfer: boolean = false) => {
     setIsApproveModalOpen(true);
+    setOnlyTransfer(onlyTransfer);
   };
 
   const handleReject = () => {
@@ -64,29 +57,40 @@ export default function GpReviewActions({
     router.refresh();
   };
 
+  // 如果国库余额不足，则显示提醒
+  const shortage = Decimal(appliedAmount).minus(podTreasuryBalances).toNumber();
+  
+
   return (
     <>
-      <div className="flex items-center gap-4">
-        {/* <small>Pod 创建者提交了变更！</small> */}
-        <AppBtn 
-          btnProps={{
-            size: "sm", 
-            color: "success",
-            onPress: handleApprove
-          }}
-        >
-          通过
-        </AppBtn>
-        <AppBtn 
-          btnProps={{
-            size: "sm", 
-            color: "danger",
-            onPress: handleReject
-          }}
-        >
-          拒绝
-        </AppBtn>
-      </div>
+    {
+      shortage > 0 && podStatus === PodStatus.IN_PROGRESS ?
+        <Alert
+        color="warning"
+        variant="bordered"
+        title="国库余额不足！"
+        className="mb-4"
+        classNames={{base: 'bg-background'}}
+        endContent={<AppBtn btnProps={{color: "warning", onPress: ()=>handleApprove(true)}}>立即注入</AppBtn>}
+      >
+        <div className="text-sm text-secondary">Pod国库不足，注入预设资金，否则 Milestone 将无法交付！</div>
+      </Alert> :
+      podStatus === PodStatus.REVIEWING ?
+      <Alert
+        color="primary"
+        variant="bordered"
+        title="Pod 提交了申请，请完成审核！"
+        className="mb-4"
+        classNames={{base:'bg-background'}}
+        endContent={
+          <div className="flex items-center gap-4">
+          <AppBtn  btnProps={{size: "sm", color: "success", onPress: ()=>handleApprove(false)}}>通过</AppBtn>
+          <AppBtn btnProps={{size: "sm", color: "danger", onPress: handleReject}}>拒绝</AppBtn>
+        </div>
+        }
+      >
+      </Alert> : null
+    }
 
       {/* 拒绝Pod的Modal */}
       <RejectPodModal
@@ -103,10 +107,11 @@ export default function GpReviewActions({
         onClose={() => setIsApproveModalOpen(false)}
         podId={podId}
         podTitle={podTitle}
-        milestones={podDetail?.milestones || []}
+        appliedAmount={appliedAmount}
         currency={podCurrency}
         walletAddress={podWalletAddress}
         onSuccess={handleModalSuccess}
+        onlyTransfer={onlyTransfer}
       />
     </>
   );

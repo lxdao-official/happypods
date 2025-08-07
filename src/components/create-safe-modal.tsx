@@ -18,7 +18,7 @@ interface CreateSafeModalProps {
 const CreateSafeModal = ({ isOpen, onClose, onConfirm, gpAddress }: CreateSafeModalProps) => {
   const [safeAddress, setSafeAddress] = useState("");
   const { address } = useAccount();
-  const { deploySafe,status } = useSafeWallet({saltNonce: address||''});
+  const { deploySafe,status } = useSafeWallet();
   const { userInfo } = useStore();
 
   const handleCreateSafe = async () => {
