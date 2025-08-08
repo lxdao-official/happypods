@@ -7,7 +7,7 @@ import { FEE_CONFIG } from "~/lib/config";
 import Decimal from "decimal.js";
 import { toast } from "sonner";
 import useSafeWallet from "~/app/hooks/useSafeWallet";
-import type { Milestone } from "@prisma/client";
+import type { GrantsPoolTokens, Milestone } from "@prisma/client";
 
 
 
@@ -19,6 +19,7 @@ interface ApprovePodModalProps {
   appliedAmount: number;
   currency: string;
   walletAddress: string;
+  treasuryWallet: string;
   onSuccess?: () => void;
   onlyTransfer: boolean;
 }
@@ -31,12 +32,13 @@ export default function ApprovePodModal({
   appliedAmount,
   currency,
   walletAddress,
+  treasuryWallet,
   onSuccess,
   onlyTransfer,
 }: ApprovePodModalProps) {
   const [isTransferring, setIsTransferring] = useState(false);
   const [isApproving, setIsApproving] = useState(false);
-  const {deploySafe} = useSafeWallet();
+  const {buildErc20TransfersSafeTransaction,signSafeTransaction,executeSafeTransaction,getTransactionHash} = useSafeWallet();
 
   const approvePodMutation = api.pod.approve.useMutation({
     onSuccess: () => {
@@ -81,10 +83,24 @@ export default function ApprovePodModal({
         setIsApproving(false);
       }
 
-
       // 转账发起
       setIsTransferring(true);
-      await new Promise(resolve => setTimeout(resolve, 2000));
+      const safeTransaction = await buildErc20TransfersSafeTransaction(treasuryWallet, [{
+        token: currency as GrantsPoolTokens,
+        to: walletAddress,
+        amount: financialInfo.totalWithFee.toString()
+      }])
+      console.log('safeTransaction', safeTransaction);
+
+      const txHash = await getTransactionHash(treasuryWallet, safeTransaction);
+      console.log('txHash', txHash);
+
+      const sendTx = await executeSafeTransaction(treasuryWallet, safeTransaction);
+      console.log('sendTx', sendTx);
+
+      // const signSafeTxHash = await signSafeTransaction(treasuryWallet, safeTransaction);
+      // console.log('signSafeTxHash', signSafeTxHash);
+      
       setIsTransferring(false);
       onClose();
       
@@ -139,7 +155,18 @@ export default function ApprovePodModal({
                   </div>
                   <div className="flex justify-between">
                     <span className="text-sm">
-                      Pod 多签国库
+                      GP 多签国库 (转出)
+                    </span>
+                    <span className="font-mono text-sm break-all">
+                      {treasuryWallet}
+                    </span>
+                  </div>
+                  
+                  {/* <div className="flex"><i className="text-2xl text-green-500 ri-arrow-down-box-line"></i></div> */}
+
+                  <div className="flex justify-between">
+                    <span className="text-sm">
+                      Pod 多签国库 (接收)
                     </span>
                     <span className="font-mono text-sm break-all">
                       {walletAddress}

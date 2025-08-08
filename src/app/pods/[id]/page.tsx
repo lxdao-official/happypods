@@ -103,6 +103,7 @@ export default function PodDetailPage() {
             podCurrency={pod.currency}
             podTreasuryBalances={pod.podTreasuryBalances}
             appliedAmount={pod.treasury.appliedAmount}
+            treasuryWallet={pod.grantsPool.treasuryWallet}
           />
       }
 

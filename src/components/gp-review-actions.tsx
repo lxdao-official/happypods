@@ -20,28 +20,23 @@ interface GpReviewActionsProps {
   podCurrency: string;
   podTreasuryBalances: number;
   appliedAmount: number;
+  treasuryWallet: string;
 }
 
 export default function GpReviewActions({ 
   podStatus, 
-  grantsPoolId,
   podId,
   podTitle,
   podWalletAddress,
   podCurrency,
   podTreasuryBalances,
-  appliedAmount
+  appliedAmount,
+  treasuryWallet
 }: GpReviewActionsProps) {
   const router = useRouter();
   const [isRejectModalOpen, setIsRejectModalOpen] = useState(false);
   const [isApproveModalOpen, setIsApproveModalOpen] = useState(false);
   const [onlyTransfer, setOnlyTransfer] = useState(false);//弹窗是否只是转账
-
-  // 查询 Pod 的 milestones 信息
-  const { data: podDetail } = api.pod.getById.useQuery(
-    { id: podId },
-    { enabled: !!podId }
-  );
 
   const handleApprove = (onlyTransfer: boolean = false) => {
     setIsApproveModalOpen(true);
@@ -64,7 +59,7 @@ export default function GpReviewActions({
   return (
     <>
     {
-      shortage > 0 && podStatus === PodStatus.IN_PROGRESS ?
+      shortage >= 0 && podStatus === PodStatus.IN_PROGRESS ?
         <Alert
         color="warning"
         variant="bordered"
@@ -110,6 +105,7 @@ export default function GpReviewActions({
         appliedAmount={appliedAmount}
         currency={podCurrency}
         walletAddress={podWalletAddress}
+        treasuryWallet={treasuryWallet}
         onSuccess={handleModalSuccess}
         onlyTransfer={onlyTransfer}
       />

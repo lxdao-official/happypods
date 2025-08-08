@@ -1,3 +1,6 @@
+---
+alwaysApply: false
+---
 # Happy Pods 项目 Cursor 规则
 
 记住：整个项目是英文项目，你生成的注释需要用中文，但是显示给用户的界面上的文案都需要是英文的！
@@ -14,7 +17,7 @@
 ## 技术栈
 - TypeScript（严格模式）
 - tRPC + Prisma + PostgreSQL
-- Tailwind CSS 4
+- Tailwind CSS 4 + heroui
 - RainbowKit + wagmi + viem（Web3）
 - TanStack Query（React Query）
 - ESLint + Prettier
