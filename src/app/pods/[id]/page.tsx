@@ -15,9 +15,9 @@ import ApplicantInfoModal from "~/components/applicant-info-modal";
 import GpReviewActions from "~/components/gp-review-actions";
 import { api } from "~/trpc/react";
 import { MilestoneStatus } from "@prisma/client";
-import StatusChip from "~/components/StatusChip";
-import LoadingSkeleton from "~/components/LoadingSkeleton";
-import Empty from "~/components/Empty";
+import StatusChip from "~/components/status-chip";
+import LoadingSkeleton from "~/components/loading-skeleton";
+import Empty from "~/components/empty";
 import type { JsonObject, JsonValue } from "@prisma/client/runtime/library";
 import JsonInfoDisplay from "~/components/json-info-display";
 import type { Status } from "~/lib/config";
@@ -91,7 +91,7 @@ export default function PodDetailPage() {
   })) || [];
 
   return (
-    <div className="container px-4 py-8 mx-auto space-y-4">
+    <div className="container px-4 py-8 mx-auto space-y-4 fadeIn">
 
       {
         isGPOwner && <GpReviewActions 

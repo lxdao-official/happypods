@@ -5,8 +5,8 @@ import { DataDisplayGrid } from "~/components/data-display-grid";
 import EdgeLine from "~/components/edge-line";
 import { api } from "~/trpc/react";
 import { useAccount } from "wagmi";
-import LoadingSkeleton from "~/components/LoadingSkeleton";
-import Empty from "~/components/Empty";
+import LoadingSkeleton from "~/components/loading-skeleton";
+import Empty from "~/components/empty";
 
 const GrantsPoolDetailPage = () => {
   const params = useParams();
@@ -36,7 +36,7 @@ const GrantsPoolDetailPage = () => {
 
   return (
     <div className="container py-8">
-      <GrantspoolItem grantsPool={grantsPool} type="detail">
+      <GrantspoolItem grantsPool={grantsPool} type="detail" className="fadeIn">
         <div className="mt-20">
           <EdgeLine color="black"/>
           <DataDisplayGrid title="Pods" sortClassName="text-black" type="gp" grantsPoolId={grantsPoolId} theme="light"/>

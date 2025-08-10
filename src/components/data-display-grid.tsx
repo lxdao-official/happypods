@@ -1,11 +1,11 @@
 'use client';
 
 import { useState, useMemo, useEffect } from 'react';
-import { Input, Dropdown, DropdownTrigger, DropdownMenu, DropdownItem, Button, Pagination, Select, SelectItem } from '@heroui/react';
+import { Input, Pagination, Select, SelectItem } from '@heroui/react';
 import PodsItem from './pods-item';
 import { api } from '~/trpc/react';
-import LoadingSkeleton from './LoadingSkeleton';
-import Empty from './Empty';
+import LoadingSkeleton from './loading-skeleton';
+import Empty from './empty';
 import { PodStatus } from '@prisma/client';
 import { STATUS_MAP } from '~/lib/config';
 
@@ -30,12 +30,13 @@ export const DataDisplayGrid = ({
   gridClassName = 'grid grid-cols-1 gap-6 mb-8 md:grid-cols-2 lg:grid-cols-3',
   itemsPerPage = 12,
   showPagination = true,
-  title = '',
+  title = 'Pods',
   searchPlaceholder = 'Search for a pod',
   theme = 'dark',
 }: Readonly<DataDisplayGridProps>) => {
   // 查询参数
   const [search, setSearch] = useState('');
+  const [searchInput, setSearchInput] = useState('');
   const [status, setStatus] = useState('');
   const [currentPage, setCurrentPage] = useState(1);
   const [pageCursor, setPageCursor] = useState<number | null>(null);
@@ -76,41 +77,70 @@ export const DataDisplayGrid = ({
     setPageCursor(null);
   }, [search, status, type, grantsPoolId]);
 
-  // 搜索栏
-  const SearchBar = () => (
-    <Input
-      type="text"
-      placeholder={searchPlaceholder}
-      value={search}
-      onChange={(e: React.ChangeEvent<HTMLInputElement>) => setSearch(e.target.value)}
-      startContent={<i className="ri-search-line"></i>}
-      isClearable
-      className="w-[300px] rounded-full border-primary border-1 overflow-hidden"
-    />
-  );
+  // 搜索输入防抖：将即时输入同步到用于查询的 search
+  useEffect(() => {
+    const id = setTimeout(() => {
+      setSearch(searchInput);
+    }, 1000);
+    return () => clearTimeout(id);
+  }, [searchInput]);
+
+  // 说明：直接内联 Input，避免定义内部子组件导致重挂载丢失焦点
+
+  const statusOptions = useMemo(() => {
+    const options = Object.values(PodStatus).map(opt => ({
+      label: STATUS_MAP[opt].label,
+      value: opt
+    }));
+    return [
+      {
+        label: 'All Status',
+        value: ''
+      },
+      ...options
+    ];
+  }, []);
 
 
   return (
     <div className={className}>
       {/* 搜索和筛选栏 */}
       { 
-        <div className="flex flex-col gap-4 my-8 md:flex-row md:items-center md:justify-between">
+        <div className="flex justify-between gap-4 my-8">
           <div className="flex items-center gap-4">
             {title && <h2 className="text-2xl font-bold">{title}</h2>}
-            <SearchBar />
           </div>
           <div className="flex items-center gap-4">
+            <Input
+              type="text"
+              placeholder={searchPlaceholder}
+              value={searchInput}
+              onChange={(e: React.ChangeEvent<HTMLInputElement>) => setSearchInput(e.target.value)}
+              startContent={<i className="ri-search-line"></i>}
+              isClearable
+              variant={type === 'gp' ? 'bordered' : 'faded'}
+              color='primary'
+              className="w-[300px]"
+              onClear={() => setSearchInput('')}
+            />
             <Select
-              defaultSelectedKeys={['ALL']}
-              selectedKeys={status ? new Set([status]) : new Set(['ALL'])}
+              defaultSelectedKeys={['']}
+              selectedKeys={status ? new Set([status]) : new Set([''])}
+              variant={type === 'gp' ? 'bordered' : 'faded'}
+              color='primary'
+              renderValue={() => {
+                return <div className={`${type === 'gp' ? 'text-black' : 'text-white'}`}>
+                  {statusOptions.find(opt => opt.value === status)?.label}
+                </div>
+              }}
               onSelectionChange={(keys) => {
                 const s = Array.from(keys)[0] as string;
                 setStatus(s);
               }}
-              className="min-w-[150px] border-1 rounded-xl border-secondary overflow-hidden"
+              className="w-[150px]"
             >
-              {Object.values(PodStatus).map(opt => (
-                <SelectItem key={opt}>{STATUS_MAP[opt].label}</SelectItem>
+              {statusOptions.map(opt => (
+                <SelectItem key={opt.value}>{opt.label}</SelectItem>
               ))}
             </Select>
           </div>

@@ -16,8 +16,8 @@ import AvatarInput from "~/components/avatar-input";
 import TagsSelect from "~/components/tags-select";
 import { api } from "~/trpc/react";
 import { toast } from "sonner";
-import LoadingSkeleton from "~/components/LoadingSkeleton";
-import Empty from "~/components/Empty";
+import LoadingSkeleton from "~/components/loading-skeleton";
+import Empty from "~/components/empty";
 
 interface RFP {
   id: string;

@@ -31,9 +31,15 @@
     --radius-sm: 0.25rem;
 }
 
+body,
+html {
+    background: var(--color-background);
+}
+
 input,
 textarea,
-button {
+button,
+* {
     outline: none;
 }
 

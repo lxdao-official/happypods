@@ -14,7 +14,7 @@ import {
 } from "@heroui/react";
 import { formatDate } from "~/lib/utils";
 import useNotifcation from "~/app/hooks/useNotifcation";
-import Empty from "../Empty";
+import Empty from "../empty";
 
 export function NotificationDrawer() {
   const {notifications, readAll, read} = useNotifcation();

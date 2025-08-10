@@ -1,6 +1,6 @@
 import NextLink from 'next/link';
 import ProgressMilestoneBar from './progress-milestone-bar';
-import StatusChip from './StatusChip';
+import StatusChip from './status-chip';
 import { formatDate } from '~/lib/utils';
 import type { Milestone, Pod } from '@prisma/client';
 import Decimal from "decimal.js"
@@ -37,8 +37,7 @@ const PodsItem = ({ pod, onClick, className = "" }: PodsItemProps) => {
     <NextLink 
       href={`/pods/${pod.id}`}
       className={`
-        text-black 
-        bg-pink rounded-xl overflow-hidden 3px 3px 0px 0px var( --color-primary cursor-pointer
+        text-black bg-pink rounded-xl overflow-hidden 3px 3px 0px 0px var( --color-primary cursor-pointer fadeIn
         ${className}
       `}
       onClick={onClick}

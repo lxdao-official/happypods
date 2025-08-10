@@ -30,7 +30,6 @@ const GrantsPoolBalance = ({ gpId, treasuryWallet, chainType, token }: GrantsPoo
 
   const completedAmount = Number(poolBalanceData?.completedAmount) || 0;
   const totalAmount = Number(poolBalanceData?.totalAmount) || 0;
-  const lockedAmount = totalAmount - completedAmount;
 
   // 计算余额（USDC + USDT 格式化余额）
   const availableUSDC = Number(uBalance ? uBalance.formattedBalance : '0');
@@ -51,8 +50,8 @@ const GrantsPoolBalance = ({ gpId, treasuryWallet, chainType, token }: GrantsPoo
             <b className="text-xs">{token}</b>
           </div>
           <div className="flex flex-col items-center p-2"><b>{availableUSDC}</b><small>Balance</small></div>
+          <div className="flex flex-col items-center p-2"><b>{totalAmount}</b><small>All Pod grants</small></div>
           <div className="flex flex-col items-center p-2"><b>{completedAmount}</b><small>Funded</small></div>
-          <div className="flex flex-col items-center p-2"><b>{lockedAmount}</b><small>Locked</small></div>
         </div>
       </div>
     </div>

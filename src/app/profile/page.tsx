@@ -16,7 +16,7 @@ import AvatarInput from "~/components/avatar-input";
 import { api } from "~/trpc/react";
 import { getUser } from "~/lib/auth-storage";
 import { toast } from "sonner";
-import LoadingSkeleton from "~/components/LoadingSkeleton";
+import LoadingSkeleton from "~/components/loading-skeleton";
 import { useUserInfo } from "../hooks/useUserInfo";
 
 // 定义链接类型
@@ -150,7 +150,7 @@ export default function ProfilePage() {
   }
 
   return (
-    <div className="container px-4 py-8 mx-auto">
+    <div className="container px-4 py-8 mx-auto fadeIn">
       <div className="max-w-4xl mx-auto">
         <div className="mb-8">
           <h1 className="text-3xl font-bold text-foreground">Profile</h1>

@@ -150,7 +150,7 @@ enum ChainType {
 enum PodStatus {
   REVIEWING // 审核中
   APPROVED // 批准
-  PENDING_PAYMENT // 待支付
+  // PENDING_PAYMENT // 待支付
   REJECTED // 拒绝
   IN_PROGRESS // 进行中
   COMPLETED // 完成

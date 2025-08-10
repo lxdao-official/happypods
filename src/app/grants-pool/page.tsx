@@ -6,8 +6,8 @@ import AppBtn from "~/components/app-btn";
 import GrantspoolItem from "~/components/grantspool-item";
 import NextLink from 'next/link';
 import { api } from "~/trpc/react";
-import Empty from "~/components/Empty";
-import LoadingSkeleton from "~/components/LoadingSkeleton";
+import Empty from "~/components/empty";
+import LoadingSkeleton from "~/components/loading-skeleton";
 
 export default function GrantsPoolPage() {
   // 获取所有 grants pools 数据（不使用分页，获取全部）
@@ -45,6 +45,7 @@ export default function GrantsPoolPage() {
               <GrantspoolItem
                 key={grantsPool.id}
                 grantsPool={grantsPool}
+                className="fadeIn"
               />
             ))
           )}

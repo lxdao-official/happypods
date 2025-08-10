@@ -3,7 +3,7 @@ import SubmitMilestoneModal from "./submit-milestone-modal";
 import MilestoneSubmissionDisplay from "./milestone-submission-display";
 import ReviewMilestoneModal from "./review-milestone-modal";
 import ProgressMilestoneBar from "./progress-milestone-bar";
-import StatusChip from "./StatusChip";
+import StatusChip from "./status-chip";
 import PayMilestoneModal from "./pay-milestone-modal";
 import { formatDate } from "~/lib/utils";
 import { MilestoneStatus, type Milestone } from "@prisma/client";
