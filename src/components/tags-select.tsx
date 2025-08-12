@@ -21,10 +21,10 @@ export default function TagsSelect({
 }: TagsSelectProps) {
   return (
     <div className="space-y-3">
-      <label className="text-sm font-medium">{label}</label>
       <Select
+        label={label}
         variant="bordered"
-        placeholder={placeholder}
+        placeholder={'Select tags'}
         selectionMode="multiple"
         selectedKeys={new Set(selectedTags)}
         onSelectionChange={(keys) => {

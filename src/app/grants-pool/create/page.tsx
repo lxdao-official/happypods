@@ -121,16 +121,10 @@ export default function CreateGrantsPoolPage() {
         return acc;
       }, {} as Record<string, string>);
 
-      // 处理多个RFP
-      const processedRfps = rfps.map(rfp => ({
-        title: rfp.title || "Default RFP",
-        description: rfp.description || "Please provide RFP description"
-      }));
-
       const modInfo = {
-        name: formData.modName || "Not set",
-        email: formData.modEmail || "Not set",
-        telegram: formData.modTelegram || "Not set",
+        name: formData.modName || "",
+        email: formData.modEmail || "",
+        telegram: formData.modTelegram || "",
       };
 
       await createGrantsPoolMutation.mutateAsync({
@@ -141,7 +135,7 @@ export default function CreateGrantsPoolPage() {
         treasuryWallet: safeAddress, // 使用Safe地址
         chainType: formData.chainType,
         links: Object.keys(links).length > 0 ? links : undefined,
-        rfps: processedRfps, // 传递所有RFP
+        rfps, // 传递所有RFP
         modInfo,
       });
 

@@ -1,15 +1,9 @@
 import { protectedProcedure } from "~/server/api/trpc";
 import { submitMilestoneDeliverySchema, reviewMilestoneDeliverySchema, confirmPaymentSchema } from "./schemas";
 import { NotificationService } from "../notification/notification-service";
-import { MilestoneStatus, NotificationType, PodStatus, SafeTransactionStatus, SafeTransactionType } from "@prisma/client";
-import SafeApiKit from "@safe-global/api-kit";
+import { MilestoneStatus, NotificationType, PodStatus } from "@prisma/client";
 import { optimism } from "viem/chains";
-
- // 验证提交的transactionHash是否有效
-const apiKit = new SafeApiKit({
-  chainId: BigInt(optimism.id),
-  apiKey: process.env.NEXT_PUBLIC_SAFE_API_KEY
-})
+import { PLATFORM_CHAINS } from "~/lib/config";
 
 export const milestoneMutations = {
   // 提交milestone交付
@@ -54,24 +48,13 @@ export const milestoneMutations = {
         throw new Error("Grants Pool不存在");
       }
 
-      // 验证提交的transactionHash是否有效
-      const safeTransaction = await apiKit.getTransaction(input.transactionHash);
-      console.log('safeTransaction', safeTransaction);
-      if(!safeTransaction){
-        throw new Error("TransactionHash无效");
-      }
-
-      // 创建新的safeTransaction
-      await ctx.db.safeTransaction.create({
-        data: {
-          status: SafeTransactionStatus.PENDING,
-          txHash: input.transactionHash,
-          safeWalletAddress: safeTransaction.safe,
-          type: SafeTransactionType.POD_MILESTONE_DELIVERY,
-          // @ts-ignore
-          targetId: Number(input.milestoneId),
-        },
-      });
+     
+       //!todo 验证提交的transactionHash是否有效
+       const safeTransaction = await PLATFORM_CHAINS[optimism.id]?.safeApiKit.getTransaction(input.transactionHash);
+       console.log('safeTransaction', safeTransaction);
+       if(!safeTransaction){
+         throw new Error("TransactionHash无效");
+       }
 
       // 创建新的交付信息
       const newDelivery = {
@@ -89,6 +72,7 @@ export const milestoneMutations = {
         data: {
           deliveryInfo: [...currentDeliveryInfo, newDelivery],
           status: MilestoneStatus.REVIEWING,
+          safeTransactionHash: milestone.safeTransactionHash ? undefined : input.transactionHash,
         },
         include: {
           pod: {
@@ -143,15 +127,10 @@ export const milestoneMutations = {
       // 获取当前的deliveryInfo数组
       const currentDeliveryInfo = (milestone.deliveryInfo as any[]) || [];
       
-      // 检查deliveryIndex是否有效
-      if (input.deliveryIndex < 0 || input.deliveryIndex >= currentDeliveryInfo.length) {
-        throw new Error("无效的交付索引");
-      }
-
       // 更新指定的交付信息
       const updatedDeliveryInfo = [...currentDeliveryInfo];
-      updatedDeliveryInfo[input.deliveryIndex] = {
-        ...updatedDeliveryInfo[input.deliveryIndex],
+      updatedDeliveryInfo[currentDeliveryInfo.length - 1] = {
+        ...updatedDeliveryInfo[currentDeliveryInfo.length - 1],
         approved: input.approved,
         reviewComment: input.comment,
         reviewedAt: new Date().toISOString(),
@@ -161,23 +140,39 @@ export const milestoneMutations = {
       let newStatus;
       if (input.approved) {
         // 审核通过，milestone完成
-        newStatus = MilestoneStatus.PENDING_PAYMENT;
-      } else {
-        // 审核拒绝
-        if (currentDeliveryInfo.length >= 3) {
-          // 已经3次提交都被拒绝，milestone失败
+        newStatus = MilestoneStatus.COMPLETED;
+
+         //!todo 检查是safeTransaction
+        if(!milestone.safeTransactionHash) throw new Error("safeTransactionHash不存在");
+        const safeTransaction = await PLATFORM_CHAINS[optimism.id]?.safeApiKit.getTransaction(milestone.safeTransactionHash);
+        if(!safeTransaction){
+          throw new Error("TransactionHash无效");
+        }
+        
+      } 
+      else if (currentDeliveryInfo.length >= 3) {
+          //! 已经3次提交都被拒绝，milestone失败，需要存入退款
+          // 第三次拒绝时必须提供退款交易hash
+          if (!input.refundSafeTransactionHash) {
+            throw new Error("第三次拒绝时必须提供退款交易hash");
+          }
+          
           newStatus = MilestoneStatus.REJECTED;
           
-          // 同时将Pod状态设置为TERMINATED
+          // 同时将Pod状态设置为TERMINATED，并记录退款交易hash
           await ctx.db.pod.update({
             where: { id: milestone.podId },
-            data: { status: PodStatus.TERMINATED },
-          });
-        } else {
-          // 还可以重新提交
-          newStatus = MilestoneStatus.ACTIVE;
-        }
+            data: { 
+              status: PodStatus.TERMINATED,
+              refundSafeTransactionHash: input.refundSafeTransactionHash 
+            },
+          })}
+      else {
+        // 还可以重新提交
+        newStatus = MilestoneStatus.ACTIVE;
       }
+
+     
 
       // 更新milestone
       const updatedMilestone = await ctx.db.milestone.update({

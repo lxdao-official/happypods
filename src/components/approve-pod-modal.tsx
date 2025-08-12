@@ -21,7 +21,6 @@ interface ApprovePodModalProps {
   walletAddress: string;
   treasuryWallet: string;
   onSuccess?: () => void;
-  onlyTransfer: boolean;
 }
 
 export default function ApprovePodModal({
@@ -32,28 +31,13 @@ export default function ApprovePodModal({
   appliedAmount,
   currency,
   walletAddress,
-  treasuryWallet,
-  onSuccess,
-  onlyTransfer,
+  treasuryWallet
 }: ApprovePodModalProps) {
   const [isTransferring, setIsTransferring] = useState(false);
   const [isApproving, setIsApproving] = useState(false);
-  const {buildErc20TransfersSafeTransaction,signSafeTransaction,executeSafeTransaction,getTransactionHash} = useSafeWallet();
+  const {buildErc20TransfersSafeTransaction, getTransactionHash} = useSafeWallet();
+  const {mutateAsync:approvePod} = api.pod.approve.useMutation();
 
-  const approvePodMutation = api.pod.approve.useMutation({
-    onSuccess: () => {
-      onSuccess?.();
-      handleClose();
-      toast.success('申请已通过，下一步请完成多签转账！');
-    },
-    onError: (error) => {
-      console.error("通过Pod失败:", error);
-      toast.error(`通过失败: ${error.message}`);
-    },
-    onSettled: () => {
-      setIsApproving(false);
-    },
-  });
 
   // 计算总金额和手续费
   const financialInfo = useMemo(() => {
@@ -76,15 +60,10 @@ export default function ApprovePodModal({
   // 完成状态变成与转账操作
   const handleTransfer = async () => {
     try {
-      // 状态变更
-      if(!onlyTransfer){
-        setIsApproving(true);
-        await approvePodMutation.mutateAsync({id: podId});
-        setIsApproving(false);
-      }
-
       // 转账发起
       setIsTransferring(true);
+
+      // 构建两笔交易
       const safeTransaction = await buildErc20TransfersSafeTransaction(treasuryWallet, [{
         token: currency as GrantsPoolTokens,
         to: walletAddress,
@@ -92,14 +71,10 @@ export default function ApprovePodModal({
       }])
       console.log('safeTransaction', safeTransaction);
 
-      const txHash = await getTransactionHash(treasuryWallet, safeTransaction);
-      console.log('txHash', txHash);
+      const transactionHash = await getTransactionHash(treasuryWallet, safeTransaction, true);
+      console.log('txHash', transactionHash);
 
-      const sendTx = await executeSafeTransaction(treasuryWallet, safeTransaction);
-      console.log('sendTx', sendTx);
-
-      // const signSafeTxHash = await signSafeTransaction(treasuryWallet, safeTransaction);
-      // console.log('signSafeTxHash', signSafeTxHash);
+      await approvePod({id: podId, transactionHash});
       
       setIsTransferring(false);
       onClose();
@@ -120,12 +95,7 @@ export default function ApprovePodModal({
       hideCloseButton={isTransferring || isApproving}
     >
       <ModalContent>
-        <ModalHeader className="flex flex-col gap-1">
-          {
-            onlyTransfer ? `您即将向 【${podTitle}】 Pod 发起多签转账` : `您即将通过 【${podTitle}】 Pod 的申请`
-          }
-            
-        </ModalHeader>
+        <ModalHeader className="flex flex-col gap-1">您即将通过 【${podTitle}】 Pod 的申请</ModalHeader>
         <ModalBody>
           <div className="space-y-6">
             <div>
@@ -200,7 +170,7 @@ export default function ApprovePodModal({
             isLoading={isTransferring || isApproving}
             isDisabled={isTransferring || isApproving || appliedAmount === 0}
           >
-            {isTransferring ? "转账中..." : isApproving ? "更新状态中..." : onlyTransfer ? "发起多签转账" : "确认通过，并发起多签转账"}
+            {isTransferring || isApproving ? "loading..." : "确认通过，并发起多签转账"}
           </Button>
         </ModalFooter>
       </ModalContent>

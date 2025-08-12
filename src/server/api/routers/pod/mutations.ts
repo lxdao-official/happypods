@@ -2,8 +2,10 @@ import { z } from "zod";
 import { protectedProcedure } from "~/server/api/trpc";
 import { createPodSchema, updatePodSchema, rejectPodSchema, approvePodSchema } from "./schemas";
 import { NotificationService } from "../notification/notification-service";
-import { MilestoneStatus, NotificationType, PodStatus } from "@prisma/client";
-import { getBalance, walletQueries } from "../wallet/queries";
+import { NotificationType, PodStatus } from "@prisma/client";
+import { getBalance } from "../wallet/queries";
+import { PLATFORM_CHAINS } from "~/lib/config";
+import { optimism } from "viem/chains";
 
 export const podMutations = {
   // 创建Pod
@@ -43,15 +45,14 @@ export const podMutations = {
 
       // 当前milestone的总额是否超过可用总额
       const totalMilestoneAmount = input.milestones.reduce((sum, milestone) => sum + Number(milestone.amount), 0);
-      const { formattedBalance } = await getBalance({
+      const { rawBalance } = await getBalance({
         address: grantsPool.treasuryWallet,
         chainType: grantsPool.chainType,
         tokenType: input.currency,
       });
-      if(totalMilestoneAmount > Number(formattedBalance)) {
+      if(totalMilestoneAmount > Number(rawBalance)) {
         throw new Error(`可用余额不足!`);
       }
-
       const { milestones, isCheck, ...podData } = input;
 
       // 创建前检查参数是否正确，正确才弹窗多签钱包创建
@@ -207,6 +208,14 @@ export const podMutations = {
       // 检查Pod状态是否为REVIEWING
       if (existingPod.status !== PodStatus.REVIEWING) {
         throw new Error("只能通过处于审核中状态的Pod");
+      }
+
+      // 检查建议id是否合法
+      // 验证提交的transactionHash是否有效
+      const safeTransaction = await PLATFORM_CHAINS[optimism.id]?.safeApiKit.getTransaction(input.transactionHash);
+      console.log('safeTransaction', safeTransaction);
+      if(!safeTransaction){
+        throw new Error("TransactionHash无效");
       }
 
       // 更新Pod状态为IN_PROGRESS

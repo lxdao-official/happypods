@@ -87,6 +87,7 @@ const { disconnect } = useDisconnect();
 const handleLogout = useCallback(async() => {
     logout();
     disconnect();
+    setStoreUserInfo(null);
     toast.success("logged out");
     await delay_s();
     window.location.reload();

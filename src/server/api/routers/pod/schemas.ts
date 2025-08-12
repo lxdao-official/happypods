@@ -49,11 +49,12 @@ export const validateMilestonesSchema = z.object({
 
 export const rejectPodSchema = z.object({
   id: z.number(),
-  rejectReason: z.string().min(1, "拒绝理由不能为空"),
+  rejectReason: z.string().min(1, "拒绝理由不能为空")
 });
 
 export const approvePodSchema = z.object({
   id: z.number(),
+  transactionHash: z.string(),
 });
 
  

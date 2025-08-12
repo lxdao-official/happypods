@@ -1,9 +1,8 @@
 "use client";
 
 import { useParams } from "next/navigation";
-import { Alert, Chip } from "@heroui/react";
 import NextLink from 'next/link';
-import { formatDate, truncateString } from "~/lib/utils";
+import { formatDate } from "~/lib/utils";
 import { QRCodeTooltip } from "~/components/qr-code-tooltip";
 import MilestonesSection from "~/components/milestones-section";
 import CardBox from "~/components/card-box";
@@ -14,18 +13,16 @@ import PodHistorySection from "~/components/pod-history-section";
 import ApplicantInfoModal from "~/components/applicant-info-modal";
 import GpReviewActions from "~/components/gp-review-actions";
 import { api } from "~/trpc/react";
-import { MilestoneStatus } from "@prisma/client";
+import { MilestoneStatus, PodStatus } from "@prisma/client";
 import StatusChip from "~/components/status-chip";
 import LoadingSkeleton from "~/components/loading-skeleton";
-import Empty from "~/components/empty";
-import type { JsonObject, JsonValue } from "@prisma/client/runtime/library";
 import JsonInfoDisplay from "~/components/json-info-display";
-import type { Status } from "~/lib/config";
 import { LinkDisplay } from "~/components/link-display";
 import { useMemo } from "react";
 import useStore from "~/store";
 import Decimal from "decimal.js";
 import Tag from "~/components/tag";
+import PodRejectedActions from "~/components/pod-rejected-actions";
 
 
 export default function PodDetailPage() {
@@ -69,7 +66,8 @@ export default function PodDetailPage() {
   }
 
   const funded = podDetail.milestones.filter(milestone => milestone.status === MilestoneStatus.COMPLETED).reduce((acc, milestone) => Decimal(acc).plus(milestone.amount).toNumber(), 0);
-  const appliedAmount = podDetail.milestones.filter(milestone => milestone.status !== MilestoneStatus.COMPLETED).reduce((acc, milestone) => Decimal(acc).plus(milestone.amount).toNumber(), 0);
+  const appliedAmount = podDetail.milestones.reduce((acc, milestone) => Decimal(acc).plus(milestone.amount).toNumber(), 0);
+  const requiredAmount = podDetail.milestones.filter(milestone => [MilestoneStatus.ACTIVE].includes(milestone.status as any)).reduce((acc, milestone) => Decimal(acc).plus(milestone.amount).toNumber(), 0);
 
   // 转换数据格式以匹配现有 UI
   const pod = {
@@ -94,16 +92,27 @@ export default function PodDetailPage() {
     <div className="container px-4 py-8 mx-auto space-y-4 fadeIn">
 
       {
-        isGPOwner && <GpReviewActions 
+        pod.status === PodStatus.TERMINATED && 
+        pod.refundSafeTransactionHash && 
+        (isGPOwner || isPodOwner) && 
+        Number(pod.podTreasuryBalances) > 0 && (
+          <PodRejectedActions pod={podDetail} />
+        )
+      }
+
+      {
+        isGPOwner && 
+        <GpReviewActions 
             podStatus={pod.status}
             grantsPoolId={pod.grantsPool.id}
             podId={pod.id}
             podTitle={pod.title}
             podWalletAddress={pod.walletAddress}
             podCurrency={pod.currency}
-            podTreasuryBalances={pod.podTreasuryBalances}
+            podTreasuryBalances={Number(pod.podTreasuryBalances)}
             appliedAmount={pod.treasury.appliedAmount}
             treasuryWallet={pod.grantsPool.treasuryWallet}
+            requiredAmount={Number(requiredAmount)}
           />
       }
 
@@ -161,6 +170,8 @@ export default function PodDetailPage() {
               gpOwnerId={pod.grantsPool.ownerId} 
               podOwnerId={pod.applicant.id} 
               podCurrency={pod.currency}
+              safeAddress={pod.walletAddress}
+              podDetail={podDetail}
             />}
           </div>
         </div>

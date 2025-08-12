@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { 
   Input, 
@@ -19,6 +19,8 @@ import GpOwnerCheck from "~/components/gp-owner-check";
 import { api } from "~/trpc/react";
 import { toast } from "sonner";
 import { zeroAddress, type Address } from "viem";
+import useStore from "~/store";
+import { PLATFORM_MOD_ADDRESS } from "~/lib/config";
 
 interface RelatedLinks {
   website: string;
@@ -40,9 +42,9 @@ export default function CreatePodPage() {
   const searchParams = useSearchParams();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [showSafeModal, setShowSafeModal] = useState(false);
-  const [gpWalletAddress, setGpWalletAddress] = useState<Address>();
   const [showProfileModal, setShowProfileModal] = useState(false);
   const [availableBalance, setAvailableBalance] = useState(0); // 可用余额
+  const {userInfo} = useStore();
   
   // URL参数
   const gpId = searchParams.get("gpId");
@@ -82,8 +84,8 @@ export default function CreatePodPage() {
   ]);
 
   // API queries
-  const { data: userProfile, isLoading: profileLoading } = api.user.checkUserProfile.useQuery();
-  const { data: grantsPoolDetails, isLoading: poolDetailsLoading } = api.pod.getGrantsPoolDetails.useQuery(
+  const { data: userProfile } = api.user.checkUserProfile.useQuery();
+  const { data: grantsPoolDetails } = api.pod.getGrantsPoolDetails.useQuery(
     { id: parseInt(formData.grantsPoolId) },
     { enabled: !!formData.grantsPoolId }
   );
@@ -156,23 +158,29 @@ export default function CreatePodPage() {
       const processedMilestones = milestones.map(milestone => ({
         title: milestone.title,
         description: milestone.description,
-        amount: parseFloat(milestone.amount) || 0,
+        amount: parseFloat(milestone.amount) * 10 ** 6 || 0,
         deadline: milestone.deadline
       }));
 
-      await createPodMutation.mutateAsync({
-        isCheck,
-        grantsPoolId: parseInt(formData.grantsPoolId),
-        rfpId: parseInt(formData.rfpId) || 0,
-        walletAddress: walletAddress,
-        avatar: formData.avatar || undefined,
-        title: formData.title,
-        description: formData.description,
-        currency: formData.currency,
-        tags: selectedTags.length > 0 ? selectedTags.join(',') : undefined,
-        links: Object.keys(links).length > 0 ? links : undefined,
-        milestones: processedMilestones,
-      });
+      try {
+        await createPodMutation.mutateAsync({
+          isCheck,
+          grantsPoolId: parseInt(formData.grantsPoolId),
+          rfpId: parseInt(formData.rfpId) || 0,
+          walletAddress: walletAddress,
+          avatar: formData.avatar || undefined,
+          title: formData.title,
+          description: formData.description,
+          currency: formData.currency,
+          tags: selectedTags.length > 0 ? selectedTags.join(',') : undefined,
+          links: Object.keys(links).length > 0 ? links : undefined,
+          milestones: processedMilestones,
+        });
+      } catch (error) {
+        console.log('error===>',error);
+        toast.error("创建失败，请检查参数!");
+        return false;
+      }
 
       if(isCheck) return true;
 
@@ -196,7 +204,9 @@ export default function CreatePodPage() {
   }, 0);
 
   // 检查余额是否充足
-  const isBalanceSufficient = totalMilestoneAmount <= availableBalance;
+  const isBalanceSufficient = useMemo(() => {
+    return totalMilestoneAmount < availableBalance;
+  }, [totalMilestoneAmount, availableBalance]);
   
   // 余额变化回调
   const handleBalanceChange = (balance: number) => {
@@ -207,6 +217,14 @@ export default function CreatePodPage() {
     setShowProfileModal(false);
     router.push("/profile");
   };
+
+  const predefinedOwners = useMemo(() => {
+    return [
+      userInfo?.walletAddress || "",
+      grantsPoolDetails?.owner.walletAddress || "",
+      PLATFORM_MOD_ADDRESS
+    ].filter(Boolean) as string[];
+  }, [userInfo?.walletAddress, grantsPoolDetails?.owner.walletAddress]);
 
   return (
     <div className="container px-4 py-8 mx-auto fadeIn">
@@ -229,7 +247,6 @@ export default function CreatePodPage() {
             onCurrencyChange={(currency) => handleInputChange("currency", currency)}
             onBalanceChange={handleBalanceChange}
             isPreselected={isPreselected}
-            setGpWalletAddress={(walletAddress: string) => setGpWalletAddress(walletAddress)}
           />
 
           {/* 项目描述 */}
@@ -303,32 +320,44 @@ export default function CreatePodPage() {
 
           {/* 提交按钮 */}
           <div className="flex items-center justify-center gap-4">
-            <AppBtn
-              btnProps={{
-                type: "submit",
-                color: isBalanceSufficient ? "primary" : "danger",
-                isLoading: isSubmitting,
-                className: "flex-1",
-                size: "lg",
-                isDisabled: !isBalanceSufficient,
-              }}
-            >
-              {isSubmitting 
-                ? "Creating..." 
-                : !isBalanceSufficient 
-                  ? "GP Available Balance Insufficient" 
-                  : "Create Pod"
-              }
-            </AppBtn>
+            {
+              isBalanceSufficient ? (
+                <AppBtn
+                  btnProps={{
+                    type: "submit",
+                    color: "primary",
+                    isLoading: isSubmitting,
+                    className: "flex-1",
+                    size: "lg",
+                  }}
+                >
+                  Create Pod
+                </AppBtn>
+              ) : (
+                <AppBtn
+                  btnProps={{
+                    type: "button",
+                    color: "danger",
+                    isLoading: isSubmitting,
+                    className: "flex-1",
+                    size: "lg",
+                  }}
+                >
+                  GP Available Balance Insufficient
+                </AppBtn>
+              )
+            }
           </div>
         </form>
 
         {/* Safe 创建模态框 */}
         <CreateSafeModal
           isOpen={showSafeModal}
-          gpAddress={gpWalletAddress}
+          description="Pod 资金将由 平台Mod + GP创建者 + 当前用户 三方共同管理!"
           onClose={() => setShowSafeModal(false)}
           onConfirm={handleSafeCreated}
+          predefinedOwners={predefinedOwners}
+          predefinedThreshold={2}
         />
 
         {/* 个人信息完善提示模态框 */}

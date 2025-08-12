@@ -283,20 +283,19 @@ export default function EditGrantsPoolPage() {
               <TagsSelect
                 selectedTags={selectedTags}
                 onTagsChange={setSelectedTags}
-                label="标签"
-                placeholder="DeFi,Web3,DAO"
+                placeholder="选择标签"
                 description="选择相关的标签来描述您的 Grants Pool"
               />
 
               {/* Treasury Wallet - 只读 */}
-              <Input
+              {/* <Input
                 variant="bordered"
                 type="text"
                 label="财库钱包地址"
                 value={formData.treasuryWallet}
                 isDisabled
                 description="财库钱包地址（不可修改）"
-              />
+              /> */}
             </div>
           </CornerFrame>
 

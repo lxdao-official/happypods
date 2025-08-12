@@ -57,7 +57,7 @@ export const podDetailQueries = {
 
       return {
         ...pod,
-        podTreasuryBalances: balances.formattedBalance,
+        podTreasuryBalances: balances.rawBalance,
       };
     }),
 

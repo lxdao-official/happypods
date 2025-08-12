@@ -1,12 +1,12 @@
-import ApplyExtensionModal from "./apply-extension-modal";
+// import ApplyExtensionModal from "./apply-extension-modal";
 import SubmitMilestoneModal from "./submit-milestone-modal";
 import MilestoneSubmissionDisplay from "./milestone-submission-display";
 import ReviewMilestoneModal from "./review-milestone-modal";
 import ProgressMilestoneBar from "./progress-milestone-bar";
 import StatusChip from "./status-chip";
-import PayMilestoneModal from "./pay-milestone-modal";
+// import PayMilestoneModal from "./pay-milestone-modal";
 import { formatDate } from "~/lib/utils";
-import { MilestoneStatus, type Milestone } from "@prisma/client";
+import { MilestoneStatus, type GrantsPool, type Milestone, type Pod } from "@prisma/client";
 import { useMemo } from "react";
 import useStore from "~/store";
 
@@ -15,9 +15,11 @@ interface MilestonesSectionProps {
   gpOwnerId: number;
   podOwnerId: number;
   podCurrency: string;
+  safeAddress: string;
+  podDetail: Pod & {grantsPool: {treasuryWallet:string}};
 }
 
-export default function MilestonesSection({ milestones, gpOwnerId, podOwnerId, podCurrency }: MilestonesSectionProps) {
+export default function MilestonesSection({ milestones, gpOwnerId, podOwnerId, podCurrency, safeAddress, podDetail }: MilestonesSectionProps) {
   const { userInfo } = useStore();
   // 转换里程碑数据格式以适配 ProgressMilestoneBar 组件
   const progressMilestones = milestones.map((milestone, index) => ({
@@ -66,20 +68,28 @@ export default function MilestonesSection({ milestones, gpOwnerId, podOwnerId, p
                   {/* 只有PENDING_DELIVERY状态才显示提交按钮 */}
                   {milestone.status === 'PENDING_DELIVERY' && remainingSubmissions > 0 && isPodOwner && (
                     <div className="flex items-center gap-2">
-                      <SubmitMilestoneModal milestoneId={milestone.id} />
+                      <SubmitMilestoneModal 
+                        milestoneId={milestone.id} 
+                        safeTransactionHash={milestone.safeTransactionHash}
+                      />
                     </div>
                   )}
                   {/* 审核中状态显示审核按钮 */}
                   {milestone.status === 'REVIEWING' && isGpOwner && (
                     <ReviewMilestoneModal 
+                      podDetail={podDetail}
+                      safeAddress={safeAddress}
                       milestoneId={milestone.id}
                       deliveryInfo={milestone.deliveryInfo as any[]}
+                      safeTransactionHash={milestone.safeTransactionHash}
                     />
                   )}
+                  
                   {/* 当前状态是待支付，并且是pg创建者，则显示支付按钮 */}
-                  {milestone.status === MilestoneStatus.PENDING_PAYMENT && isGpOwner && (
+                  {/* {milestone.status === MilestoneStatus.PENDING_PAYMENT && isGpOwner && (
                     <PayMilestoneModal  milestoneId={milestone.id}/>
-                  )}
+                  )} */}
+
                 </div>
               </div>
               <div className="flex items-center gap-4 mb-4 text-xs text-gray-600">

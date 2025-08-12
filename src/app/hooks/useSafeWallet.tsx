@@ -15,7 +15,7 @@ const useSafeWallet = () => {
   const publicClient = usePublicClient();
   const chainId = useChainId();
   const [status, setStatus] = useState<'idle' | 'loading' | 'success' | 'error'>('idle');
-  const { sendTransaction,status:sendTransactionStatus } = useSendTransaction();
+  const { status:sendTransactionStatus, sendTransactionAsync } = useSendTransaction();
 
   const apiKit = useMemo(() => {
     return new SafeApiKit({
@@ -39,10 +39,11 @@ const useSafeWallet = () => {
     if (!address || !walletClient || !publicClient) {
       throw new Error("请先连接钱包");
     }
+    console.log('owners==>',owners,threshold);
     setStatus('loading');
      // 配置 Safe 账户
      const safeAccountConfig: SafeAccountConfig = {
-      owners: [address, ...owners],
+      owners: [...owners],
       threshold: threshold
     };
 
@@ -68,21 +69,21 @@ const useSafeWallet = () => {
     const safeAddress = await protocolKit.getAddress();
     console.log('safeAddress==>',safeAddress);
     // 创建部署交易
-      try {
-        const deploymentTransaction = await protocolKit.createSafeDeploymentTransaction();
-        await sendTransaction({
-          to: deploymentTransaction.to,
-          value: BigInt(deploymentTransaction.value),
-          data: deploymentTransaction.data as `0x${string}`
-        });
-      } catch (error) {
-        console.log('error===>',error);
-        toast.error('创建Safe多签钱包失败或已存在，请重试！');
-        setStatus('error');
-      }
+    try {
+      const deploymentTransaction = await protocolKit.createSafeDeploymentTransaction();
+      await sendTransactionAsync({
+        to: deploymentTransaction.to,
+        value: BigInt(deploymentTransaction.value),
+        data: deploymentTransaction.data as `0x${string}`
+      });
+    } catch (error) {
+      console.log('error===>',error);
+      toast.error('创建Safe多签钱包失败或已存在，请重试！');
+      setStatus('error');
+      throw error;
+    }
     return {
-      safeAddress,
-      transactionHash: ''
+      safeAddress
     };
   }
 
@@ -191,6 +192,21 @@ const useSafeWallet = () => {
     }
   };
 
+  // 根据当前的交易hash获取交易对象,并完成转账执行
+  const executeSafeTransactionByHash = async (safeAddress: string, safeTransactionHash: string) => {
+    if (!address || !walletClient || !publicClient) {
+      throw new Error("请先连接钱包");
+    }
+    const safeWallet = await Safe.init({
+      provider: walletClient as any,
+      safeAddress
+    });
+    if(!safeWallet) return;
+    const safeTransaction = await apiKit.getTransaction(safeTransactionHash)
+    const res = await safeWallet.executeTransaction(safeTransaction);
+    return res;
+  }
+
   // 基于 {token, from, to, amount}[] 构建 ERC20 转账 SafeTransaction
   type TransferInput = Readonly<{
     token: GrantsPoolTokens;
@@ -228,11 +244,11 @@ const useSafeWallet = () => {
       const tokenAddress = tokenInfo.address as Address;
       const decimals = tokenInfo.decimals;
 
-      const value = parseUnits(t.amount, decimals);
+      const value = BigInt(t.amount);
       const data = encodeFunctionData({
         abi: erc20Abi,
         functionName: 'transfer',
-        args: [t.to as Address, value],
+        args: [t.to, value] as [Address, bigint],
       });
 
       return {
@@ -254,6 +270,29 @@ const useSafeWallet = () => {
     return safeTransaction;
   };
 
+  // 传入交易数据,构建交易获取hash,发起交易
+  const buildAndExecuteSafeTransaction = async (safeAddress: string, transfers: ReadonlyArray<TransferInput>) => {
+    if (!address || !walletClient || !publicClient) {
+      throw new Error("请先连接钱包");
+    }
+    console.log('transfers==>',transfers);
+    const safeTransaction = await buildErc20TransfersSafeTransaction(safeAddress, transfers);
+    console.log('safeTransaction==>',safeTransaction);
+    const safeTxHash = await getTransactionHash(safeAddress, safeTransaction, true);
+    console.log('safeTxHash==>',safeTxHash);
+    const res = await executeSafeTransactionByHash(safeAddress, safeTxHash);
+    return {
+      res,
+      safeTxHash
+    };
+  }
+
+  // 获取交易详情
+  const getTransactionDetail = async (safeTransactionHash: string) => {;
+    const transaction = await apiKit.getTransaction(safeTransactionHash);
+    return transaction;
+  }
+
   return {
     deploySafe,
     getTransactionHash,
@@ -261,6 +300,9 @@ const useSafeWallet = () => {
     signSafeTransaction,
     executeSafeTransaction,
     buildErc20TransfersSafeTransaction,
+    executeSafeTransactionByHash,
+    buildAndExecuteSafeTransaction,
+    getTransactionDetail,
     status
   };
 };

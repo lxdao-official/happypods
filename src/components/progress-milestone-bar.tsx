@@ -68,14 +68,14 @@ export default function ProgressMilestoneBar({ milestones = [] }: ProgressMilest
               content={
                 <div className="flex flex-col gap-1 p-2 text-center">
                   <small>Project Created</small>
-                  <small>Created: {formatDate(milestones[0].createdAt, 'YYYY-MM-DD')}</small>
+                  <small>Created: {formatDate(milestones[0].createdAt, 'MM.DD')}</small>
                 </div>
               } 
               placement="top" 
               showArrow={true}
             >
-              <span className="font-bold text-center cursor-pointer progress-milestone hover:scale-105 whitespace-nowrap">
-                <small>Start</small>
+              <span className="font-bold text-center cursor-pointer progress-milestone whitespace-nowrap">
+                <small className="p-1 overflow-hidden bg-gray-400 hover:bg-primary rounded-xl">Start</small>
               </span>
             </Tooltip>
           </div>
@@ -104,7 +104,7 @@ export default function ProgressMilestoneBar({ milestones = [] }: ProgressMilest
           return (
             <div 
               key={index} 
-              className={`absolute flex flex-col min-w-[60px] ${
+              className={`absolute flex flex-col min-w-[60px]  hover:z-10 ${
                 isLastMilestone ? 'items-end -translate-x-full' : 'items-center -translate-x-1/2'
               }`}
               style={{ left: `${positionPercent}%` }}
@@ -114,17 +114,18 @@ export default function ProgressMilestoneBar({ milestones = [] }: ProgressMilest
                 content={
                   <div className="flex flex-col gap-1 p-2 text-center">
                     <small>{milestone.name}</small>
-                    <small>Deadline: {formatDate(milestone.deadline, 'YYYY-MM-DD')}</small>
+                    <small>Deadline: {formatDate(milestone.deadline, 'MM.DD')}</small>
                   </div>
                 } 
                 placement="top" 
                 showArrow={true}
               >
-                <span className="gap-2 font-bold text-center cursor-pointer progress-milestone hover:scale-105 whitespace-nowrap">
+                <span className="gap-2 font-bold text-center cursor-pointer progress-milestone hover:text-black whitespace-nowrap">
                   {
                     milestone.status === 'COMPLETED' && <i className="mr-1 text-green-500 ri-check-line"></i>
                   }
-                  <small>{`${formatDate(milestone.deadline,'MM.DD')}`}-{milestone.amount}U</small>
+                  <small className="p-1 overflow-hidden bg-gray-400 hover:bg-primary rounded-xl">{`${formatDate(milestone.deadline,'MM.DD')}`}</small>
+                  {/* -{milestone.amount}U */}
                 </span>
               </Tooltip>
             </div>

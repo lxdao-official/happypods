@@ -5,6 +5,7 @@
 import type { Address } from "viem";
 import { mainnet, optimism, type Chain } from "viem/chains";
 import { ChainType } from "@prisma/client";
+import SafeApiKit from "@safe-global/api-kit";
 
 // 手续费相关配置
 export const FEE_CONFIG = {
@@ -62,7 +63,7 @@ export type Token = {
   decimals: number;
 }
 // 各平台的TOKEN地址
-export const PLATFORM_CHAINS:Record<Chain['id'], {TOKENS: {USDC: Token, USDT: Token}, START_BLOCK_NUMBER: bigint, RPCS: string[]}> = {
+export const PLATFORM_CHAINS:Record<Chain['id'], {TOKENS: {USDC: Token, USDT: Token}, START_BLOCK_NUMBER: bigint, RPCS: string[], safeApiKit: SafeApiKit}> = {
   [optimism.id]: {
     TOKENS: {
       USDC: {
@@ -75,7 +76,11 @@ export const PLATFORM_CHAINS:Record<Chain['id'], {TOKENS: {USDC: Token, USDT: To
       },
     },
     START_BLOCK_NUMBER: 139468091n,
-    RPCS:['https://optimism-mainnet.infura.io/v3/839d5d4b452f4408a1f763fd5c42af1c']
+    RPCS:['https://optimism-mainnet.infura.io/v3/839d5d4b452f4408a1f763fd5c42af1c'],
+    safeApiKit: new SafeApiKit({
+      chainId: BigInt(optimism.id),
+      apiKey: process.env.NEXT_PUBLIC_SAFE_API_KEY
+    }),
   },
   [mainnet.id]: {
     TOKENS: {
@@ -89,7 +94,11 @@ export const PLATFORM_CHAINS:Record<Chain['id'], {TOKENS: {USDC: Token, USDT: To
       },
     },
     START_BLOCK_NUMBER: 23086332n,
-    RPCS:['https://mainnet.infura.io/v3/839d5d4b452f4408a1f763fd5c42af1c']
+    RPCS:['https://mainnet.infura.io/v3/839d5d4b452f4408a1f763fd5c42af1c'],
+    safeApiKit: new SafeApiKit({
+      chainId: BigInt(mainnet.id),
+      apiKey: process.env.NEXT_PUBLIC_SAFE_API_KEY
+    }),
   },
 };
 

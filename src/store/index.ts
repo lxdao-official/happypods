@@ -8,7 +8,7 @@ import {
 interface State {
     // 用户信息
     userInfo: User | null;
-    setUserInfo: (user: User) => void;
+    setUserInfo: (user: User | null) => void;
     
     // 通知信息
     notificationList: Notification[];
@@ -20,7 +20,7 @@ const useStore = create<State>()(
         persist(
             (set) => ({
                 userInfo: null,
-                setUserInfo: (user: User) => set({ userInfo: user }),
+                setUserInfo: (user: User | null) => set({ userInfo: user }),
                 notificationList:[],
                 setNotificationList: (list: Notification[]) => set({ notificationList: list })
             }),

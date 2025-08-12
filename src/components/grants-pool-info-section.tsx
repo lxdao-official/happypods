@@ -13,7 +13,6 @@ interface GrantsPoolInfoSectionProps {
   onCurrencyChange: (currency: string) => void;
   onBalanceChange: (balance: number) => void; // 新增余额回调
   isPreselected: boolean;
-  setGpWalletAddress: (walletAddress: string) => void;
 }
 
 const GrantsPoolInfoSection = ({
@@ -25,7 +24,6 @@ const GrantsPoolInfoSection = ({
   onCurrencyChange,
   onBalanceChange,
   isPreselected,
-  setGpWalletAddress,
 }: GrantsPoolInfoSectionProps) => {
   // API queries
   const { data: grantsPools, isLoading: grantsPoolsLoading } = api.grantsPool.getActiveGrantsPools.useQuery();
@@ -38,12 +36,6 @@ const GrantsPoolInfoSection = ({
   const selectedPool = grantsPools?.find(gp => gp.id.toString() === grantsPoolId);
   const selectedRfp = grantsPoolDetails?.rfps?.find(rfp => rfp.id.toString() === rfpId);
 
-  // 设置当前gp的owner钱包地址
-  useEffect(()=>{
-    if(selectedPool?.owner?.walletAddress) {
-      setGpWalletAddress(selectedPool.owner.walletAddress);
-    }
-  },[selectedPool?.owner?.walletAddress])
 
   // 使用 tokens 数组作为币种选项
   const currencyOptions = selectedPool?.tokens || [];
