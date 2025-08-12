@@ -102,6 +102,7 @@ model Pod {
   approvedAt       DateTime?
   inactiveTime     DateTime? // 失效时间，null 表示当前活跃版本
   milestones       Milestone[] @relation("PodMilestones")
+  safeTransactions SafeTransaction[] @relation("PodSafeTransactions")
   applicant        User        @relation("UserPods", fields: [applicantId], references: [id])
   grantsPool       GrantsPool  @relation("GrantsPoolPods", fields: [grantsPoolId], references: [id])
   rfp              Rfps        @relation("RfpPods", fields: [rfpId], references: [id])
@@ -128,7 +129,8 @@ model Milestone {
   createdAt    DateTime        @default(now())
   updatedAt    DateTime        @updatedAt
   pod          Pod             @relation("PodMilestones", fields: [podId], references: [id], onDelete: Cascade)
-
+  safeTransactions SafeTransaction[] @relation("MilestoneSafeTransactions")
+  
   @@index([podId])
   @@index([status])
   @@index([currentPhase])
@@ -216,4 +218,40 @@ enum TransactionStatus {
   COMPLETED // 已完成
   ERROR // 异常
   OTHER // 其他
+}
+
+// safeTransaction 多签钱包的交易记录表
+model SafeTransaction {
+  id Int @id @default(autoincrement())
+  status SafeTransactionStatus @default(PENDING)
+  createdAt DateTime @default(now())
+  txHash String
+  metadata Json? @default("{}")
+  safeWalletAddress String
+  type SafeTransactionType
+  updatedAt DateTime @updatedAt
+  targetId Int
+
+  // 根据类型关联到不同的目标
+  // 当 type = POD_MILESTONE_DELIVERY 时，targetId 指向 Milestone.id
+  milestone Milestone? @relation("MilestoneSafeTransactions", fields: [targetId], references: [id], map: "SafeTransaction_milestone_fkey")
+  // 当 type = POD_TERMINATE_REFUND 时，targetId 指向 Pod.id  
+  pod Pod? @relation("PodSafeTransactions", fields: [targetId], references: [id], map: "SafeTransaction_pod_fkey")
+
+  @@index([targetId])
+  @@index([type])
+  @@index([status])
+}
+
+enum SafeTransactionStatus {
+  PENDING // 待处理
+  COMPLETED // 已完成
+  REJECTED // 已取消
+  ERROR // 异常
+  OTHER // 其他
+}
+
+enum SafeTransactionType {
+  POD_MILESTONE_DELIVERY // pod里程碑交付
+  POD_TERMINATE_REFUND // 终止pod退款
 }

@@ -22,7 +22,7 @@ export default function MilestonesSection({ milestones, gpOwnerId, podOwnerId, p
   // 转换里程碑数据格式以适配 ProgressMilestoneBar 组件
   const progressMilestones = milestones.map((milestone, index) => ({
     name: milestone.title,
-    amount: milestone.amount,
+    amount: Number(milestone.amount),
     createdAt: milestone.createdAt,
     deadline: milestone.deadline,
     status: milestone.status
@@ -66,9 +66,7 @@ export default function MilestonesSection({ milestones, gpOwnerId, podOwnerId, p
                   {/* 只有PENDING_DELIVERY状态才显示提交按钮 */}
                   {milestone.status === 'PENDING_DELIVERY' && remainingSubmissions > 0 && isPodOwner && (
                     <div className="flex items-center gap-2">
-                      <SubmitMilestoneModal 
-                        milestoneId={milestone.id} 
-                      />
+                      <SubmitMilestoneModal milestoneId={milestone.id} />
                     </div>
                   )}
                   {/* 审核中状态显示审核按钮 */}
@@ -88,7 +86,7 @@ export default function MilestonesSection({ milestones, gpOwnerId, podOwnerId, p
                 
                 <div className="flex items-center gap-1">
                   <img src={`/tokens/${podCurrency}.svg`} alt={podCurrency} className="w-4 h-4" />
-                  <b>{milestone.amount} {podCurrency}</b>
+                  <b>{milestone.amount.toString()} {podCurrency}</b>
                 </div>
                 
                 <b>Deadline: {formatDate(milestone.deadline)}</b>

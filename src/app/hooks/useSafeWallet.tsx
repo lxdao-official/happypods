@@ -1,5 +1,5 @@
 import { useAccount, useWalletClient, usePublicClient, useChainId, useSwitchChain, useSendTransaction } from "wagmi";
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import Safe, { type SafeAccountConfig, type PredictedSafeProps } from '@safe-global/protocol-kit';
 import SafeApiKit from '@safe-global/api-kit';
 import type { SafeTransaction, MetaTransactionData } from '@safe-global/types-kit';
@@ -16,6 +16,13 @@ const useSafeWallet = () => {
   const chainId = useChainId();
   const [status, setStatus] = useState<'idle' | 'loading' | 'success' | 'error'>('idle');
   const { sendTransaction,status:sendTransactionStatus } = useSendTransaction();
+
+  const apiKit = useMemo(() => {
+    return new SafeApiKit({
+      chainId: BigInt(chainId),
+      apiKey: process.env.NEXT_PUBLIC_SAFE_API_KEY
+    })
+  }, [chainId]);
 
   useEffect(() => {
     if(sendTransactionStatus === 'error') {
@@ -79,8 +86,8 @@ const useSafeWallet = () => {
     };
   }
 
-  // 发送（创建并计算哈希）多签交易：传入已构建的 SafeTransaction，返回 safeTxHash
-  const getTransactionHash = async (safeAddress: string, safeTransaction: SafeTransaction) => {
+  // 创建并计算哈希多签交易：传入已构建的 SafeTransaction，返回 safeTxHash
+  const getTransactionHash = async (safeAddress: string, safeTransaction: SafeTransaction, signPropose: boolean = false) => {
     if (!address || !walletClient || !publicClient) {
       throw new Error("请先连接钱包");
     }
@@ -93,6 +100,18 @@ const useSafeWallet = () => {
 
       const safeTxHash = await safeWallet.getTransactionHash(safeTransaction);
       setStatus('success');
+
+      if(signPropose){
+        const senderSignature = await safeWallet.signHash(safeTxHash)
+        await apiKit.proposeTransaction({
+          safeAddress,
+          safeTransactionData: safeTransaction.data,
+          safeTxHash,
+          senderAddress: address,
+          senderSignature: senderSignature.data
+        })
+      }
+
       return safeTxHash;
     } catch (error) {
       console.error('sendSafeTransaction error =>', error);

@@ -1,7 +1,15 @@
 import { protectedProcedure } from "~/server/api/trpc";
 import { submitMilestoneDeliverySchema, reviewMilestoneDeliverySchema, confirmPaymentSchema } from "./schemas";
 import { NotificationService } from "../notification/notification-service";
-import { MilestoneStatus, NotificationType, PodStatus } from "@prisma/client";
+import { MilestoneStatus, NotificationType, PodStatus, SafeTransactionStatus, SafeTransactionType } from "@prisma/client";
+import SafeApiKit from "@safe-global/api-kit";
+import { optimism } from "viem/chains";
+
+ // 验证提交的transactionHash是否有效
+const apiKit = new SafeApiKit({
+  chainId: BigInt(optimism.id),
+  apiKey: process.env.NEXT_PUBLIC_SAFE_API_KEY
+})
 
 export const milestoneMutations = {
   // 提交milestone交付
@@ -36,6 +44,35 @@ export const milestoneMutations = {
         throw new Error("已达到最大提交次数限制（3次）");
       }
 
+      // 根据milestonesID查询gp创建者id与pod名称
+      const gpOwnerId = await ctx.db.grantsPool.findUnique({
+        where: { id: milestone.pod.grantsPoolId },
+        select: { ownerId: true },
+      });
+
+      if(!gpOwnerId){
+        throw new Error("Grants Pool不存在");
+      }
+
+      // 验证提交的transactionHash是否有效
+      const safeTransaction = await apiKit.getTransaction(input.transactionHash);
+      console.log('safeTransaction', safeTransaction);
+      if(!safeTransaction){
+        throw new Error("TransactionHash无效");
+      }
+
+      // 创建新的safeTransaction
+      await ctx.db.safeTransaction.create({
+        data: {
+          status: SafeTransactionStatus.PENDING,
+          txHash: input.transactionHash,
+          safeWalletAddress: safeTransaction.safe,
+          type: SafeTransactionType.POD_MILESTONE_DELIVERY,
+          // @ts-ignore
+          targetId: Number(input.milestoneId),
+        },
+      });
+
       // 创建新的交付信息
       const newDelivery = {
         content: input.content,
@@ -61,19 +98,9 @@ export const milestoneMutations = {
             },
           },
         },
-      });
+      })
 
-      // 根据milestonesID查询gp创建者id与pod名称
-      const gpOwnerId = await ctx.db.grantsPool.findUnique({
-        where: { id: milestone.pod.grantsPoolId },
-        select: { ownerId: true },
-      });
-
-      if(!gpOwnerId){
-        throw new Error("Grants Pool不存在");
-      }
-
-      // 同时gp创建者
+      // 通知gp创建者
       await NotificationService.createNotification({
         type: NotificationType.MILESTONE_DELIVERY_SUBMIT,
         senderId: ctx.user.id,

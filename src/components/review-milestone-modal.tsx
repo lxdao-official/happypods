@@ -135,7 +135,6 @@ export default function ReviewMilestoneModal({ milestoneId, deliveryInfo, onRevi
                 minRows={4}
                 maxRows={8}
                 isRequired
-                description="您的审核评价将对申请者可见"
               />
             </div>
           </ModalBody>
