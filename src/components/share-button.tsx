@@ -35,21 +35,21 @@ export const ShareButton = ({
   // 分享到推特
   const shareToTwitter = () => {
     const twitterUrl = `https://x.com/intent/tweet?text=${encodeURIComponent(title)}&url=${encodeURIComponent(url)}`;
-    window.open(twitterUrl, '_blank', 'width=600,height=400');
+    window.open(twitterUrl, '_blank');
     setIsOpen(false);
   };
 
   // 分享到 Telegram
   const shareToTelegram = () => {
     const telegramUrl = `https://t.me/share/url?url=${encodeURIComponent(url)}&text=${encodeURIComponent(title)}`;
-    window.open(telegramUrl, '_blank', 'width=600,height=400');
+    window.open(telegramUrl, '_blank');
     setIsOpen(false);
   };
 
   return (
     <Dropdown isOpen={isOpen} onOpenChange={setIsOpen} placement="bottom-end">
       <DropdownTrigger>
-         <i className={`text-2xl cursor-pointer ri-share-line ${className}`}></i>
+         <i className={`text-2xl cursor-pointer ri-share-line ${className} hover:scale-105`}></i>
       </DropdownTrigger>
       <DropdownMenu
         aria-label="分享选项"

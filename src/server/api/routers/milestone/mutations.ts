@@ -1,9 +1,48 @@
 import { protectedProcedure } from "~/server/api/trpc";
-import { submitMilestoneDeliverySchema, reviewMilestoneDeliverySchema, confirmPaymentSchema } from "./schemas";
+import { submitMilestoneDeliverySchema, reviewMilestoneDeliverySchema, confirmPaymentSchema, initiatePodRefundSchema } from "./schemas";
 import { NotificationService } from "../notification/notification-service";
 import { MilestoneStatus, NotificationType, PodStatus } from "@prisma/client";
 import { optimism } from "viem/chains";
 import { PLATFORM_CHAINS } from "~/lib/config";
+
+// 通用的退款逻辑函数
+const handlePodRefund = async (
+  db: any,
+  podId: number,
+  refundSafeTransactionHash: string,
+  reason: string
+) => {
+  // 更新Pod状态为TERMINATED，并记录退款交易hash
+  const updatedPod = await db.pod.update({
+    where: { id: podId },
+    data: { 
+      status: PodStatus.TERMINATED,
+      refundSafeTransactionHash: refundSafeTransactionHash 
+    },
+    include: {
+      applicant: true,
+      grantsPool: {
+        select: { ownerId: true }
+      },
+      milestones: {
+        where: { status: MilestoneStatus.ACTIVE }
+      }
+    }
+  });
+
+  // 将所有ACTIVE状态的milestone设置为REJECTED
+  if (updatedPod.milestones.length > 0) {
+    await db.milestone.updateMany({
+      where: { 
+        podId: podId,
+        status: MilestoneStatus.ACTIVE
+      },
+      data: { status: MilestoneStatus.REJECTED }
+    });
+  }
+
+  return updatedPod;
+};
 
 export const milestoneMutations = {
   // 提交milestone交付
@@ -48,7 +87,8 @@ export const milestoneMutations = {
         throw new Error("Grants Pool不存在");
       }
 
-     
+      // !todo 校验提交之前需要检查国库余额是否充足
+
        //!todo 验证提交的transactionHash是否有效
        const safeTransaction = await PLATFORM_CHAINS[optimism.id]?.safeApiKit.getTransaction(input.transactionHash);
        console.log('safeTransaction', safeTransaction);
@@ -159,14 +199,14 @@ export const milestoneMutations = {
           
           newStatus = MilestoneStatus.REJECTED;
           
-          // 同时将Pod状态设置为TERMINATED，并记录退款交易hash
-          await ctx.db.pod.update({
-            where: { id: milestone.podId },
-            data: { 
-              status: PodStatus.TERMINATED,
-              refundSafeTransactionHash: input.refundSafeTransactionHash 
-            },
-          })}
+          // 使用通用退款函数
+          await handlePodRefund(
+            ctx.db, 
+            milestone.podId, 
+            input.refundSafeTransactionHash, 
+            "Milestone交付三次被拒绝"
+          );
+        }
       else {
         // 还可以重新提交
         newStatus = MilestoneStatus.ACTIVE;
@@ -249,5 +289,73 @@ export const milestoneMutations = {
       });
 
       return updatedMilestone;
+    }),
+
+  // GP直接发起退款（用于milestone超时等情况）
+  initiatePodRefund: protectedProcedure
+    .input(initiatePodRefundSchema)
+    .mutation(async ({ ctx, input }) => {
+      // 检查Pod是否存在
+      const pod = await ctx.db.pod.findUnique({
+        where: { id: input.podId },
+        include: { 
+          grantsPool: true,
+          milestones: {
+            where: { status: MilestoneStatus.ACTIVE },
+            orderBy: { deadline: "asc" }
+          },
+          applicant: true
+        },
+      });
+
+      if (!pod) {
+        throw new Error("Pod不存在");
+      }
+
+      // 检查当前用户是否是 Grants Pool 的拥有者
+      if (pod.grantsPool.ownerId !== ctx.user!.id) {
+        throw new Error("没有权限发起此Pod的退款");
+      }
+
+      // 检查Pod状态是否允许退款
+      if (pod.status === PodStatus.TERMINATED) {
+        throw new Error("Pod已经终止，不能重复退款");
+      }
+
+      // 检查是否存在超时未交付的milestone
+      const now = new Date();
+      const hasTimeoutMilestone = pod.milestones.some(milestone => {
+        const deadline = new Date(milestone.deadline);
+        return deadline < now && milestone.status === MilestoneStatus.ACTIVE;
+      });
+
+      if (!hasTimeoutMilestone) {
+        throw new Error("没有超时未交付的Milestone，无法发起退款");
+      }
+
+      // 验证退款交易hash是否有效
+      const safeTransaction = await PLATFORM_CHAINS[optimism.id]?.safeApiKit.getTransaction(input.refundSafeTransactionHash);
+      if (!safeTransaction) {
+        throw new Error("退款TransactionHash无效");
+      }
+
+      // 使用通用退款函数
+      const updatedPod = await handlePodRefund(
+        ctx.db, 
+        input.podId, 
+        input.refundSafeTransactionHash, 
+        "GP发起Milestone超时退款"
+      );
+
+      // 通知Pod申请者
+      await NotificationService.createNotification({
+        type: NotificationType.POD_REVIEW,
+        senderId: ctx.user.id,
+        receiverId: updatedPod.applicant.id,
+        title: `Pod 已被终止`,
+        content: `由于Milestone交付超时，您的Pod已被GP终止并发起退款`,
+      });
+
+      return updatedPod;
     }),
 };

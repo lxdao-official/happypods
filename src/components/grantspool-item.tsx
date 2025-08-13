@@ -8,6 +8,7 @@ import { ShareButton } from "./share-button";
 import GrantsPoolBalance from "./grants-pool-balance";
 import type { ChainType, GrantsPool, GrantsPoolTokens, Rfps } from "@prisma/client";
 import useStore from "~/store";
+import { GpModInfo } from "./gp-mod-info";
 
 
 const GrantspoolItem = ({ grantsPool, className = "", children, type = "list" }: {
@@ -59,6 +60,7 @@ const GrantspoolItem = ({ grantsPool, className = "", children, type = "list" }:
               <i className={`${iconMap[key] || "ri-link"} text-2xl`}></i>
             </NextLink>
           ))}
+          <GpModInfo mod={grantsPool.modInfo}/>
           <ShareButton/>
           {
             type === "list" ?

@@ -5,14 +5,17 @@ import AppBtn from "~/components/app-btn";
 import Link from "next/link";
 import type { Pod } from "@prisma/client";
 import useSafeWallet from "~/app/hooks/useSafeWallet";
-import { useEffect } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { toast } from "sonner";
+import useStore from "~/store";
 
 interface PodRejectedActionsProps {
   pod: Pod;
 }
 
 export default function PodRejectedActions({pod}: PodRejectedActionsProps) {
+  const {userInfo} = useStore();
+  const [confirmations, setConfirmations] = useState<string[]>([]);
 
   const {getTransactionDetail,executeSafeTransactionByHash} = useSafeWallet();
 
@@ -20,12 +23,19 @@ export default function PodRejectedActions({pod}: PodRejectedActionsProps) {
     if (pod.refundSafeTransactionHash) {
       const transaction = await getTransactionDetail(pod.refundSafeTransactionHash);
       console.log('transaction==?',transaction);
+      setConfirmations(transaction.confirmations?.map(item=>item.owner.toLowerCase()) || []);
     }
   }
 
   useEffect(() => {
     getTxData()
   }, [pod.refundSafeTransactionHash]);
+
+  // 只显示未确认的按钮
+  const isConfirmed = useMemo(()=>{
+    if(!userInfo?.walletAddress || !confirmations.length) return true;
+    return confirmations.includes(userInfo?.walletAddress.toLowerCase());
+  },[confirmations,userInfo]);
 
   const refund = async () => {
     if (!pod.walletAddress || !pod.refundSafeTransactionHash) throw new Error('退款失败');
@@ -43,15 +53,16 @@ export default function PodRejectedActions({pod}: PodRejectedActionsProps) {
       classNames={{base: 'bg-background'}}
       endContent={
         <div className="flex items-center gap-4">
-          <AppBtn 
-            btnProps={{
-              size: "sm", 
-              color: "warning",
-              onPress: refund
-            }}
-          >
-            确认退款
-          </AppBtn>
+          {
+            !isConfirmed &&
+              <AppBtn 
+                btnProps={{
+                  size: "sm", 
+                  color: "warning",
+                  onPress: refund
+                }}
+                > 确认退款</AppBtn>
+          }
           <Link href={`https://app.safe.global/transactions/tx?safe=oeth:${pod.walletAddress}&id=multisig_${pod.walletAddress}_${pod.refundSafeTransactionHash}`} target="_blank">
             <AppBtn btnProps={{color: "default", size: "sm", variant: "bordered"}}>
               <div className="flex gap-2">

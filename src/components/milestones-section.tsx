@@ -4,10 +4,9 @@ import MilestoneSubmissionDisplay from "./milestone-submission-display";
 import ReviewMilestoneModal from "./review-milestone-modal";
 import ProgressMilestoneBar from "./progress-milestone-bar";
 import StatusChip from "./status-chip";
-// import PayMilestoneModal from "./pay-milestone-modal";
 import { formatDate } from "~/lib/utils";
 import { MilestoneStatus, type GrantsPool, type Milestone, type Pod } from "@prisma/client";
-import { useMemo } from "react";
+import { useEffect, useMemo } from "react";
 import useStore from "~/store";
 
 interface MilestonesSectionProps {
@@ -16,7 +15,7 @@ interface MilestonesSectionProps {
   podOwnerId: number;
   podCurrency: string;
   safeAddress: string;
-  podDetail: Pod & {grantsPool: {treasuryWallet:string}};
+  podDetail: Pod & {grantsPool: {treasuryWallet:string},podTreasuryBalances:BigInt};
 }
 
 export default function MilestonesSection({ milestones, gpOwnerId, podOwnerId, podCurrency, safeAddress, podDetail }: MilestonesSectionProps) {
@@ -39,6 +38,17 @@ export default function MilestonesSection({ milestones, gpOwnerId, podOwnerId, p
   const isPodOwner = useMemo(()=>{
     return userInfo && userInfo?.id === podOwnerId
   },[userInfo, podOwnerId])
+
+  // 当前的milestone 的所需总额大于了国库金额，需要等待国库充入
+  const waitPodTreasuryRecharge = useMemo(()=>{
+    if(!podDetail || !milestones) return true;
+    const totalAmount = milestones
+    .filter(v=>[MilestoneStatus.ACTIVE, MilestoneStatus.PENDING_DELIVERY, MilestoneStatus.REVIEWING].includes(v.status as any))
+    .reduce((acc, milestone) => acc + Number(milestone.amount), 0);
+    console.log('totalAmount-',totalAmount,podDetail.podTreasuryBalances);
+    return totalAmount > Number(podDetail.podTreasuryBalances);
+  },[milestones, podDetail])
+
 
   return (
     <div>
@@ -65,19 +75,26 @@ export default function MilestonesSection({ milestones, gpOwnerId, podOwnerId, p
                   )}
                 </div>
                 <div className="flex items-center gap-2">
+
+                  {
+                     milestone.status === 'PENDING_DELIVERY' && waitPodTreasuryRecharge &&
+                      <div className="flex items-center gap-1 px-1 text-xs bg-red-400 rounded-md">
+                        <i className="text-xl ri-error-warning-fill"></i>
+                        <span>Pod 国库余额不足，请 GP Moderator 完成转入！</span>
+                      </div>
+                  }
+
                   {/* 只有PENDING_DELIVERY状态才显示提交按钮 */}
                   {milestone.status === 'PENDING_DELIVERY' && remainingSubmissions > 0 && isPodOwner && (
-                    <div className="flex items-center gap-2">
-                      <SubmitMilestoneModal 
+                     <SubmitMilestoneModal 
                         milestoneId={milestone.id} 
                         safeTransactionHash={milestone.safeTransactionHash}
-                      />
-                    </div>
+                      /> 
                   )}
                   {/* 审核中状态显示审核按钮 */}
                   {milestone.status === 'REVIEWING' && isGpOwner && (
                     <ReviewMilestoneModal 
-                      podDetail={podDetail}
+                      podDetail={podDetail as any}
                       safeAddress={safeAddress}
                       milestoneId={milestone.id}
                       deliveryInfo={milestone.deliveryInfo as any[]}
@@ -85,11 +102,6 @@ export default function MilestonesSection({ milestones, gpOwnerId, podOwnerId, p
                     />
                   )}
                   
-                  {/* 当前状态是待支付，并且是pg创建者，则显示支付按钮 */}
-                  {/* {milestone.status === MilestoneStatus.PENDING_PAYMENT && isGpOwner && (
-                    <PayMilestoneModal  milestoneId={milestone.id}/>
-                  )} */}
-
                 </div>
               </div>
               <div className="flex items-center gap-4 mb-4 text-xs text-gray-600">

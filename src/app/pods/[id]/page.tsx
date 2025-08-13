@@ -23,6 +23,8 @@ import useStore from "~/store";
 import Decimal from "decimal.js";
 import Tag from "~/components/tag";
 import PodRejectedActions from "~/components/pod-rejected-actions";
+import { useUserInfo } from "~/app/hooks/useUserInfo";
+import PodMilestoneTimeoutActions from "~/components/pod-milestone-timeout-actions";
 
 
 export default function PodDetailPage() {
@@ -42,11 +44,7 @@ export default function PodDetailPage() {
     { enabled: !!podId }
   );
 
-  // 查询历史记录
-  const { data: podHistory, isLoading: isHistoryLoading } = api.pod.getPodHistory.useQuery(
-    { podId },
-    { enabled: !!podId }
-  );
+
 
    // 我是GP owner
    const isGPOwner = useMemo(()=>{
@@ -58,8 +56,17 @@ export default function PodDetailPage() {
       return userInfo && userInfo?.id === podDetail?.applicantId;
     },[userInfo,podDetail]);
 
+    // 当前用户是管理员
+    const { isPlatformAdmin } = useUserInfo();
 
-  if (isPodLoading || isMilestonesLoading || isHistoryLoading || !podDetail) {
+
+    // 存在超时milestone
+    const hasTimeoutMilestone = useMemo(()=>{
+      return podDetail?.milestones?.some(milestone => milestone.status === MilestoneStatus.ACTIVE && new Date(milestone.deadline) < new Date());
+    },[podDetail?.milestones]);
+
+    
+  if (isPodLoading || isMilestonesLoading || !podDetail) {
     return <div className="container px-4 py-8 mx-auto">
       <LoadingSkeleton />
     </div>
@@ -75,21 +82,17 @@ export default function PodDetailPage() {
     tags: podDetail.tags?.split(',').map(tag => tag.trim()).filter(Boolean) || [],
     treasury: {
       appliedAmount,
-      funded,
-      balances: podDetail.treasuryBalances
+      funded
     },
   };
 
-  // 转换历史记录数据格式
-  const formattedHistory: PodHistoryItem[] = podHistory?.versions?.map(item => ({
-    id: item.id,
-    date: item.date,
-    status: item.status,
-    description: item.description
-  })) || [];
-
   return (
     <div className="container px-4 py-8 mx-auto space-y-4 fadeIn">
+
+      {
+        (isGPOwner) && hasTimeoutMilestone && 
+        <PodMilestoneTimeoutActions pod={podDetail} />
+      }
 
       {
         pod.status === PodStatus.TERMINATED && 
@@ -288,7 +291,7 @@ export default function PodDetailPage() {
                 <LinkDisplay links={pod.links as Record<string, string>} theme="light" />
                 
                 {/* 历史版本组件 */}
-                <PodHistorySection history={formattedHistory} />
+                <PodHistorySection pod={podDetail} />
               </div>
             )}
           </div>

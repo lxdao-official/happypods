@@ -17,3 +17,8 @@ export const reviewMilestoneDeliverySchema = z.object({
 export const confirmPaymentSchema = z.object({
   milestoneId: z.number(),
 });
+
+export const initiatePodRefundSchema = z.object({
+  podId: z.number(),
+  refundSafeTransactionHash: z.string(),
+});

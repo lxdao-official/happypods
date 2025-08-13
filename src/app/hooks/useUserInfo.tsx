@@ -1,12 +1,13 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { useAccount, useDisconnect, useSwitchAccount } from "wagmi";
 import { api } from "~/trpc/react";
 import { storeUser, getUser, type StoredUser, logout } from "~/lib/auth-storage";
 import useStore from "~/store";
 import { toast } from "sonner";
 import { delay_s } from "~/lib/utils";
+import { PLATFORM_MOD_ADDRESS } from "~/lib/config";
 
 export function useUserInfo() {
   const [userInfo, setUserInfo] = useState<StoredUser | null>(getUser());
@@ -100,11 +101,17 @@ const handleLogout = useCallback(async() => {
     }
   },[address]);
 
+  // 当前用户是平台管理员
+  const isPlatformAdmin = useMemo(()=>{
+    return userInfo && userInfo?.address === PLATFORM_MOD_ADDRESS;
+  },[userInfo]);
+
   return {
     userInfo,
     setUserInfo,
     fetchAndStoreUserInfo,
     refetchUser,
-    handleLogout
+    handleLogout,
+    isPlatformAdmin
   };
 }

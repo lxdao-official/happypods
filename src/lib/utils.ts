@@ -33,7 +33,7 @@ export const truncateString = (
 };
 
 // dayjs时间格式为指定格式
-export const formatDate = (date: string|Date, format: string = 'YYYY-MM-DD') => {
+export const formatDate = (date: string|Date, format: string = 'MMM DD, YYYY') => {
   return dayjs(date).format(format);
 };
 

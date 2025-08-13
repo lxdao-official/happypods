@@ -16,7 +16,6 @@ export const createGrantsPoolSchema = z.object({
   modInfo: z.any(),
   treasuryWallet: z.string().min(1, "国库钱包地址不能为空"),
   chainType: z.enum(["ETHEREUM", "OPTIMISM"]),
-  treasuryBalances: z.any().optional(),
 });
 
 // 更新时的 RFP schema，支持现有和新增的 RFP
@@ -38,7 +37,6 @@ export const updateGrantsPoolSchema = z.object({
   treasuryWallet: z.string().min(1, "国库钱包地址不能为空").optional(),
   chainType: z.enum(["ETHEREUM", "OPTIMISM"]).optional(),
   status: z.enum(["ACTIVE", "INACTIVE", "ARCHIVED"]).optional(),
-  treasuryBalances: z.any().optional(),
 });
 
 export const getAllSchema = z.object({
