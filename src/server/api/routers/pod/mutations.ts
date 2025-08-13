@@ -1,11 +1,11 @@
-import { z } from "zod";
 import { protectedProcedure } from "~/server/api/trpc";
-import { createPodSchema, updatePodSchema, rejectPodSchema, approvePodSchema } from "./schemas";
+import { createPodSchema, rejectPodSchema, approvePodSchema, editPodSchema } from "./schemas";
 import { NotificationService } from "../notification/notification-service";
 import { NotificationType, PodStatus } from "@prisma/client";
 import { getBalance } from "../wallet/queries";
 import { PLATFORM_CHAINS } from "~/lib/config";
 import { optimism } from "viem/chains";
+import { PodEditService } from "./edit-service";
 
 export const podMutations = {
   // 创建Pod
@@ -14,7 +14,7 @@ export const podMutations = {
     .mutation(async ({ ctx, input }) => {
       // 验证用户信息是否完善
       const user = await ctx.db.user.findUnique({
-        where: { id: ctx.user!.id },
+        where: { id: ctx.user.id },
         select: { name: true, email: true, description: true },
       });
 
@@ -35,7 +35,7 @@ export const podMutations = {
       // 当前用户是否有其他正在审核中的pod
       const existingReviewingPod = await ctx.db.pod.findFirst({
         where: {
-          applicantId: ctx.user!.id,
+          applicantId: ctx.user.id,
           status: "REVIEWING"
         }
       });
@@ -67,10 +67,10 @@ export const podMutations = {
           avatar: podData.avatar,
           title: podData.title,
           description: podData.description,
-          links: podData.links as any,
+          links: podData.links,
           currency: podData.currency,
           tags: podData.tags,
-          applicantId: ctx.user!.id as number,
+          applicantId: ctx.user.id,
         },
         include: {
           applicant: true,
@@ -108,38 +108,6 @@ export const podMutations = {
 
       return pod;
     }),
-
-  // 更新Pod
-  update: protectedProcedure
-    .input(updatePodSchema)
-    .mutation(async ({ ctx, input }) => {
-      const { id, ...updateData } = input;
-
-      // 检查Pod是否存在且属于当前用户
-      const existingPod = await ctx.db.pod.findUnique({
-        where: { id },
-      });
-
-      if (!existingPod) {
-        throw new Error("Pod不存在");
-      }
-
-      if (existingPod.applicantId !== ctx.user!.id) {
-        throw new Error("没有权限修改此Pod");
-      }
-
-      const updatedPod = await ctx.db.pod.update({
-        where: { id },
-        data: updateData,
-        include: {
-          applicant: true,
-          grantsPool: true,
-        },
-      });
-
-      return updatedPod;
-    }),
-
   // 拒绝Pod
   reject: protectedProcedure
     .input(rejectPodSchema)
@@ -155,7 +123,7 @@ export const podMutations = {
       }
 
       // 检查当前用户是否是 Grants Pool 的拥有者
-      if (existingPod.grantsPool.ownerId !== ctx.user!.id) {
+      if (existingPod.grantsPool.ownerId !== ctx.user.id) {
         throw new Error("没有权限拒绝此Pod");
       }
 
@@ -201,7 +169,7 @@ export const podMutations = {
       }
 
       // 检查当前用户是否是 Grants Pool 的拥有者
-      if (existingPod.grantsPool.ownerId !== ctx.user!.id) {
+      if (existingPod.grantsPool.ownerId !== ctx.user.id) {
         throw new Error("没有权限通过此Pod");
       }
 
@@ -227,9 +195,30 @@ export const podMutations = {
         }
       });
 
+      // 如果这是一个编辑版本的审核通过，需要将同组下的其他活跃版本设置为失效
+      if (existingPod.status === PodStatus.REVIEWING) {
+        await ctx.db.pod.updateMany({
+          where: {
+            podGroupId: existingPod.podGroupId,
+            id: { not: input.id }, // 排除当前正在审核通过的Pod
+            inactiveTime: null, // 只更新还未失效的版本
+          },
+          data: {
+            inactiveTime: new Date(), // 设置失效时间
+          }
+        });
+      }
+
       //!todo 消息通知
 
       return updatedPod;
+    }),
+
+  // 编辑Pod（创建新版本）
+  edit: protectedProcedure
+    .input(editPodSchema)
+    .mutation(async ({ ctx, input }) => {
+      return await PodEditService.editPod(ctx as any, input);
     }),
 
 

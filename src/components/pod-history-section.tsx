@@ -2,6 +2,7 @@ import { Button, Chip } from "@heroui/react";
 import EdgeLine from "./edge-line";
 import { api } from "~/trpc/react";
 import { useParams } from "next/navigation";
+import Link from "next/link";
 import { formatDate } from "~/lib/utils";
 import { PodStatus, type Pod } from "@prisma/client";
 import Empty from "./empty";
@@ -44,10 +45,10 @@ export default function PodHistorySection({ pod }: PodHistorySectionProps) {
         <div className="text-xl font-bold">History</div>
         {
           pod.status === PodStatus.IN_PROGRESS && isPodOwner && (
-          <div className="flex items-center gap-2 cursor-pointer hover:opacity-70">
+          <Link href={`/pods/edit/${pod.id}`} className="flex items-center gap-2 cursor-pointer hover:opacity-70">
             <i className="ri-edit-line"></i>
             <small>Edit Pod</small>
-          </div>
+          </Link>
           )
         }
       </div>

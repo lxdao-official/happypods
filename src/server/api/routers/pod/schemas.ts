@@ -57,4 +57,14 @@ export const approvePodSchema = z.object({
   transactionHash: z.string(),
 });
 
+export const editPodSchema = z.object({
+  id: z.number(),
+  avatar: z.string().url().optional(),
+  title: z.string().min(1, "项目标题不能为空"),
+  description: z.string().min(1, "项目描述不能为空"),
+  links: z.any().optional(),
+  tags: z.string().optional(),
+  milestones: z.array(milestoneSchema).min(1, "至少需要一个里程碑"),
+});
+
  
