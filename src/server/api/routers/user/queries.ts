@@ -23,6 +23,7 @@ export const userQueries = {  // 检查用户信息是否完善
     }),
   // 获取当前用户的数据
   getMe: publicProcedure.query(async ({ ctx }) => {
+    if (!ctx.user.id) return null;
     const user = await ctx.db.user.findUnique({
       where: { id: ctx.user.id },
       select: {

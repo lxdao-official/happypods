@@ -1,4 +1,6 @@
 import dayjs from "dayjs";
+import { PLATFORM_CHAINS } from "./config";
+import { optimism } from "viem/chains";
 
  /**
  * 字符串省略方法
@@ -39,3 +41,33 @@ export const formatDate = (date: string|Date, format: string = 'MMM DD, YYYY') =
 
 // 定一个promise的延迟函数
 export const delay_s = (ms: number=300) => new Promise((resolve) => setTimeout(resolve, ms));
+
+// 解析传入的 safe 交易 hash, 并验证是否合法
+export const parseSafeTransactionHash = async(hash: string, {from,to,amount}:{from:string,to:string,amount:string}) => {
+  const safeTransaction = await PLATFORM_CHAINS[optimism.id]?.safeApiKit.getTransaction(hash);
+  if(
+    safeTransaction && 
+    safeTransaction.dataDecoded?.method === 'transfer' && 
+    safeTransaction.to.toLocaleLowerCase()===PLATFORM_CHAINS[optimism.id]?.TOKENS.USDT.address.toLocaleLowerCase() &&
+    safeTransaction.dataDecoded.parameters[1] &&
+    safeTransaction.dataDecoded.parameters[0]
+  ){
+    const result = {
+      from: safeTransaction.safe,
+      to: safeTransaction.dataDecoded.parameters[0].value,
+      amount: safeTransaction.dataDecoded.parameters[1].value,
+      hash: safeTransaction.safeTxHash
+    }
+    if(
+      result.from.toLocaleLowerCase()===from.toLocaleLowerCase() &&
+      result.to.toLocaleLowerCase()===to.toLocaleLowerCase() &&
+      Number(result.amount)===Number(amount)
+    ){
+      return result;
+    }else{
+      throw new Error("交易数据不匹配！");
+    }
+  }else{
+    throw new Error("TransactionHash无效");
+  }
+};

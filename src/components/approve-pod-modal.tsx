@@ -8,6 +8,7 @@ import Decimal from "decimal.js";
 import { toast } from "sonner";
 import useSafeWallet from "~/app/hooks/useSafeWallet";
 import type { GrantsPoolTokens, Milestone } from "@prisma/client";
+import { delay_s } from "~/lib/utils";
 
 
 
@@ -79,6 +80,9 @@ export default function ApprovePodModal({
       setIsTransferring(false);
       onClose();
       
+      await delay_s(2000);
+      window.location.reload();
+
     } catch (error) {
       setIsApproving(false);
       setIsTransferring(false);

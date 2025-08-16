@@ -1,31 +1,24 @@
-import { Button, Chip } from "@heroui/react";
 import EdgeLine from "./edge-line";
-import { api } from "~/trpc/react";
 import { useParams } from "next/navigation";
 import Link from "next/link";
-import { formatDate } from "~/lib/utils";
-import { PodStatus, type Pod } from "@prisma/client";
+import { PodStatus, type GrantsPool, type Pod } from "@prisma/client";
 import Empty from "./empty";
-import { useMemo } from "react";
+import { useMemo, useState } from "react";
 import useStore from "~/store";
-
-export interface PodHistoryItem {
-  pod:Pod
-}
+import { formatDate } from "~/lib/utils";
+import StatusChip from "./status-chip";
+import PodVersionReviewModal from "./pod-version-review-modal";
 
 interface PodHistorySectionProps {
-  pod: Pod;
+  pod: Pod & { grantsPool: GrantsPool};
 }
 
 export default function PodHistorySection({ pod }: PodHistorySectionProps) {
   const { userInfo } = useStore();
   const params = useParams();
   const podId = parseInt(params.id as string);
-  // 查询历史记录
-  const { data: podHistory } = api.pod.getPodHistory.useQuery(
-    { podId },
-    { enabled: !!podId }
-  );
+  const [selectedVersion, setSelectedVersion] = useState<any>(null);
+  const [isModalOpen, setIsModalOpen] = useState(false);
 
   // 是 podower
   const isPodOwner = useMemo(()=>{
@@ -33,7 +26,19 @@ export default function PodHistorySection({ pod }: PodHistorySectionProps) {
     return pod.applicantId === userInfo.id;
   },[pod.applicantId, userInfo]);
 
-  if(!podHistory) return null;
+
+  const canEdit = useMemo(()=>{
+      return pod.versions && pod.status === PodStatus.IN_PROGRESS && 
+      isPodOwner && 
+      !pod.versions.some((item: any) => item?.status === 'REVIEWING'); 
+    },[pod.status, isPodOwner,pod.versions]);
+
+  if(!pod.versions) return null;
+
+  const handleVersionClick = (version: any) => {
+    setSelectedVersion(version);
+    setIsModalOpen(true);
+  };
 
 
   return (
@@ -42,9 +47,9 @@ export default function PodHistorySection({ pod }: PodHistorySectionProps) {
     <EdgeLine color="var(--color-background)" className="mb-4"/>
     
       <div className="flex items-center justify-between mb-4">
-        <div className="text-xl font-bold">History</div>
+        <div className="text-xl font-bold">Modify</div>
         {
-          pod.status === PodStatus.IN_PROGRESS && isPodOwner && (
+          canEdit && (
           <Link href={`/pods/edit/${pod.id}`} className="flex items-center gap-2 cursor-pointer hover:opacity-70">
             <i className="ri-edit-line"></i>
             <small>Edit Pod</small>
@@ -53,21 +58,34 @@ export default function PodHistorySection({ pod }: PodHistorySectionProps) {
         }
       </div>
 
-      <Empty imgClassName="w-auto h-[100px]" textClassName="text-xl" theme="dark"/>
-
-      {/* <div className="space-y-3">
-        {history.map(item => (
-          <div key={item.id} className="flex items-center justify-between p-3 border border-black rounded-lg">
-            <div className="flex flex-col gap-1">
-              <span className="text-sm font-medium text-gray-900">{item.description || `Version ${item.version || item.id}`}</span>
-              <span className="text-xs text-gray-500">{formatDate(item.date)}</span>
+      <div className="space-y-3">
+        {/* 历史编辑版本 */}
+        {pod.versions.map((item: any, index: number) => (
+          <div 
+            key={`version_${index}`} 
+            className="flex items-center justify-between p-3 text-sm border border-black rounded-lg cursor-pointer hover:text-blue-500 fadeIn"
+            onClick={() => handleVersionClick(item)}
+          >
+            <div className="flex items-center gap-1 underline">
+              {formatDate(item?.createdAt, 'MMM DD, HH:mm')}
             </div>
-            <Chip color={statusMap[item.status].color as any} variant="bordered" size="sm">
-              {statusMap[item.status].label}
-            </Chip>
+            <StatusChip status={item?.status || 'REVIEWING'}/>
           </div>
         ))}
-      </div> */}
+      </div>
+
+      {
+        pod.versions.length === 0 && <Empty imgClassName="w-auto h-[100px]" textClassName="text-xl" theme="dark"/>
+      }
+      
+      {/* 版本审核弹窗 */}
+      <PodVersionReviewModal
+        isOpen={isModalOpen}
+        onClose={() => setIsModalOpen(false)}
+        versionData={selectedVersion}
+        podId={podId}
+        pod={pod}
+      />
     </div>
   );
 } 

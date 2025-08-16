@@ -14,14 +14,10 @@ import AvatarInput from "~/components/avatar-input";
 import TagsSelect from "~/components/tags-select";
 import { api } from "~/trpc/react";
 import { toast } from "sonner";
-import useStore from "~/store";
+import LoadingSkeleton from "~/components/loading-skeleton";
+import { DEFAULT_MILESTONE_AMOUNTS } from "~/lib/config";
+import { c } from "node_modules/framer-motion/dist/types.d-Bq-Qm38R";
 
-interface RelatedLinks {
-  website: string;
-  github: string;
-  twitter: string;
-  telegram: string;
-}
 
 interface Milestone {
   id: string;
@@ -36,7 +32,6 @@ export default function EditPodPage() {
   const params = useParams();
   const podId = parseInt(params.id as string);
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const { userInfo } = useStore();
   
   const [formData, setFormData] = useState({
     avatar: "",
@@ -49,12 +44,7 @@ export default function EditPodPage() {
   const [selectedTags, setSelectedTags] = useState<string[]>([]);
 
   // Related Links 数据
-  const [relatedLinks, setRelatedLinks] = useState<RelatedLinks>({
-    website: "",
-    github: "",
-    twitter: "",
-    telegram: "",
-  });
+  const [relatedLinks, setRelatedLinks] = useState<Record<string, string>>({});
 
   // Milestones 数据
   const [milestones, setMilestones] = useState<Milestone[]>([]);
@@ -99,13 +89,7 @@ export default function EditPodPage() {
 
       // 设置相关链接
       if (podDetail.links) {
-        const links = podDetail.links as Record<string, string>;
-        setRelatedLinks({
-          website: links.website ?? "",
-          github: links.github ?? "",
-          twitter: links.twitter ?? "",
-          telegram: links.telegram ?? "",
-        });
+        setRelatedLinks(podDetail.links as Record<string, string>);
       }
     }
   }, [podDetail]);
@@ -115,7 +99,7 @@ export default function EditPodPage() {
     if (podMilestones) {
       // 过滤出ACTIVE状态的milestone并转换格式
       const activeMilestones = podMilestones
-        .filter(m => m.status === 'ACTIVE')
+        .filter(m => ['ACTIVE','PENDING_DELIVERY'].includes(m.status))
         .map((milestone, index) => ({
           id: (index + 1).toString(),
           title: milestone.title,
@@ -127,23 +111,17 @@ export default function EditPodPage() {
       // 确保至少有一个milestone
       if (activeMilestones.length === 0) {
         activeMilestones.push({
-          id: "1",
+          id: `${Date.now()}`,
           title: "",
           deadline: "",
-          amount: "100",
+          amount: DEFAULT_MILESTONE_AMOUNTS.DEFAULT,
           description: ""
         });
       }
 
-      setMilestones(activeMilestones);
+      setMilestones(activeMilestones as Milestone[]);
     }
   }, [podMilestones]);
-
-  // 权限检查
-  const canEdit = useMemo(() => {
-    if (!podDetail || !userInfo) return false;
-    return podDetail.applicantId === userInfo.id && podDetail.status === 'IN_PROGRESS';
-  }, [podDetail, userInfo]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -165,19 +143,15 @@ export default function EditPodPage() {
     setIsSubmitting(true);
 
     try {
-      const links = {
-        ...(relatedLinks.website && { website: relatedLinks.website }),
-        ...(relatedLinks.github && { github: relatedLinks.github }),
-        ...(relatedLinks.twitter && { twitter: relatedLinks.twitter }),
-        ...(relatedLinks.telegram && { telegram: relatedLinks.telegram }),
-      };
+      const links = Object.fromEntries(
+        Object.entries(relatedLinks).filter(([_, value]) => value && value.trim() !== '')
+      );
 
       // 处理里程碑数据
       const processedMilestones = milestones.map(milestone => ({
-        title: milestone.title,
-        description: milestone.description,
-        amount: parseFloat(milestone.amount) * 10 ** 6 || 0,
-        deadline: milestone.deadline
+        ...milestone,
+        id: podMilestones?.map(v=>v.id).includes(Number(milestone.id)) ? Number(milestone.id) : 0,
+        amount: parseFloat(milestone.amount) * (10 ** 6) || 0
       }));
 
       await editPodMutation.mutateAsync({
@@ -191,6 +165,7 @@ export default function EditPodPage() {
       });
     } catch {
       // 错误处理在mutation的onError中
+      toast.error('编辑失败，请重试');
     }
   };
 
@@ -198,50 +173,11 @@ export default function EditPodPage() {
     setFormData(prev => ({ ...prev, [field]: value }));
   };
 
-  if (isLoading) {
-    return (
-      <div className="container px-4 py-8 mx-auto">
-        <div className="max-w-4xl mx-auto">
-          <div className="flex items-center justify-center py-12">
-            <div className="text-lg">加载中...</div>
-          </div>
-        </div>
-      </div>
-    );
-  }
-
-  if (!podDetail) {
-    return (
-      <div className="container px-4 py-8 mx-auto">
-        <div className="max-w-4xl mx-auto">
-          <div className="flex items-center justify-center py-12">
-            <div className="text-lg text-red-500">Pod不存在</div>
-          </div>
-        </div>
-      </div>
-    );
-  }
-
-  if (!canEdit) {
-    return (
-      <div className="container px-4 py-8 mx-auto">
-        <div className="max-w-4xl mx-auto">
-          <div className="flex items-center justify-center py-12">
-            <div className="text-lg text-red-500">
-              {podDetail.status !== 'IN_PROGRESS' 
-                ? '只能编辑进行中的Pod' 
-                : '没有权限编辑此Pod'
-              }
-            </div>
-          </div>
-        </div>
-      </div>
-    );
-  }
-
-  // 计算已完成的milestone数量（简化）
-  const completedCount = podMilestones?.filter(m => m.status === 'COMPLETED').length ?? 0;
-  const maxNewMilestones = 3 - completedCount;
+  if (isLoading) return (
+    <div className="container px-4 py-8 mx-auto">
+      <LoadingSkeleton/>
+    </div>
+  );
 
   return (
     <div className="container px-4 py-8 mx-auto fadeIn">
@@ -250,13 +186,6 @@ export default function EditPodPage() {
         <div className="mb-8">
           <h1 className="text-3xl font-bold text-foreground">Edit Pod Project</h1>
           <p className="mt-2 text-default-500">编辑您的Pod项目信息</p>
-          {completedCount > 0 && (
-            <div className="p-3 mt-2 border border-blue-200 rounded-lg bg-blue-50">
-              <p className="text-sm text-blue-700">
-                已完成 {completedCount} 个milestone，最多还可以添加 {maxNewMilestones} 个新milestone
-              </p>
-            </div>
-          )}
         </div>
 
         <form onSubmit={handleSubmit} className="space-y-6">
@@ -313,20 +242,8 @@ export default function EditPodPage() {
 
           {/* Related Links */}
           <RelatedLinksSection 
-            links={{
-              website: relatedLinks.website,
-              github: relatedLinks.github,
-              twitter: relatedLinks.twitter,
-              telegram: relatedLinks.telegram
-            }}
-            onLinksChange={(links: Record<string, string>) => {
-              setRelatedLinks({
-                website: links.website ?? '',
-                github: links.github ?? '',
-                twitter: links.twitter ?? '',
-                telegram: links.telegram ?? ''
-              });
-            }}
+            links={relatedLinks}
+            onLinksChange={setRelatedLinks}
           />
 
           {/* 提交按钮 */}

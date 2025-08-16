@@ -258,11 +258,6 @@ export const milestoneMutations = {
         throw new Error("没有权限确认支付此Milestone");
       }
 
-      // 检查milestone状态是否为PENDING_PAYMENT
-      if (milestone.status !== MilestoneStatus.PENDING_PAYMENT) {
-        throw new Error("只能确认支付状态为PENDING_PAYMENT的Milestone");
-      }
-
       // 更新milestone状态为COMPLETED
       const updatedMilestone = await ctx.db.milestone.update({
         where: { id: input.milestoneId },

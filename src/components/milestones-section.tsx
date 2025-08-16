@@ -62,6 +62,24 @@ export default function MilestonesSection({ milestones, gpOwnerId, podOwnerId, p
           
           return (
             <div key={milestone.id} className="p-4 border border-black rounded-md">
+
+              <div className="flex flex-col">
+                  { new Date(milestone.deadline) < new Date() && !milestone.deliveryInfo.length && milestone.status === MilestoneStatus.PENDING_DELIVERY &&
+                  <div className="flex items-center gap-1 px-1 mb-2 text-xs text-yellow-600 border border-yellow-500 rounded-md bg-yellow-400/10">
+                    <i className="text-xl ri-error-warning-fill"></i>
+                    <span>Deadline 交付已超时，如需延期请及时与 GP Moderator 沟通，否则 GP 可能将关闭当前 Pod 并退回所有资金！</span>
+                    </div>
+                  }
+
+                  {
+                     milestone.status === 'PENDING_DELIVERY' && waitPodTreasuryRecharge &&
+                      <div className="flex items-center gap-1 px-1 mb-2 text-xs text-red-600 border border-red-500 rounded-md bg-red-400/10">
+                        <i className="text-xl ri-error-warning-fill"></i>
+                        <span>Pod 国库余额不足，请 GP Moderator 转入后，可提交交付！</span>
+                      </div>
+                  }
+              </div>
+                  
               <div className="flex items-center justify-between mb-3">
                 <div className="flex items-center gap-3">
                   <h3 className="font-semibold">{milestone.title}</h3>
@@ -75,17 +93,8 @@ export default function MilestonesSection({ milestones, gpOwnerId, podOwnerId, p
                   )}
                 </div>
                 <div className="flex items-center gap-2">
-
-                  {
-                     milestone.status === 'PENDING_DELIVERY' && waitPodTreasuryRecharge &&
-                      <div className="flex items-center gap-1 px-1 text-xs bg-red-400 rounded-md">
-                        <i className="text-xl ri-error-warning-fill"></i>
-                        <span>Pod 国库余额不足，请 GP Moderator 完成转入！</span>
-                      </div>
-                  }
-
                   {/* 只有PENDING_DELIVERY状态才显示提交按钮 */}
-                  {milestone.status === 'PENDING_DELIVERY' && remainingSubmissions > 0 && isPodOwner && (
+                  {milestone.status === 'PENDING_DELIVERY' && remainingSubmissions > 0 && isPodOwner && !waitPodTreasuryRecharge && (
                      <SubmitMilestoneModal 
                         milestoneId={milestone.id} 
                         safeTransactionHash={milestone.safeTransactionHash}
@@ -114,6 +123,7 @@ export default function MilestonesSection({ milestones, gpOwnerId, podOwnerId, p
                 <b>Deadline: {formatDate(milestone.deadline)}</b>
 
               </div>
+
               <p className="text-sm text-gray-700">
                 {milestone.description}
               </p>

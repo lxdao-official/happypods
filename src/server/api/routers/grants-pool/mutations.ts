@@ -74,6 +74,19 @@ export const grantsPoolMutations = {
         throw new Error("没有权限修改此GrantsPool");
       }
 
+      // 更新 GrantsPool 基本信息
+      await ctx.db.grantsPool.update({
+        where: { id },
+        data: {
+          name: updateData.name,
+          description: updateData.description,
+          avatar: updateData.avatar,
+          tags: updateData.tags,
+          links: updateData.links,
+          modInfo: updateData.modInfo as Prisma.InputJsonValue,
+        },
+      });
+
       // 处理 RFP 更新
       if (rfps && rfps.length > 0) {
         const existingRfpIds = existingGrantsPool.rfps.map(rfp => rfp.id);
@@ -118,26 +131,6 @@ export const grantsPoolMutations = {
           }
         }
       }
-
-      // 返回更新后的 GrantsPool 及其关联数据
-      return ctx.db.grantsPool.findUnique({
-        where: { id },
-        include: {
-          owner: {
-            select: {
-              id: true,
-              name: true,
-              avatar: true,
-            },
-          },
-          rfps: {
-            where: {
-              inactiveTime: null, // 只返回活跃的 RFP
-            },
-            orderBy: { createdAt: "asc" },
-          },
-        },
-      });
     }),
 
   // 删除GrantsPool

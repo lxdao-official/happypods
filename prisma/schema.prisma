@@ -83,7 +83,6 @@ model Rfps {
 
 model Pod {
   id               Int         @id @default(autoincrement())
-  podGroupId       Int         @unique @default(autoincrement()) // 使用自增 ID 作为唯一标识
   applicantId      Int
   grantsPoolId     Int
   rfpId            Int
@@ -99,19 +98,17 @@ model Pod {
   createdAt        DateTime    @default(now())
   updatedAt        DateTime    @updatedAt
   approvedAt       DateTime?
-  inactiveTime     DateTime? // 失效时间，null 表示当前活跃版本
   milestones       Milestone[] @relation("PodMilestones")
   applicant        User        @relation("UserPods", fields: [applicantId], references: [id])
   grantsPool       GrantsPool  @relation("GrantsPoolPods", fields: [grantsPoolId], references: [id])
   rfp              Rfps        @relation("RfpPods", fields: [rfpId], references: [id])
-  refundSafeTransactionHash String? // 用于记录失败退款交易hash,需要多方确认
+  safeTransactionHash Json     @default("{}") // 用金额与类型记录转账 hash 存入 {type_amount: string} eg {in_100:0xxxxxxx, out_100:0xxxxxxx}
+  versions         Json[] // 版本号，用于记录每次编辑的信息
 
   @@index([applicantId])
   @@index([grantsPoolId])
   @@index([rfpId])
   @@index([status])
-  @@index([podGroupId])
-  @@index([inactiveTime])
 }
 
 model Milestone {
@@ -122,17 +119,16 @@ model Milestone {
   amount       Decimal
   deadline     DateTime
   status       MilestoneStatus @default(ACTIVE)
-  currentPhase String          @default("PENDING")
   deliveryInfo Json[]          // [{content: string, links: string[], deadline: string}]
   metadata     Json?           @default("{}") // {rejectReason: string}
   createdAt    DateTime        @default(now())
   updatedAt    DateTime        @updatedAt
   pod          Pod             @relation("PodMilestones", fields: [podId], references: [id], onDelete: Cascade)
   safeTransactionHash String?
+  inactiveAt DateTime?
   
   @@index([podId])
   @@index([status])
-  @@index([currentPhase])
 }
 
 enum UserRole {
@@ -151,7 +147,6 @@ enum ChainType {
 enum PodStatus {
   REVIEWING // 审核中
   APPROVED // 批准
-  // PENDING_PAYMENT // 待支付
   REJECTED // 拒绝
   IN_PROGRESS // 进行中
   COMPLETED // 完成
@@ -166,7 +161,6 @@ enum MilestoneStatus {
   APPROVED // 批准
   REVIEWING // 审核中
   PENDING_DELIVERY // 待交付
-  PENDING_PAYMENT // 待支付
 }
 
 model Notification {

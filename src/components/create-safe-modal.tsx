@@ -40,8 +40,8 @@ const CreateSafeModal = ({
   // 初始化owners和threshold
   useEffect(() => {
     if (isUsingPredefined) {
-      setOwners(predefinedOwners);
       setThreshold(predefinedThreshold);
+      setOwners(predefinedOwners);
     } else {
       // 手动场景下，默认只包含当前用户地址
       const defaultOwners = [];
@@ -85,6 +85,7 @@ const CreateSafeModal = ({
 
     try {
       const { safeAddress } = await deploySafe(owners as Address[], threshold);
+      console.log('safeAddress===?>',safeAddress);
       onConfirm(safeAddress);
     } catch (error) {
       console.error("Failed to create Safe:", error);

@@ -8,10 +8,10 @@ import MilestonesSection from "~/components/milestones-section";
 import CardBox from "~/components/card-box";
 import EdgeLine from "~/components/edge-line";
 import { ShareButton } from "~/components/share-button";
-import type { PodHistoryItem } from "~/components/pod-history-section";
 import PodHistorySection from "~/components/pod-history-section";
 import ApplicantInfoModal from "~/components/applicant-info-modal";
 import GpReviewActions from "~/components/gp-review-actions";
+import TreasuryBalanceWarning from "~/components/treasury-balance-warning";
 import { api } from "~/trpc/react";
 import { MilestoneStatus, PodStatus } from "@prisma/client";
 import StatusChip from "~/components/status-chip";
@@ -74,7 +74,6 @@ export default function PodDetailPage() {
 
   const funded = podDetail.milestones.filter(milestone => milestone.status === MilestoneStatus.COMPLETED).reduce((acc, milestone) => Decimal(acc).plus(milestone.amount).toNumber(), 0);
   const appliedAmount = podDetail.milestones.reduce((acc, milestone) => Decimal(acc).plus(milestone.amount).toNumber(), 0);
-  const requiredAmount = podDetail.milestones.filter(milestone => [MilestoneStatus.ACTIVE].includes(milestone.status as any)).reduce((acc, milestone) => Decimal(acc).plus(milestone.amount).toNumber(), 0);
 
   // 转换数据格式以匹配现有 UI
   const pod = {
@@ -96,13 +95,20 @@ export default function PodDetailPage() {
 
       {
         pod.status === PodStatus.TERMINATED && 
-        pod.refundSafeTransactionHash && 
+        (pod.safeTransactionHash as Record<string, string>)[`out_${Number(pod.podTreasuryBalances)}`] && 
         (isGPOwner || isPodOwner) && 
         Number(pod.podTreasuryBalances) > 0 && (
           <PodRejectedActions pod={podDetail} />
         )
       }
 
+      {/* 国库余额不足警告 */}
+      {
+        (isGPOwner || isPodOwner) && pod.status === PodStatus.IN_PROGRESS && 
+        <TreasuryBalanceWarning pod={pod as any}/>
+      }
+
+      {/* GP 审核操作 */}
       {
         isGPOwner && 
         <GpReviewActions 
@@ -112,10 +118,8 @@ export default function PodDetailPage() {
             podTitle={pod.title}
             podWalletAddress={pod.walletAddress}
             podCurrency={pod.currency}
-            podTreasuryBalances={Number(pod.podTreasuryBalances)}
             appliedAmount={pod.treasury.appliedAmount}
             treasuryWallet={pod.grantsPool.treasuryWallet}
-            requiredAmount={Number(requiredAmount)}
           />
       }
 
@@ -157,7 +161,7 @@ export default function PodDetailPage() {
             
             <div className="space-y-6">
               <div>
-                <p className="leading-relaxed text-secondary">
+                <p className="leading-relaxed">
                   {pod.description}
                 </p>
               </div>
@@ -291,7 +295,7 @@ export default function PodDetailPage() {
                 <LinkDisplay links={pod.links as Record<string, string>} theme="light" />
                 
                 {/* 历史版本组件 */}
-                <PodHistorySection pod={podDetail} />
+                <PodHistorySection pod={podDetail as any} />
               </div>
             )}
           </div>

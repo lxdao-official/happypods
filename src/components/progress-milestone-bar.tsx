@@ -62,7 +62,7 @@ export default function ProgressMilestoneBar({ milestones = [] }: ProgressMilest
       <div className="relative h-8 mt-2 text-xs progress-bar">
         {/* 创建时间节点（起始点） */}
         {milestones.length > 0 && milestones[0]?.createdAt && (
-          <div className="absolute flex flex-col items-start min-w-[60px]" style={{ left: '0%' }}>
+          <div className="absolute flex flex-col items-start min-w-[60px] hover:z-10" style={{ left: '0%' }}>
             <Tooltip 
               color="foreground"
               content={

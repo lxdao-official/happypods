@@ -1,6 +1,28 @@
 import { z } from "zod";
-import { createTRPCRouter, protectedProcedure, publicProcedure } from "~/server/api/trpc";
+import { protectedProcedure, publicProcedure } from "~/server/api/trpc";
 import { getListSchema, validateMilestonesSchema } from "./schemas";
+import { db } from "~/server/db";
+import { MilestoneStatus } from "@prisma/client";
+import { FEE_CONFIG } from "~/lib/config";
+
+// 获取 pod 的余额相关数据
+export const getPodAssets = async (podId: number) => {
+  const pod = await db.pod.findUnique({
+    where: { id: podId },
+    include: {
+      milestones: true,
+    },
+  });
+  const milestones = pod?.milestones;
+  const totalAmount = milestones?.reduce((sum, milestone) => sum + Number(milestone.amount), 0);
+  const totalActiveAmount = milestones?.filter((milestone) => milestone.status === MilestoneStatus.ACTIVE).reduce((sum, milestone) => sum + Number(milestone.amount), 0);
+  return { 
+    totalAmount,
+    totalAmountWithFee: totalAmount ? totalAmount * (1 + FEE_CONFIG.TRANSACTION_FEE_RATE) : 0,
+    totalActiveAmount,
+    totalActiveAmountWithFee: totalActiveAmount ? totalActiveAmount * (1 + FEE_CONFIG.TRANSACTION_FEE_RATE) : 0,
+  };
+};
 
 export const podQueries = {
   // 获取Grants Pool详细信息（包含RFP和token信息）
@@ -66,9 +88,7 @@ export const podQueries = {
     .input(getListSchema)
     .query(async ({ ctx, input }) => {
       const { limit, cursor, search, status, grantsPoolId, myOnly } = input;
-      const where: any = {
-        inactiveTime: null, // 只获取当前活跃的 Pod 版本
-      };
+      const where: any = {};
       if (search) {
         where.OR = [
           { title: { contains: search, mode: "insensitive" } },
@@ -133,8 +153,7 @@ export const podQueries = {
     .query(async ({ ctx }) => {
       const pods = await ctx.db.pod.findMany({
         where: { 
-          applicantId: ctx.user.id,
-          inactiveTime: null, // 只获取当前活跃的 Pod 版本
+          applicantId: ctx.user.id
         },
         orderBy: { createdAt: "desc" },
         include: {

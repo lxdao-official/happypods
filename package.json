@@ -25,6 +25,7 @@
         "@heroui/button": "^2.2.23",
         "@heroui/react": "^2.8.1",
         "@heroui/theme": "^2.4.19",
+        "@internationalized/date": "3.8.2",
         "@prisma/client": "^6.5.0",
         "@rainbow-me/rainbowkit": "^2.2.8",
         "@safe-global/api-kit": "^4.0.0",

@@ -4,9 +4,11 @@ import { LoginModal } from '~/components/login-modal';
 import { NotificationDrawer } from '~/components/layout/notification';
 import NextLink from 'next/link';
 import { usePathname } from 'next/navigation';
+import useStore from '~/store';
 
 export function Header() {
   const pathname = usePathname();
+  const {userInfo} = useStore();
 
   const navs = [
     { href: '/', label: 'Home' },
@@ -45,7 +47,10 @@ export function Header() {
 
         {/* 登录按钮 */}
         <div className="flex items-center justify-end gap-8 basis-1/5">
-          <NotificationDrawer />
+          {
+            userInfo?.id && <NotificationDrawer />
+          }
+          
           <LoginModal />
         </div>
       </div>

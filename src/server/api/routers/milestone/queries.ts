@@ -26,7 +26,7 @@ export const milestoneQueries = {
     .input(z.object({ podId: z.number() }))
     .query(async ({ ctx, input }) => {
       const milestones = await ctx.db.milestone.findMany({
-        where: { podId: input.podId },
+        where: { podId: input.podId, status: { not: MilestoneStatus.INACTIVE } },
         orderBy: { deadline: "asc" },
         include: {
           pod: {
@@ -39,8 +39,7 @@ export const milestoneQueries = {
 
       // 找到第一个状态为ACTIVE的milestone的index，并且没有待支付的milestone
       const activeMilestone = milestones.find(v=>v.status === MilestoneStatus.ACTIVE);
-      const pendingPaymentMilestone = milestones.some(v=>v.status === MilestoneStatus.PENDING_PAYMENT);
-      if(activeMilestone && activeMilestone.pod.status === PodStatus.IN_PROGRESS && !pendingPaymentMilestone){
+      if(activeMilestone && activeMilestone.pod.status === PodStatus.IN_PROGRESS){
         activeMilestone.status = MilestoneStatus.PENDING_DELIVERY;
       }
       

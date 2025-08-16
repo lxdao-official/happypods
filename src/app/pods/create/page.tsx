@@ -20,7 +20,8 @@ import { api } from "~/trpc/react";
 import { toast } from "sonner";
 import { zeroAddress, type Address } from "viem";
 import useStore from "~/store";
-import { PLATFORM_MOD_ADDRESS } from "~/lib/config";
+import { DEFAULT_MILESTONE_AMOUNTS, PLATFORM_CHAINS, PLATFORM_MOD_ADDRESS } from "~/lib/config";
+import { optimism } from "viem/chains";
 
 interface RelatedLinks {
   website: string;
@@ -78,13 +79,13 @@ export default function CreatePodPage() {
       id: "1",
       title: "",
       deadline: "",
-      amount: "100",
+      amount: DEFAULT_MILESTONE_AMOUNTS.DEFAULT,
       description: ""
     }
   ]);
 
   // API queries
-  const { data: userProfile } = api.user.checkUserProfile.useQuery();
+  const { refetch: refetchUserProfile } = api.user.checkUserProfile.useQuery();
   const { data: grantsPoolDetails } = api.pod.getGrantsPoolDetails.useQuery(
     { id: parseInt(formData.grantsPoolId) },
     { enabled: !!formData.grantsPoolId }
@@ -94,11 +95,12 @@ export default function CreatePodPage() {
 
   // 检查用户信息是否完善
   useEffect(() => {
-    if (userProfile && !userProfile.isComplete) {
-      setShowProfileModal(true);
-      return;
+    const checkUserProfile = async () => {
+      const res = await refetchUserProfile();
+      setShowProfileModal(!res.data?.isComplete);
     }
-  }, [userProfile]);
+    checkUserProfile();
+  }, []);
 
   // 确保URL参数正确设置到formData
   useEffect(() => {
@@ -142,23 +144,16 @@ export default function CreatePodPage() {
     setShowSafeModal(true);
   };
 
-  const handleSafeCreated = async (walletAddress: string,isCheck:boolean=false) => {
+  const handleSafeCreated = async (walletAddress: string, isCheck:boolean=false) => {
     setShowSafeModal(false);
     setIsSubmitting(true);
 
     try {
-      const links = {
-        ...(relatedLinks.website && { website: relatedLinks.website }),
-        ...(relatedLinks.github && { github: relatedLinks.github }),
-        ...(relatedLinks.twitter && { twitter: relatedLinks.twitter }),
-        ...(relatedLinks.telegram && { telegram: relatedLinks.telegram }),
-      };
-
       // 处理里程碑数据
       const processedMilestones = milestones.map(milestone => ({
         title: milestone.title,
         description: milestone.description,
-        amount: parseFloat(milestone.amount) * 10 ** 6 || 0,
+        amount: parseFloat(milestone.amount) * (10 ** 6) || 0,
         deadline: milestone.deadline
       }));
 
@@ -173,7 +168,7 @@ export default function CreatePodPage() {
           description: formData.description,
           currency: formData.currency,
           tags: selectedTags.length > 0 ? selectedTags.join(',') : undefined,
-          links: Object.keys(links).length > 0 ? links : undefined,
+          links: Object.keys(relatedLinks).length > 0 ? relatedLinks : undefined,
           milestones: processedMilestones,
         });
       } catch (error) {
@@ -225,6 +220,8 @@ export default function CreatePodPage() {
       PLATFORM_MOD_ADDRESS
     ].filter(Boolean) as string[];
   }, [userInfo?.walletAddress, grantsPoolDetails?.owner.walletAddress]);
+
+  console.log('predefinedOwners',predefinedOwners);
 
   return (
     <div className="container px-4 py-8 mx-auto fadeIn">

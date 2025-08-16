@@ -264,21 +264,6 @@ export default function EditGrantsPoolPage() {
                 minRows={4}
               />
 
-              {/* Chain Type - 只允许Optimism */}
-              <Select
-                variant="bordered"
-                label="财库链类型"
-                selectedKeys={[formData.chainType]}
-                onSelectionChange={(keys) => {
-                  const selected = Array.from(keys)[0] as string;
-                  handleInputChange("chainType", selected);
-                }}
-                isRequired
-              >
-                <SelectItem key="OPTIMISM">Optimism Network</SelectItem>
-                <SelectItem key="ETHEREUM" isDisabled>Ethereum Mainnet (不可用)</SelectItem>
-              </Select>
-
               {/* Tags */}
               <TagsSelect
                 selectedTags={selectedTags}
@@ -286,16 +271,6 @@ export default function EditGrantsPoolPage() {
                 placeholder="选择标签"
                 description="选择相关的标签来描述您的 Grants Pool"
               />
-
-              {/* Treasury Wallet - 只读 */}
-              {/* <Input
-                variant="bordered"
-                type="text"
-                label="财库钱包地址"
-                value={formData.treasuryWallet}
-                isDisabled
-                description="财库钱包地址（不可修改）"
-              /> */}
             </div>
           </CornerFrame>
 
@@ -365,7 +340,7 @@ export default function EditGrantsPoolPage() {
           <div className="flex items-center justify-center gap-4">
             <AppBtn
               btnProps={{
-                variant: "bordered",
+                color: "default",
                 onClick: () => router.back(),
                 type: "button",
                 className: "flex-1",

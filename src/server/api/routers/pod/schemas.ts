@@ -1,6 +1,7 @@
 import { z } from "zod";
 
 export const milestoneSchema = z.object({
+  id: z.number().optional(),
   title: z.string().min(1, "里程碑标题不能为空"),
   description: z.string().min(1, "里程碑描述不能为空"),
   amount: z.number().min(0, "金额必须大于等于0"),

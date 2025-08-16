@@ -6,6 +6,9 @@ import { getBalance } from "../wallet/queries";
 import { PLATFORM_CHAINS } from "~/lib/config";
 import { optimism } from "viem/chains";
 import { PodEditService } from "./edit-service";
+import { z } from "zod";
+import { parseSafeTransactionHash } from "~/lib/utils";
+import { getPodAssets } from "./queries";
 
 export const podMutations = {
   // 创建Pod
@@ -57,7 +60,7 @@ export const podMutations = {
 
       // 创建前检查参数是否正确，正确才弹窗多签钱包创建
       if(isCheck) return true;
-
+      if(!ctx.user.id) throw new Error("用户不存在");
       // 创建Pod
       const pod = await ctx.db.pod.create({
         data: {
@@ -156,7 +159,7 @@ export const podMutations = {
     .input(approvePodSchema)
     .mutation(async ({ ctx, input }) => {
       // 检查Pod是否存在
-      const existingPod = await ctx.db.pod.findUnique({
+      const pod = await ctx.db.pod.findUnique({
         where: { id: input.id },
         include: { 
           grantsPool: true,
@@ -164,27 +167,32 @@ export const podMutations = {
         },
       });
 
-      if (!existingPod) {
+      if (!pod) {
         throw new Error("Pod不存在");
       }
 
       // 检查当前用户是否是 Grants Pool 的拥有者
-      if (existingPod.grantsPool.ownerId !== ctx.user.id) {
+      if (pod.grantsPool.ownerId !== ctx.user.id) {
         throw new Error("没有权限通过此Pod");
       }
 
       // 检查Pod状态是否为REVIEWING
-      if (existingPod.status !== PodStatus.REVIEWING) {
+      if (pod.status !== PodStatus.REVIEWING) {
         throw new Error("只能通过处于审核中状态的Pod");
       }
 
       // 检查建议id是否合法
-      // 验证提交的transactionHash是否有效
-      const safeTransaction = await PLATFORM_CHAINS[optimism.id]?.safeApiKit.getTransaction(input.transactionHash);
-      console.log('safeTransaction', safeTransaction);
-      if(!safeTransaction){
-        throw new Error("TransactionHash无效");
-      }
+      /*
+      const {totalAmountWithFee} = await getPodAssets(pod.id);
+      const {from,to,amount} = await parseSafeTransactionHash(input.transactionHash, {
+        from: pod.grantsPool.treasuryWallet,
+        to: pod.walletAddress,
+        amount: totalAmountWithFee.toString(),
+      });
+
+      const safeTransactionHash = pod.safeTransactionHash as Record<string, string>;
+      safeTransactionHash[`${from}_${to}_${amount}`] = input.transactionHash;
+      */
 
       // 更新Pod状态为IN_PROGRESS
       const updatedPod = await ctx.db.pod.update({
@@ -192,24 +200,17 @@ export const podMutations = {
         data: {
           status: PodStatus.IN_PROGRESS,
           approvedAt: new Date(),
+          // safeTransactionHash
         }
       });
 
-      // 如果这是一个编辑版本的审核通过，需要将同组下的其他活跃版本设置为失效
-      if (existingPod.status === PodStatus.REVIEWING) {
-        await ctx.db.pod.updateMany({
-          where: {
-            podGroupId: existingPod.podGroupId,
-            id: { not: input.id }, // 排除当前正在审核通过的Pod
-            inactiveTime: null, // 只更新还未失效的版本
-          },
-          data: {
-            inactiveTime: new Date(), // 设置失效时间
-          }
-        });
-      }
-
-      //!todo 消息通知
+      await NotificationService.createNotification({
+        type: NotificationType.POD_REVIEW,
+        senderId: ctx.user.id,
+        receiverId: pod.applicantId,
+        title: `Pod审核通过`,
+        content: `您的 <${pod.title}> Pod审核已通过!`,
+      });
 
       return updatedPod;
     }),
@@ -221,5 +222,26 @@ export const podMutations = {
       return await PodEditService.editPod(ctx as any, input);
     }),
 
+  // 审核通过版本
+  approveVersion: protectedProcedure
+    .input(z.object({
+      podId: z.number(),
+      versionData: z.any(),
+    }))
+    .mutation(async ({ ctx, input }) => {
+      const { podId, versionData } = input;
+      return await PodEditService.reviewVersion(ctx as any, podId, versionData, true);
+    }),
+
+  // 驳回版本
+  rejectVersion: protectedProcedure
+    .input(z.object({
+      podId: z.number(),
+      versionData: z.any(),
+    }))
+    .mutation(async ({ ctx, input }) => {
+      const { podId, versionData } = input;
+      return await PodEditService.reviewVersion(ctx as any, podId, versionData, false);
+    }),
 
 }; 

@@ -2,6 +2,7 @@ import { NotificationService } from "../notification/notification-service";
 import { NotificationType, PodStatus, MilestoneStatus } from "@prisma/client";
 import { getBalance } from "../wallet/queries";
 import type { PrismaClient } from "@prisma/client";
+import { formatDate } from "~/lib/utils";
 
 interface EditPodInput {
   id: number;
@@ -11,6 +12,7 @@ interface EditPodInput {
   links?: any;
   tags?: string;
   milestones: Array<{
+    id?: number | null; // 数据库ID，新建时为null
     title: string;
     description: string;
     amount: number;
@@ -33,16 +35,13 @@ export class PodEditService {
     // 2. 业务验证
     await this.validateEditConstraints(ctx, originalPod, milestones);
     
-    // 3. 创建新版本Pod（简单复制+修改）
-    const newPod = await this.createNewPodVersion(ctx, originalPod, podData);
+    // 3. 创建新版本数据并保存到 versions 字段
+    const updatedPod = await this.saveVersionToDatabase(ctx, originalPod, { ...podData, milestones });
     
-    // 4. 创建milestone
-    await this.createMilestones(ctx, newPod.id, milestones, originalPod.milestones);
+    // 4. 发送通知
+    await this.sendEditNotification(ctx, updatedPod, originalPod);
     
-    // 5. 发送通知
-    await this.sendEditNotification(ctx, newPod, originalPod);
-    
-    return newPod;
+    return updatedPod;
   }
 
   private static async validateEditPermissions(ctx: EditPodContext, podId: number) {
@@ -66,17 +65,13 @@ export class PodEditService {
       throw new Error("只能编辑状态为进行中的Pod");
     }
 
-    // 检查同组下是否已有待审核的Pod
-    const existingReviewingPod = await ctx.db.pod.findFirst({
-      where: {
-        podGroupId: pod.podGroupId,
-        status: PodStatus.REVIEWING,
-        inactiveTime: null,
-      }
-    });
-
-    if (existingReviewingPod) {
-      throw new Error("该Pod组下已有正在审核中的版本，请等待审核完成后再编辑");
+    // 检查是否已有待审核的版本
+    const hasReviewingVersion = pod.versions.some((version: any) => 
+      version.status === 'REVIEWING'
+    );
+    
+    if (hasReviewingVersion) {
+      throw new Error("该Pod已有正在审核中的版本，请等待审核完成后再编辑");
     }
 
     return pod;
@@ -109,91 +104,176 @@ export class PodEditService {
     }
   }
 
-  private static async createNewPodVersion(
-    ctx: EditPodContext, 
-    originalPod: any, 
-    podData: Omit<EditPodInput, 'id' | 'milestones'>
+  private static async saveVersionToDatabase(
+    ctx: EditPodContext,
+    originalPod: any,
+    editData: any
   ) {
-    return await ctx.db.pod.create({
+    // 构造版本数据，保持与数据库查询结果一致的结构
+    const versionData = {
+      id: `version_${Date.now()}`, // 临时ID，用于前端显示
+      avatar: editData.avatar ?? originalPod.avatar,
+      title: editData.title,
+      description: editData.description,
+      links: editData.links ?? originalPod.links,
+      tags: editData.tags ?? originalPod.tags,
+      status: 'REVIEWING', // 新版本状态为审核中
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
+      // 直接存储传入的 milestones 数据
+      milestones: editData.milestones.map((milestone: any) => ({
+        id: milestone.id, // 保存传入的数据库ID，新建时为null
+        title: milestone.title,
+        description: milestone.description,
+        amount: milestone.amount,
+        deadline: milestone.deadline,
+        status: 'ACTIVE',
+        deliveryInfo: [],
+        metadata: {},
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
+      })),
+    };
+
+    // 更新 Pod 的 versions 字段
+    const updatedPod = await ctx.db.pod.update({
+      where: { id: originalPod.id },
       data: {
-        podGroupId: originalPod.podGroupId,
-        grantsPoolId: originalPod.grantsPoolId,
-        rfpId: originalPod.rfpId,
-        walletAddress: originalPod.walletAddress,
-        currency: originalPod.currency,
-        applicantId: originalPod.applicantId,
-        avatar: podData.avatar ?? originalPod.avatar,
-        title: podData.title,
-        description: podData.description,
-        links: podData.links ?? originalPod.links,
-        tags: podData.tags ?? originalPod.tags,
-        status: PodStatus.REVIEWING,
+        versions: {
+          push: versionData
+        }
       },
       include: {
         applicant: true,
         grantsPool: true,
+        milestones: true,
       },
     });
-  }
 
-  private static async createMilestones(
-    ctx: EditPodContext, 
-    newPodId: number, 
-    newMilestones: any[], 
-    originalMilestones: any[]
-  ) {
-    // 创建新的milestone
-    const newMilestonePromises = newMilestones.map(milestone => 
-      ctx.db.milestone.create({
-        data: {
-          podId: newPodId,
-          title: milestone.title,
-          description: milestone.description,
-          amount: milestone.amount,
-          deadline: new Date(milestone.deadline),
-          status: MilestoneStatus.ACTIVE,
-        },
-      })
-    );
-
-    // 复制已完成的milestone
-    const completedMilestones = originalMilestones.filter(
-      (m: any) => m.status === MilestoneStatus.COMPLETED
-    );
-    
-    const completedMilestonePromises = completedMilestones.map((milestone: any) =>
-      ctx.db.milestone.create({
-        data: {
-          podId: newPodId,
-          title: milestone.title,
-          description: milestone.description,
-          amount: milestone.amount,
-          deadline: milestone.deadline,
-          status: MilestoneStatus.COMPLETED,
-          deliveryInfo: milestone.deliveryInfo,
-          safeTransactionHash: milestone.safeTransactionHash,
-          currentPhase: milestone.currentPhase,
-        },
-      })
-    );
-
-    await Promise.all([...newMilestonePromises, ...completedMilestonePromises]);
+    return updatedPod;
   }
 
   private static async sendEditNotification(
     ctx: EditPodContext, 
-    newPod: any, 
+    updatedPod: any, 
     originalPod: any
   ) {
     await NotificationService.createNotification({
       type: NotificationType.POD_REVIEW,
-      senderId: newPod.applicantId,
-      receiverId: newPod.grantsPool.ownerId,
+      senderId: updatedPod.applicantId,
+      receiverId: updatedPod.grantsPool.ownerId,
       title: `Pod编辑审核通知`,
-      content: `${newPod.applicant.name} 编辑了Pod "${newPod.title}"，请及时审核新版本!`,
+      content: `${updatedPod.applicant.name} 编辑了Pod "${updatedPod.title}"，请及时审核新版本!`,
       params: {
-        podId: newPod.id,
-        originalPodId: originalPod.id,
+        podId: updatedPod.id,
+        action: 'edit_review'
+      }
+    });
+  }
+
+  // 审核版本（通过或拒绝）
+  static async reviewVersion(ctx: EditPodContext, podId: number, versionData: any, isApproved: boolean) {
+    // 1. 权限验证
+    const existingPod = await this.validateReviewPermissions(ctx, podId);
+    
+    // 2. 清空 versions 字段
+    await ctx.db.pod.update({
+      where: { id: podId, status: PodStatus.IN_PROGRESS },
+      data: { versions: [] }
+    });
+    
+    // 3. 如果是通过，则更新Pod和milestones
+    if (isApproved) {
+      // 更新Pod基本信息
+      await ctx.db.pod.update({
+        where: { id: podId },
+        data: {
+          title: versionData.title,
+          description: versionData.description,
+          avatar: versionData.avatar,
+          tags: versionData.tags,
+          links: versionData.links,
+        },
+      });
+
+
+      // 筛选需要失效的 milestone
+      const milestonesIds = versionData.milestones.map((v:any)=>v.id);
+      const needInactiveMilestones = existingPod.milestones.filter(v=>v.status === MilestoneStatus.ACTIVE)
+      .filter(v=>!milestonesIds.includes(v.id));
+
+      // todo 会多次被插入，需要优化
+
+      await Promise.all(needInactiveMilestones.map(v=>ctx.db.milestone.update({
+        where: { id: v.id },
+        data: { status: MilestoneStatus.INACTIVE, inactiveAt: new Date() }
+      })));
+
+      // 处理每个 milestone
+      const milestonePromises = versionData.milestones.map((milestone: any) => {
+        console.log('milestone==>',milestone);
+        const item = {
+          podId: podId,
+          title: milestone.title,
+          description: milestone.description,
+          amount: milestone.amount,
+          deadline: new Date(milestone.deadline),
+          status: MilestoneStatus.ACTIVE
+        }
+        console.log('item==>',item);
+        if(!milestone.id){ // 如果id 不存在则新增
+            return ctx.db.milestone.create({
+              data: item
+            });
+        }else{// 如果 ID 存在，则更新现有 milestone
+          return ctx.db.milestone.update({
+            where: { id: Number(milestone.id) },
+            data: item,
+          });
+        }
+        });
+        await Promise.all(milestonePromises);
+      }
+    
+      // 4. 发送通知
+      await this.sendReviewNotification(ctx, existingPod, versionData, isApproved);
+      
+      return isApproved ? { success: true } : { success: true };
+  }
+
+  private static async validateReviewPermissions(ctx: EditPodContext, podId: number) {
+    const pod = await ctx.db.pod.findUnique({
+      where: { id: podId },
+      include: { grantsPool: true, milestones:true },
+    });
+
+    if (!pod) {
+      throw new Error("Pod不存在");
+    }
+
+    if (pod.grantsPool.ownerId !== ctx.user.id) {
+      throw new Error("没有权限审核此Pod版本");
+    }
+
+    return pod;
+  }
+
+  private static async sendReviewNotification(ctx: EditPodContext, existingPod: any, versionData: any, isApproved: boolean) {
+    const title = isApproved ? "Pod版本审核通过" : "Pod 版本变更被拒绝";
+    const content = isApproved 
+      ? `您的Pod "${versionData.title}" 版本已审核通过`
+      : `您的 ${formatDate(versionData.createdAt)} 提交的 Pod "${versionData.title}" 版本变更被拒绝`;
+    const action = isApproved ? 'version_approved' : 'version_rejected';
+
+    await NotificationService.createNotification({
+      type: NotificationType.POD_REVIEW,
+      senderId: ctx.user.id,
+      receiverId: existingPod.applicantId,
+      title,
+      content,
+      params: {
+        podId: existingPod.id,
+        action
       }
     });
   }

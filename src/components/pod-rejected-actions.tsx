@@ -10,7 +10,9 @@ import { toast } from "sonner";
 import useStore from "~/store";
 
 interface PodRejectedActionsProps {
-  pod: Pod;
+  pod: Pod & {
+    podTreasuryBalances: BigInt;
+  };
 }
 
 export default function PodRejectedActions({pod}: PodRejectedActionsProps) {
@@ -18,10 +20,11 @@ export default function PodRejectedActions({pod}: PodRejectedActionsProps) {
   const [confirmations, setConfirmations] = useState<string[]>([]);
 
   const {getTransactionDetail,executeSafeTransactionByHash} = useSafeWallet();
+  const refundSafeTransactionHash = (pod.safeTransactionHash as Record<string, string>)[`out_${Number(pod.podTreasuryBalances)}`];
 
   const getTxData = async () => {
-    if (pod.refundSafeTransactionHash) {
-      const transaction = await getTransactionDetail(pod.refundSafeTransactionHash);
+    if (refundSafeTransactionHash) {
+      const transaction = await getTransactionDetail(refundSafeTransactionHash);
       console.log('transaction==?',transaction);
       setConfirmations(transaction.confirmations?.map(item=>item.owner.toLowerCase()) || []);
     }
@@ -29,7 +32,7 @@ export default function PodRejectedActions({pod}: PodRejectedActionsProps) {
 
   useEffect(() => {
     getTxData()
-  }, [pod.refundSafeTransactionHash]);
+  }, [refundSafeTransactionHash]);
 
   // 只显示未确认的按钮
   const isConfirmed = useMemo(()=>{
@@ -38,8 +41,8 @@ export default function PodRejectedActions({pod}: PodRejectedActionsProps) {
   },[confirmations,userInfo]);
 
   const refund = async () => {
-    if (!pod.walletAddress || !pod.refundSafeTransactionHash) throw new Error('退款失败');
-    await executeSafeTransactionByHash(pod.walletAddress, pod.refundSafeTransactionHash);
+    if (!pod.walletAddress || !refundSafeTransactionHash) throw new Error('退款失败');
+    await executeSafeTransactionByHash(pod.walletAddress, refundSafeTransactionHash);
     toast.success('退款成功');
   }
 
@@ -63,7 +66,7 @@ export default function PodRejectedActions({pod}: PodRejectedActionsProps) {
                 }}
                 > 确认退款</AppBtn>
           }
-          <Link href={`https://app.safe.global/transactions/tx?safe=oeth:${pod.walletAddress}&id=multisig_${pod.walletAddress}_${pod.refundSafeTransactionHash}`} target="_blank">
+          <Link href={`https://app.safe.global/transactions/tx?safe=oeth:${pod.walletAddress}&id=multisig_${pod.walletAddress}_${refundSafeTransactionHash}`} target="_blank">
             <AppBtn btnProps={{color: "default", size: "sm", variant: "bordered"}}>
               <div className="flex gap-2">
                 <span>交易详情</span>

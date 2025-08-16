@@ -1,8 +1,9 @@
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { Input, Textarea, Button, DatePicker } from "@heroui/react";
-import { parseDate, CalendarDate } from "@internationalized/date";
+import { parseDate, CalendarDate, getLocalTimeZone, today } from "@internationalized/date";
 import CornerFrame from "~/components/corner-frame";
 import EdgeLine from "./edge-line";
+import { DEFAULT_MILESTONE_AMOUNTS, MAX_MILESTONE_COUNT } from "~/lib/config";
 
 interface Milestone {
   id: string;
@@ -15,18 +16,17 @@ interface Milestone {
 interface MilestoneSectionProps {
   milestones: Milestone[];
   onMilestonesChange: (milestones: Milestone[]) => void;
+  info?: React.ReactNode;
 }
 
-const PRESET_AMOUNTS = [100, 300, 500];
-
-const MilestoneSection = ({ milestones, onMilestonesChange }: MilestoneSectionProps) => {
+const MilestoneSection = ({ milestones, onMilestonesChange, info }: MilestoneSectionProps) => {
   const addMilestone = () => {
-    if (milestones.length >= 3) return;
+    if (milestones.length >= MAX_MILESTONE_COUNT) return;
     const newMilestone: Milestone = {
-      id: Date.now().toString(),
+      id: `${Date.now()}`,
       title: "",
       deadline: "",
-      amount: "",
+      amount: DEFAULT_MILESTONE_AMOUNTS.DEFAULT,
       description: ""
     };
     onMilestonesChange([...milestones, newMilestone]);
@@ -67,12 +67,22 @@ const MilestoneSection = ({ milestones, onMilestonesChange }: MilestoneSectionPr
     }
   };
 
+  const minDate = (index: number) => {
+    if (index === 0) {
+      return today(getLocalTimeZone()).add({ days: 1 });
+    }
+    const currentMilestone = milestones[index-1];
+    const currentDeadline = currentMilestone?.deadline ? parseDate(currentMilestone.deadline) : null;
+    return currentDeadline?.add({ days: 1 }) ?? today(getLocalTimeZone()).add({ days: 1 });
+  };
+
   return (
     <CornerFrame backgroundColor="var(--color-background)" color="gray">
-      <div className="flex items-center justify-between mb-6">
+      <div className="flex flex-col mb-6">
         <h2 className="flex items-center gap-2 text-xl">
           <span>Milestone Information</span>
         </h2>
+        <div>{info}</div>
       </div>
       <div className="space-y-8">
         {milestones.map((milestone, index) => (
@@ -107,6 +117,7 @@ const MilestoneSection = ({ milestones, onMilestonesChange }: MilestoneSectionPr
                 {/* Deadline */}
                 <DatePicker
                   label="Deadline"
+                  minValue={minDate(index)}
                   value={milestone.deadline ? parseDate(milestone.deadline.split("T")[0] ?? "") : null}
                   onChange={date => handleDateChange(milestone.id, date)}
                   showMonthAndYearPickers
@@ -115,7 +126,7 @@ const MilestoneSection = ({ milestones, onMilestonesChange }: MilestoneSectionPr
                 <Input
                 variant="bordered"
                   type="number"
-                  label="Amount (USDC)"
+                  label="Amount"
                   value={milestone.amount}
                   onChange={e => handleAmountChange(milestone.id, e.target.value)}
                   placeholder="Enter amount"
@@ -124,7 +135,7 @@ const MilestoneSection = ({ milestones, onMilestonesChange }: MilestoneSectionPr
                   step="0.0001"
                   endContent={
                     <div className="flex gap-2">
-                      {PRESET_AMOUNTS.map(amount => (
+                      {DEFAULT_MILESTONE_AMOUNTS.OPTIONS.map(amount => (
                         <button
                           key={amount}
                           type="button"
