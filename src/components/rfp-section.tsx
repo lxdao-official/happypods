@@ -35,7 +35,7 @@ const RFPSection = ({ rfps, onRfpsChange, isEdit = false, grantsPoolId }: RFPSec
 
   const removeRFP = async (id: string) => {
     if (rfps.length <= 1) {
-      toast.error("至少需要保留一个RFP");
+      toast.error("At least one RFP must be kept");
       return;
     }
 
@@ -47,10 +47,10 @@ const RFPSection = ({ rfps, onRfpsChange, isEdit = false, grantsPoolId }: RFPSec
           rfpId: parseInt(id),
           grantsPoolId: grantsPoolId,
         });
-        toast.success("RFP删除成功");
+        toast.success("RFP deleted successfully");
         onRfpsChange(rfps.filter(rfp => rfp.id !== id));
       } catch (error: any) {
-        toast.error(error.message || "删除RFP失败");
+        toast.error(error.message || "Failed to delete RFP");
       } finally {
         setDeletingRfpId(null);
       }
@@ -91,7 +91,7 @@ const RFPSection = ({ rfps, onRfpsChange, isEdit = false, grantsPoolId }: RFPSec
                   isLoading={deletingRfpId === rfp.id}
                   startContent={!deletingRfpId && <i className="ri-delete-bin-line"></i>}
                 >
-                  {deletingRfpId === rfp.id ? "删除中..." : "Remove"}
+                  {deletingRfpId === rfp.id ? "Deleting..." : "Remove"}
                 </Button>
               )}
             </div>

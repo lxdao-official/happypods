@@ -63,11 +63,11 @@ export default function EditPodPage() {
 
   const editPodMutation = api.pod.edit.useMutation({
     onSuccess: () => {
-      toast.success("Pod编辑提交成功，等待审核！");
+      toast.success("Pod edit submitted successfully, awaiting review!");
       router.push(`/pods/${podId}`);
     },
     onError: (error) => {
-      toast.error(`编辑失败: ${error.message}`);
+      toast.error(`Edit failed: ${error.message}`);
       setIsSubmitting(false);
     },
   });
@@ -127,7 +127,7 @@ export default function EditPodPage() {
     e.preventDefault();
     
     if (!formData.title || !formData.description) {
-      toast.error("请填写所有必需字段");
+      toast.error("Please fill in all required fields");
       return;
     }
 
@@ -136,7 +136,7 @@ export default function EditPodPage() {
       !milestone.title.trim() || !milestone.description.trim() || !milestone.amount || !milestone.deadline
     );
     if (hasInvalidMilestone) {
-      toast.error("请完整填写所有里程碑信息");
+      toast.error("Please fill in all milestone information completely");
       return;
     }
 
@@ -166,7 +166,7 @@ export default function EditPodPage() {
       });
     } catch {
       // 错误处理在mutation的onError中
-      toast.error('编辑失败，请重试');
+      toast.error('Edit failed, please try again');
     }
   };
 
@@ -186,7 +186,7 @@ export default function EditPodPage() {
         
         <div className="mb-8">
           <h1 className="text-3xl font-bold text-foreground">Edit Pod Project</h1>
-          <p className="mt-2 text-default-500">编辑您的Pod项目信息</p>
+          <p className="mt-2 text-default-500">Edit your Pod project information</p>
         </div>
 
         <form onSubmit={handleSubmit} className="space-y-6">
@@ -259,7 +259,7 @@ export default function EditPodPage() {
                 onPress: () => router.back()
               }}
             >
-              取消
+              Cancel
             </AppBtn>
             <AppBtn
               btnProps={{
@@ -270,7 +270,7 @@ export default function EditPodPage() {
                 size: "lg",
               }}
             >
-              提交编辑
+              Submit Edit
             </AppBtn>
           </div>
         </form>

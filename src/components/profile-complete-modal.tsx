@@ -20,17 +20,17 @@ export default function ProfileCompleteModal({
     <Modal isOpen={isOpen} onClose={onCloseModal} size="md" isDismissable={false}>
       <ModalContent>
         <ModalHeader className="text-xl font-bold">
-          提示
+          Tip
         </ModalHeader>
         <ModalBody>
-          <small>请先完善个人信息，让 Grants pool Moderator 更好的了解你!</small>
+          <small>Please complete your personal information first, so that the Grants Pool Moderator can better understand you!</small>
         </ModalBody>
         <ModalFooter>
           <Button variant="light" onPress={onCloseModal}>
-            稍后处理
+            Handle Later
           </Button>
           <Button color="success" onPress={onNavigateToProfile}>
-            立即完善
+            Complete Now
           </Button>
         </ModalFooter>
       </ModalContent>

@@ -67,10 +67,10 @@ export const parseSafeTransactionHash = async(hash: string, {from,to,amount}:{fr
     ){
       return result;
     }else{
-      throw new Error("交易数据不匹配！");
+      throw new Error("Transaction data does not match!");
     }
   }else{
-    throw new Error("TransactionHash无效");
+    throw new Error("Invalid TransactionHash");
   }
 };
 

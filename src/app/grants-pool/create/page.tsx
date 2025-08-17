@@ -203,7 +203,7 @@ export default function CreateGrantsPoolPage() {
                 minRows={4}
               />
 
-              {/* Chain Type - 只允许Optimism */}
+              {/* Chain Type - Optimism Only */}
               <Select
                 variant="bordered"
                 label="Treasury Chain Type"
@@ -241,7 +241,7 @@ export default function CreateGrantsPoolPage() {
             </div>
           </CornerFrame>
 
-          {/* RFP Information - 使用新组件 */}
+          {/* RFP Information - Using New Component */}
           <RFPSection 
             rfps={rfps}
             onRfpsChange={setRfps}
@@ -283,7 +283,7 @@ export default function CreateGrantsPoolPage() {
             </div>
           </CornerFrame>
 
-          {/* Related Links - 使用新组件 */}
+          {/* Related Links - Using New Component */}
           <RelatedLinksSection 
             links={{
               website: relatedLinks.website,

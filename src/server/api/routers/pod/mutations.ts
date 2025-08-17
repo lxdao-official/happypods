@@ -18,7 +18,7 @@ export const podMutations = {
       });
 
       if (!user?.name || !user?.email || !user?.description) {
-        throw new Error("请先完善个人信息");
+        throw new Error("Please complete your personal information first");
       }
 
       // 验证Grants Pool和RFP
@@ -28,7 +28,7 @@ export const podMutations = {
       });
 
       if (!grantsPool) {
-        throw new Error("Grants Pool不存在");
+        throw new Error("Grants Pool does not exist");
       }
 
       // 当前用户是否有其他正在审核中的pod
@@ -39,7 +39,7 @@ export const podMutations = {
         }
       });
       if (existingReviewingPod) {
-        throw new Error("您已有正在审核中的Pod，请等待审核完成后再创建新的Pod");
+        throw new Error("You already have a Pod under review. Please wait for the review to be completed before creating a new one.");
       }
 
       // 当前milestone的总额是否超过可用总额
@@ -50,13 +50,13 @@ export const podMutations = {
         tokenType: input.currency,
       });
       if(totalMilestoneAmount > Number(rawBalance)) {
-        throw new Error(`可用余额不足!`);
+        throw new Error(`Insufficient balance!`);
       }
       const { milestones, isCheck, ...podData } = input;
 
       // 创建前检查参数是否正确，正确才弹窗多签钱包创建
       if(isCheck) return true;
-      if(!ctx.user.id) throw new Error("用户不存在");
+      if(!ctx.user.id) throw new Error("User does not exist");
       // 创建Pod
       const pod = await ctx.db.pod.create({
         data: {
@@ -98,8 +98,8 @@ export const podMutations = {
         type: NotificationType.POD_REVIEW,
         senderId: pod.applicantId,
         receiverId: pod.grantsPool.ownerId,
-        title: `Pod审核通知`,
-        content: `${user?.name} 向您提交了 <${pod.title}> 的Pod，请及时审核!`,
+        title: `Pod Review Notification`,
+        content: `${user?.name} has submitted the <${pod.title}> Pod to you. Please review it in time!`,
         params: {
           podId: pod.id,
         }
@@ -118,17 +118,17 @@ export const podMutations = {
       });
 
       if (!existingPod) {
-        throw new Error("Pod不存在");
+        throw new Error("Pod does not exist");
       }
 
       // 检查当前用户是否是 Grants Pool 的拥有者
       if (existingPod.grantsPool.ownerId !== ctx.user.id) {
-        throw new Error("没有权限拒绝此Pod");
+        throw new Error("You do not have permission to reject this Pod");
       }
 
       // 检查Pod状态是否为REVIEWING
       if (existingPod.status !== "REVIEWING") {
-        throw new Error("只能拒绝处于审核中状态的Pod");
+        throw new Error("Only Pods in the reviewing state can be rejected");
       }
 
       // 更新Pod状态为REJECTED，并设置拒绝理由
@@ -164,17 +164,17 @@ export const podMutations = {
       });
 
       if (!pod) {
-        throw new Error("Pod不存在");
+        throw new Error("Pod does not exist");
       }
 
       // 检查当前用户是否是 Grants Pool 的拥有者
       if (pod.grantsPool.ownerId !== ctx.user.id) {
-        throw new Error("没有权限通过此Pod");
+        throw new Error("You do not have permission to approve this Pod");
       }
 
       // 检查Pod状态是否为REVIEWING
       if (pod.status !== PodStatus.REVIEWING) {
-        throw new Error("只能通过处于审核中状态的Pod");
+        throw new Error("Only Pods in the reviewing state can be approved");
       }
 
       // todo 检查建议id是否合法, 这部分删除，直接全部通过，金额处理统一在详情顶部组件处理
@@ -203,8 +203,8 @@ export const podMutations = {
         type: NotificationType.POD_REVIEW,
         senderId: ctx.user.id,
         receiverId: pod.applicantId,
-        title: `Pod审核通过`,
-        content: `您的 <${pod.title}> Pod审核已通过!`,
+        title: `Pod Approved`,
+        content: `Your <${pod.title}> Pod has been approved!`,
       });
 
       return updatedPod;

@@ -9,6 +9,7 @@ import GrantsPoolBalance from "./grants-pool-balance";
 import type { ChainType, GrantsPool, GrantsPoolTokens, Rfps } from "@prisma/client";
 import useStore from "~/store";
 import { GpModInfo } from "./gp-mod-info";
+import ExpandableText from "./expandable-text";
 
 
 const GrantspoolItem = ({ grantsPool, className = "", children, type = "list" }: {
@@ -46,12 +47,14 @@ const GrantspoolItem = ({ grantsPool, className = "", children, type = "list" }:
     titleBg="#02BC59"
     title={
       <div className="flex items-center justify-between">
-        <div className="flex items-center gap-2 text-2xl">
+        <div className="flex items-center flex-1 gap-2 overflow-hidden text-2xl text-ellipsis whitespace-nowrap">
           <img 
             src={avatarSrc} alt="avatar" 
             className="w-10 h-10 bg-white border-black rounded-full border-1" 
           />
+          
           <b>{grantsPool.name}</b>
+
         </div>
         <div className="flex items-center space-x-4">
           {/* links 渲染 */}
@@ -92,7 +95,7 @@ const GrantspoolItem = ({ grantsPool, className = "", children, type = "list" }:
         </div>
         {/* 描述 */}
         <div className="md:col-span-2">
-          <p className="leading-relaxed text-gray-700">{grantsPool.description}</p>
+        <ExpandableText text={grantsPool.description} maxLines={3} showExpandButton={type === "detail"} />
         </div>
         {/* 资金池余额 */}
         {type==='detail' && (

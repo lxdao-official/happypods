@@ -42,7 +42,7 @@ export default function ApplicantInfoModal({
 
       <Modal isOpen={isOpen} onClose={handleClose} size="md">
         <ModalContent>
-          <ModalHeader className="text-xl font-bold">申请人信息</ModalHeader>
+          <ModalHeader className="text-xl font-bold">Applicant Information</ModalHeader>
           <ModalBody className="pb-6">
             <div className="space-y-4">
               {/* 头像和姓名 */}
@@ -50,7 +50,7 @@ export default function ApplicantInfoModal({
                 {applicant.avatar ? (
                   <img
                     src={applicant.avatar}
-                    alt={applicant.name || "用户头像"}
+                    alt={applicant.name || "User Avatar"}
                     className="object-cover w-16 h-16 rounded-full"
                   />
                 ) : (
@@ -65,25 +65,25 @@ export default function ApplicantInfoModal({
                 {[
                   {
                     key: "name",
-                    label: "名称",
+                    label: "Name",
                     value: applicant.name,
                     show: true,
                   },
                   {
                     key: "walletAddress",
-                    label: "钱包",
+                    label: "Wallet",
                     value: applicant.walletAddress,
                     show: true,
                   },
                   {
                     key: "email",
-                    label: "邮箱",
+                    label: "Email",
                     value: applicant.email,
                     show: !!applicant.email,
                   },
                   {
                     key: "description",
-                    label: "简介",
+                    label: "Bio",
                     value: applicant.description,
                     show: !!applicant.description,
                   },

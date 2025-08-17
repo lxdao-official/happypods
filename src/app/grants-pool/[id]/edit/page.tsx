@@ -129,19 +129,19 @@ export default function EditGrantsPoolPage() {
     
     // 验证基本信息
     if (!formData.avatar || !formData.name || !formData.description) {
-      toast.error("请填写头像URL、Grants Pool名称和描述");
+      toast.error("Please fill in the avatar URL, Grants Pool name, and description");
       return;
     }
 
     // 验证管理员信息
     if (!formData.modName || !formData.modEmail || !formData.modTelegram) {
-      toast.error("请填写完整的管理员信息（姓名、邮箱、Telegram）");
+      toast.error("Please fill in the complete administrator information (Name, Email, Telegram)");
       return;
     }
 
     // 验证RFP信息
     if (rfps.length === 0) {
-      toast.error("至少需要一个RFP");
+      toast.error("At least one RFP is required");
       return;
     }
 
@@ -149,11 +149,11 @@ export default function EditGrantsPoolPage() {
     for (let i = 0; i < rfps.length; i++) {
       const rfp = rfps[i];
       if (!rfp?.title.trim()) {
-        toast.error(`请填写RFP #${i + 1}的标题`);
+        toast.error(`Please fill in the title for RFP #${i + 1}`);
         return;
       }
       if (!rfp?.description.trim()) {
-        toast.error(`请填写RFP #${i + 1}的描述`);
+        toast.error(`Please fill in the description for RFP #${i + 1}`);
         return;
       }
     }
@@ -197,11 +197,11 @@ export default function EditGrantsPoolPage() {
         modInfo,
       });
 
-      toast.success("Grants Pool更新成功！");
+      toast.success("Grants Pool updated successfully!");
       router.back();
     } catch (error: any) {
       console.error("Failed to update Grants Pool:", error);
-      toast.error(error.message || "更新失败，请重试");
+      toast.error(error.message || "Update failed, please try again");
     } finally {
       setIsSubmitting(false);
     }
@@ -225,41 +225,41 @@ export default function EditGrantsPoolPage() {
     <div className="container px-4 py-8 mx-auto">
       <div className="max-w-4xl mx-auto">
         <div className="mb-8">
-          <h1 className="text-3xl font-bold text-foreground">编辑 Grants Pool</h1>
-          <p className="mt-2 text-default-500">修改以下信息来更新您的 Grants Pool</p>
+          <h1 className="text-3xl font-bold text-foreground">Edit Grants Pool</h1>
+          <p className="mt-2 text-default-500">Modify the following information to update your Grants Pool</p>
         </div>
 
         <form onSubmit={handleSubmit} className="space-y-6">
           {/* General Information */}
           <CornerFrame backgroundColor="var(--color-background)" color="gray">
-            <h2 className="mb-6 text-xl">基本信息</h2>
+            <h2 className="mb-6 text-xl">General Information</h2>
             <div className="space-y-6">
               {/* Avatar */}
               <AvatarInput
                 value={formData.avatar}
                 onChange={(value) => handleInputChange("avatar", value)}
                 label="Grants Pool Avatar URL"
-                description="输入 Grants Pool 头像图片的 URL"
+                description="Enter the URL of the Grants Pool avatar image"
               />
 
               {/* Name */}
               <Input
                 variant="bordered"
                 type="text"
-                label="Grants Pool 名称"
+                label="Grants Pool Name"
                 value={formData.name}
                 onChange={(e) => handleInputChange("name", e.target.value)}
-                placeholder="输入 Grants Pool 的名称"
+                placeholder="Enter the name of the Grants Pool"
                 isRequired
               />
 
               {/* Description */}
               <Textarea
                 variant="bordered"
-                label="描述"
+                label="Description"
                 value={formData.description}
                 onChange={(e) => handleInputChange("description", e.target.value)}
-                placeholder="描述您的 Grants Pool 的目标、愿景和资助方向"
+                placeholder="Describe the goals, vision, and funding direction of your Grants Pool"
                 isRequired
                 minRows={4}
               />
@@ -268,8 +268,8 @@ export default function EditGrantsPoolPage() {
               <TagsSelect
                 selectedTags={selectedTags}
                 onTagsChange={setSelectedTags}
-                placeholder="选择标签"
-                description="选择相关的标签来描述您的 Grants Pool"
+                placeholder="Select Tags"
+                description="Select relevant tags to describe your Grants Pool"
               />
             </div>
           </CornerFrame>
@@ -284,22 +284,22 @@ export default function EditGrantsPoolPage() {
 
           {/* Moderator Information */}
           <CornerFrame backgroundColor="var(--color-background)" color="gray">
-            <h2 className="mb-6 text-xl">管理员信息</h2>
+            <h2 className="mb-6 text-xl">Administrator Information</h2>
             <div className="space-y-6">
               <Input
                 variant="bordered"
                 type="text"
-                label="管理员姓名"
+                label="Administrator Name"
                 value={formData.modName}
                 onChange={(e) => handleInputChange("modName", e.target.value)}
-                placeholder="管理员姓名"
+                placeholder="Administrator Name"
                 isRequired
               />
 
               <Input
                 variant="bordered"
                 type="email"
-                label="管理员邮箱"
+                label="Administrator Email"
                 value={formData.modEmail}
                 onChange={(e) => handleInputChange("modEmail", e.target.value)}
                 placeholder="admin@example.com"
@@ -309,7 +309,7 @@ export default function EditGrantsPoolPage() {
               <Input
                 variant="bordered"
                 type="text"
-                label="管理员 Telegram"
+                label="Administrator Telegram"
                 value={formData.modTelegram}
                 onChange={(e) => handleInputChange("modTelegram", e.target.value)}
                 placeholder="@username"
@@ -347,7 +347,7 @@ export default function EditGrantsPoolPage() {
                 size: "lg",
               }}
             >
-              取消
+              Cancel
             </AppBtn>
             <AppBtn
               btnProps={{
@@ -358,7 +358,7 @@ export default function EditGrantsPoolPage() {
                 size: "lg",
               }}
             >
-              {isSubmitting ? "更新中..." : "更新"}
+              {isSubmitting ? "Updating..." : "Update"}
             </AppBtn>
           </div>
         </form>

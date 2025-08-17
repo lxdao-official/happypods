@@ -117,7 +117,7 @@ export default function CreatePodPage() {
     e.preventDefault();
     
     if (!formData.grantsPoolId || !formData.title || !formData.description || !formData.currency) {
-      toast.error("请填写所有必需字段");
+      toast.error("Please fill in all required fields");
       return;
     }
 
@@ -126,13 +126,13 @@ export default function CreatePodPage() {
       !milestone.title.trim() || !milestone.description.trim() || !milestone.amount || !milestone.deadline
     );
     if (hasInvalidMilestone) {
-      toast.error("请完整填写所有里程碑信息");
+      toast.error("Please fill in all milestone information completely");
       return;
     }
 
     // 验证里程碑总额
     if (!isBalanceSufficient) {
-      toast.error(`里程碑总额 ${totalMilestoneAmount.toFixed(6)} ${formData.currency} 超过了可用资金 ${availableBalance.toFixed(6)} ${formData.currency}`);
+      toast.error(`Total milestone amount ${totalMilestoneAmount.toFixed(6)} ${formData.currency} exceeds available funds ${availableBalance.toFixed(6)} ${formData.currency}`);
       return;
     }
 
@@ -173,17 +173,17 @@ export default function CreatePodPage() {
         });
       } catch (error) {
         console.log('error===>',error);
-        toast.error("创建失败，请检查参数!");
+        toast.error("Creation failed, please check parameters!");
         return false;
       }
 
       if(isCheck) return true;
 
-      toast.success("Pod创建成功！");
+      toast.success("Pod created successfully!");
       router.push("/pods");
     } catch (error) {
       if(isCheck) return false;
-      toast.error("创建失败，请重试");
+      toast.error("Creation failed, please try again");
     } finally {
       setIsSubmitting(false);
     }
@@ -350,7 +350,7 @@ export default function CreatePodPage() {
         {/* Safe 创建模态框 */}
         <CreateSafeModal
           isOpen={showSafeModal}
-          description="Pod 资金将由 平台Mod + GP创建者 + 当前用户 三方共同管理!"
+          description="Pod funds will be jointly managed by Platform Mod + GP Creator + Current User!"
           onClose={() => setShowSafeModal(false)}
           onConfirm={handleSafeCreated}
           predefinedOwners={predefinedOwners}

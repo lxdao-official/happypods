@@ -5,8 +5,6 @@ import AppBtn from "~/components/app-btn";
 import CornerFrame from "~/components/corner-frame";
 import { DataDisplayGrid } from "~/components/data-display-grid";
 
-
-
 export default function PodsPage() {
   return (
     <div className="p-6 ">

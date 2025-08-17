@@ -15,7 +15,7 @@ export const grantsPoolMutations = {
       });
 
       if (existingGrantsPool) {
-        throw new Error("您已经创建了一个 GrantsPool，无法再创建其他 GrantsPool");
+        throw new Error("You have already created a GrantsPool and cannot create another one.");
       }
 
       const { rfps, ...poolData } = input;
@@ -67,11 +67,11 @@ export const grantsPoolMutations = {
       });
 
       if (!existingGrantsPool) {
-        throw new Error("GrantsPool不存在");
+        throw new Error("GrantsPool does not exist");
       }
 
       if (existingGrantsPool.ownerId !== ctx.user.id) {
-        throw new Error("没有权限修改此GrantsPool");
+        throw new Error("You do not have permission to modify this GrantsPool");
       }
 
       // 更新 GrantsPool 基本信息
@@ -149,17 +149,17 @@ export const grantsPoolMutations = {
       });
 
       if (!existingGrantsPool) {
-        throw new Error("GrantsPool不存在");
+        throw new Error("GrantsPool does not exist");
       }
 
       if (
         existingGrantsPool.ownerId !== ctx.user.id
       ) {
-        throw new Error("没有权限删除此GrantsPool");
+        throw new Error("You do not have permission to delete this GrantsPool");
       }
 
       if (existingGrantsPool._count.pods > 0) {
-        throw new Error("该GrantsPool下还有Pod，无法删除");
+        throw new Error("There are still Pods under this GrantsPool, so it cannot be deleted");
       }
 
       await ctx.db.grantsPool.delete({
@@ -182,13 +182,13 @@ export const grantsPoolMutations = {
       });
 
       if (!grantsPool) {
-        throw new Error("GrantsPool不存在");
+        throw new Error("GrantsPool does not exist");
       }
 
       if (
         grantsPool.ownerId !== ctx.user.id
       ) {
-        throw new Error("没有权限删除此RFP");
+        throw new Error("You do not have permission to delete this RFP");
       }
 
       // 检查 RFP 是否存在且属于指定的 GrantsPool
@@ -201,7 +201,7 @@ export const grantsPoolMutations = {
       });
 
       if (!rfp) {
-        throw new Error("RFP不存在或已被删除");
+        throw new Error("RFP does not exist or has been deleted");
       }
 
       // 逻辑删除 RFP

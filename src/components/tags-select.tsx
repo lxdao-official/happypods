@@ -1,5 +1,6 @@
 import { Select, SelectItem } from "@heroui/react";
 import { DEFAULT_TAGS } from "~/lib/config";
+import { toast } from "sonner";
 
 interface TagsSelectProps {
   selectedTags: string[];
@@ -15,7 +16,6 @@ export default function TagsSelect({
   selectedTags,
   onTagsChange,
   label = "Tags",
-  placeholder = "Select tags",
   isRequired = false,
   availableTags = DEFAULT_TAGS
 }: TagsSelectProps) {
@@ -29,9 +29,15 @@ export default function TagsSelect({
         selectedKeys={new Set(selectedTags)}
         onSelectionChange={(keys) => {
           const newTags = Array.from(keys) as string[];
-          onTagsChange(newTags);
+          // 限制最多选择3个标签
+          if (newTags.length <= 3) {
+            onTagsChange(newTags);
+          } else {
+            toast.warning("You can only select up to 3 tags");
+          }
         }}
         isRequired={isRequired}
+        description={`Selected ${selectedTags.length}/3 tags`}
       >
         {availableTags.map((tag) => (
           <SelectItem key={tag}>

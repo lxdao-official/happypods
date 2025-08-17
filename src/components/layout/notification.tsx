@@ -50,10 +50,10 @@ export function NotificationDrawer() {
             <>
               <DrawerHeader className="flex flex-col gap-1">
                 <div className="flex items-center w-full gap-4">
-                  <h2 className="text-lg font-semibold">消息通知</h2>
+                  <h2 className="text-lg font-semibold">Notifications</h2>
                   {
                     noReadNotification > 0 && <span className="text-sm text-default-500">
-                      {noReadNotification} 条未读
+                      {noReadNotification} unread
                     </span>
                   }
                 </div>
@@ -106,7 +106,7 @@ export function NotificationDrawer() {
               </DrawerBody>
               {
                 noReadNotification > 0 && <DrawerFooter>
-                  <Button color="default" className="w-full" onPress={readAll}>全部已读</Button>
+                  <Button color="default" className="w-full" onPress={readAll}>Mark All as Read</Button>
                 </DrawerFooter>
               }
             </>

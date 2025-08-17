@@ -90,29 +90,29 @@ export default function ApprovePodModal({
       hideCloseButton={isTransferring || isApproving}
     >
       <ModalContent>
-        <ModalHeader className="flex flex-col gap-1">您即将通过 【${podTitle}】 Pod 的申请</ModalHeader>
+        <ModalHeader className="flex flex-col gap-1">You are about to approve the application for the 【${podTitle}】 Pod</ModalHeader>
         <ModalBody>
           <div className="space-y-6">
             <div>
               <p className="text-sm text-green-600">
-                将 Pod 的申请资金 + 平台手续费，通过GP国库转入 Pod 多签国库后，即可激活当前 Pod。
+                After transferring the Pod's application funds + platform fees from the GP treasury to the Pod multi-sig treasury, the current Pod can be activated.
               </p>
             </div>
             
             {/* 费用明细 */}
             <Card className="border border-gray-800">
               <CardBody className="space-y-3 overflow-hidden">
-                <h4 className="text-sm font-semibold">费用明细</h4>
+                <h4 className="text-sm font-semibold">Fee Details</h4>
                 <div className="space-y-4">
                   <div className="flex justify-between">
-                    <span className="text-sm">里程碑总额</span>
+                    <span className="text-sm">Total Milestone Amount</span>
                     <span className="font-mono text-sm">
                       {formatToken(financialInfo.appliedAmount)} {currency}
                     </span>
                   </div>
                   <div className="flex justify-between">
                     <span className="text-sm">
-                      平台手续费 ({financialInfo.feeRate}%)
+                      Platform Fee ({financialInfo.feeRate}%)
                     </span>
                     <span className="font-mono text-sm text-orange-600">
                       {formatToken(financialInfo.fee)} {currency}
@@ -120,7 +120,7 @@ export default function ApprovePodModal({
                   </div>
                   <div className="flex justify-between">
                     <span className="text-sm">
-                      GP 多签国库 (转出)
+                      GP Multi-sig Treasury (Transfer out)
                     </span>
                     <span className="font-mono text-sm break-all">
                       {treasuryWallet}
@@ -131,7 +131,7 @@ export default function ApprovePodModal({
 
                   <div className="flex justify-between">
                     <span className="text-sm">
-                      Pod 多签国库 (接收)
+                      Pod Multi-sig Treasury (Receive)
                     </span>
                     <span className="font-mono text-sm break-all">
                       {walletAddress}
@@ -139,7 +139,7 @@ export default function ApprovePodModal({
                   </div>
                   <Divider />
                   <div className="flex justify-between font-semibold">
-                    <span className="text-base">总计转账金额</span>
+                    <span className="text-base">Total Transfer Amount</span>
                     <span className="font-mono text-base text-green-600">
                       {formatToken(financialInfo.totalWithFee)} {currency}
                     </span>
@@ -157,7 +157,7 @@ export default function ApprovePodModal({
             onPress={handleClose}
             isDisabled={isTransferring || isApproving}
           >
-            取消
+            Cancel
           </Button>
           <Button 
             color="success" 
@@ -165,7 +165,7 @@ export default function ApprovePodModal({
             isLoading={isTransferring || isApproving}
             isDisabled={isTransferring || isApproving || appliedAmount === 0}
           >
-            {isTransferring || isApproving ? "loading..." : "确认通过，并发起多签转账"}
+            {isTransferring || isApproving ? "loading..." : "Confirm Approval and Initiate Multi-sig Transfer"}
           </Button>
         </ModalFooter>
       </ModalContent>

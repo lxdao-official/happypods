@@ -6,8 +6,8 @@ export const createNotificationSchema = z.object({
   type: z.enum(Object.values(NotificationType) as [string, ...string[]]),
   senderId: z.number(),
   receiverId: z.number(),
-  title: z.string(),
-  content: z.string(),
+  title: z.string().min(1, "标题不能为空").max(100),
+  content: z.string().min(1, "内容不能为空").max(1000),
   params: z.record(z.any()).optional(),
   metadata: z.record(z.any()).optional(),
 });

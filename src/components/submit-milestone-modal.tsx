@@ -27,12 +27,12 @@ export default function SubmitMilestoneModal({ milestoneId }: SubmitMilestoneMod
       setLinks({});
       onClose();
       await delay_s(2000);
-      toast.success("Milestone交付提交成功！");
+      toast.success("Milestone delivery submitted successfully!");
       window.location.reload();
     },
     onError: (error) => {
-      console.error("提交失败:", error);  
-      toast.error(`提交失败: ${error.message}`);
+      console.error("Submission failed:", error);  
+      toast.error(`Submission failed: ${error.message}`);
     },
     onSettled: () => {
       setIsSubmitting(false);
@@ -41,7 +41,7 @@ export default function SubmitMilestoneModal({ milestoneId }: SubmitMilestoneMod
 
   const handleSubmit = async () => {
     if (!description.trim()) {
-      toast.error("请输入milestone描述");
+      toast.error("Please enter a milestone description");
       return;
     }
 
@@ -70,8 +70,8 @@ export default function SubmitMilestoneModal({ milestoneId }: SubmitMilestoneMod
       });
     } catch (error) {
       // 错误处理在mutation的onError中
-      console.error("提交失败:", error);  
-      toast.error(`提交失败,请检查后重试!`);
+      console.error("Submission failed:", error);  
+      toast.error(`Submission failed, please check and try again!`);
     } finally {
       setIsSubmitting(false);
     }
@@ -91,7 +91,7 @@ export default function SubmitMilestoneModal({ milestoneId }: SubmitMilestoneMod
         variant="flat"
         onPress={onOpen}
       >
-      提交交付
+      Submit Delivery
       </Button>
       
       <Modal 
@@ -103,7 +103,7 @@ export default function SubmitMilestoneModal({ milestoneId }: SubmitMilestoneMod
       >
         <ModalContent>
           <ModalHeader className="text-xl font-bold">
-            提交 Milestone 交付
+            Submit Milestone Delivery
           </ModalHeader>
           <ModalBody>
             <div className="space-y-6">
@@ -111,8 +111,8 @@ export default function SubmitMilestoneModal({ milestoneId }: SubmitMilestoneMod
               <div>
                 <Textarea
                   variant="bordered"
-                  label="Milestone交付内容"
-                  placeholder="详细描述您在此里程碑中完成的工作，包括交付物、进度和任何相关细节..."
+                  label="Milestone Delivery Content"
+                  placeholder="Describe in detail the work you have completed in this milestone, including deliverables, progress, and any relevant details..."
                   value={description}
                   onChange={(e) => setDescription(e.target.value)}
                   minRows={6}
@@ -137,14 +137,14 @@ export default function SubmitMilestoneModal({ milestoneId }: SubmitMilestoneMod
               onPress={handleClose}
               isDisabled={isSubmitting}
             >
-              取消
+              Cancel
             </Button>
             <Button 
               color="success" 
               onPress={handleSubmit}
               isLoading={isSubmitting}
             >
-              {isSubmitting ? "loading..." : "提交交付"}
+              {isSubmitting ? "loading..." : "Submit Delivery"}
             </Button>
           </ModalFooter>
         </ModalContent>

@@ -37,14 +37,14 @@ export default function ReviewMilestoneModal({ milestone, podDetail, onReview }:
       onClose();
       // 调用父组件的回调
       onReview?.({ action: reviewAction, comment: comment.trim() });
-      const actionText = reviewAction === 'approve' ? '通过' : '拒绝';
-      toast.success(`Milestone审核${actionText}成功！`);
+      const actionText = reviewAction === 'approve' ? 'Approve' : 'Reject';
+      toast.success(`Milestone review ${actionText}d successfully!`);
       await delay_s(2000);
       window.location.reload();
     },
     onError: (error) => {
-      console.error("审核失败:", error);
-      toast.error(`审核失败: ${error.message}`);  
+      console.error("Review failed:", error);
+      toast.error(`Review failed: ${error.message}`);  
     },
     onSettled: () => {
       setIsSubmitting(false);
@@ -59,7 +59,7 @@ export default function ReviewMilestoneModal({ milestone, podDetail, onReview }:
 
   const handleSubmit = async () => {
     if (!comment.trim()) {
-      toast.error("请输入评价内容");
+      toast.error("Please enter your review");
       return;
     }
 
@@ -133,7 +133,7 @@ export default function ReviewMilestoneModal({ milestone, podDetail, onReview }:
             variant="flat"
             onPress={() => handleOpenModal('reject')}
           >
-            拒绝
+            Reject
           </Button>
           <Button 
             size="sm" 
@@ -141,7 +141,7 @@ export default function ReviewMilestoneModal({ milestone, podDetail, onReview }:
             variant="flat"
             onPress={() => handleOpenModal('approve')}
           >
-            通过
+            Approve
           </Button>
         </div>
       )}
@@ -155,17 +155,17 @@ export default function ReviewMilestoneModal({ milestone, podDetail, onReview }:
       >
         <ModalContent>
           <ModalHeader className="text-xl font-bold">
-            {isApproved ? '通过 Milestone' : '拒绝 Milestone'}
+            {isApproved ? 'Approve Milestone' : 'Reject Milestone'}
           </ModalHeader>
           <ModalBody>
             <div className="space-y-4">
               <Textarea
                 variant="bordered"
-                label={isApproved ? '通过评价' : '拒绝理由'}
+                label={isApproved ? 'Approve Review' : 'Reason for Rejection'}
                 placeholder={
                   isApproved 
-                    ? '请提供对完成工作的积极反馈...'
-                    : '请说明拒绝的原因和需要改进的地方...'
+                    ? 'Please provide positive feedback on the completed work...'
+                    : 'Please explain the reason for rejection and areas for improvement...'
                 }
                 value={comment}
                 onChange={(e) => setComment(e.target.value)}
@@ -175,8 +175,8 @@ export default function ReviewMilestoneModal({ milestone, podDetail, onReview }:
               />
 
               <div className="text-xs text-secondary">
-                {isApproved && '通过操作,将自动支付当前 Milestone 金额与平台手续费!'}
-                {isLastReject && '这是最后一次拒绝机会,发起拒绝将关闭 Pod,并退回所有未使用的资金至 GP 多签国库, 请谨慎操作!'}
+                {isApproved && 'Approving will automatically pay the current Milestone amount and platform fees!'}
+                {isLastReject && 'This is the last chance to reject. Rejecting will close the Pod and return all unused funds to the GP multi-sig treasury. Please proceed with caution!'}
               </div>
 
             </div>
@@ -188,7 +188,7 @@ export default function ReviewMilestoneModal({ milestone, podDetail, onReview }:
               onPress={handleClose}
               isDisabled={isSubmitting}
             >
-              取消
+              Cancel
             </Button>
             <Button 
               color={isApproved ? 'success' : 'danger'}
@@ -196,10 +196,10 @@ export default function ReviewMilestoneModal({ milestone, podDetail, onReview }:
               isLoading={isSubmitting}
             >
               {isSubmitting 
-                ? '提交中...' 
+                ? 'Submitting...' 
                 : isApproved 
-                  ? '确认通过' 
-                  : '确认拒绝'
+                  ? 'Confirm Approve' 
+                  : 'Confirm Reject'
               }
             </Button>
           </ModalFooter>

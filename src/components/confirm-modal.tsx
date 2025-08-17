@@ -19,10 +19,10 @@ export default function ConfirmModal({
   isOpen,
   onClose,
   onConfirm,
-  title = "确认操作",
-  content = "您确定要执行此操作吗？",
-  confirmText = "确认",
-  cancelText = "取消",
+  title = "Confirm Action",
+  content = "Are you sure you want to perform this action?",
+  confirmText = "Confirm",
+  cancelText = "Cancel",
   confirmColor = "danger",
   isLoading = false
 }: ConfirmModalProps) {

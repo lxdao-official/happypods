@@ -1,6 +1,6 @@
-import { Chip, Tooltip } from "@heroui/react";
-import { m } from "framer-motion";
+import { Tooltip } from "@heroui/react";
 import { formatDate } from "~/lib/utils";
+import { usePathname } from "next/navigation";
 
 interface ProgressMilestoneBarProps {
   milestones: {
@@ -10,128 +10,212 @@ interface ProgressMilestoneBarProps {
     deadline: Date;
     status: string;
   }[]
+  children?: React.ReactNode;
 }
 
-export default function ProgressMilestoneBar({ milestones = [] }: ProgressMilestoneBarProps) {
+interface ProgressSegment {
+  name: string;
+  startTime: number;
+  endTime: number;
+  duration: number;
+  days: number;
+  milestone: {
+    name: string;
+    amount: number;
+    createdAt: Date;
+    deadline: Date;
+    status: string;
+  } | null;
+}
+
+export default function ProgressMilestoneBar({ milestones = [], children }: ProgressMilestoneBarProps) {
+  const pathname = usePathname();
   milestones = milestones.sort((a, b) => new Date(a.deadline).getTime() - new Date(b.deadline).getTime());
-  // 计算时间进度
-  const calculateTimeProgress = () => {
-    if (milestones.length === 0) return 0;
+  
+    // 计算时间段和进度段
+  const calculateProgressSegments = () => {
+    if (milestones.length === 0) return [];
     
-    const firstMilestone = milestones[0];
-    const lastMilestone = milestones[milestones.length - 1];
+    const segments = [];
     
-    if (!firstMilestone?.createdAt || !lastMilestone?.deadline) return 0;
+    // 添加里程碑段
+    for (let i = 0; i < milestones.length; i++) {
+      const milestone = milestones[i]!;
+      const nextMilestone = milestones[i + 1];
+      
+      // 第一个里程碑从项目创建时间开始
+      const startTime = i === 0 
+        ? new Date(milestone.createdAt).getTime()
+        : new Date(milestone.deadline).getTime();
+      
+      // 最后一个里程碑的结束时间
+      const endTime = nextMilestone 
+        ? new Date(nextMilestone.deadline).getTime()
+        : new Date(milestone.deadline).getTime() + (24 * 60 * 60 * 1000); // 如果没有下一个里程碑，加一天
+      
+      const segmentDuration = endTime - startTime;
+      const days = Math.ceil(segmentDuration / (24 * 60 * 60 * 1000));
+      
+      segments.push({
+        name: milestone.name,
+        startTime,
+        endTime,
+        duration: segmentDuration,
+        days,
+        milestone
+      });
+    }
     
-    const startTime = new Date(firstMilestone.createdAt).getTime();
-    const endTime = new Date(lastMilestone.deadline).getTime()+(3600*24*1000);
-    const currentTime = Date.now();
-    
-    // 计算时间进度百分比
-    const totalDuration = endTime - startTime;
-    if (totalDuration <= 0) return 0;
-    
-    const elapsed = currentTime - startTime;
-    const progress = Math.min(100, Math.max(0, (elapsed / totalDuration) * 100));
-    
-    return progress;
+    return segments;
   };
 
-  const progress = calculateTimeProgress();
+  const segments = calculateProgressSegments();
+  
+  // 计算总时间跨度
+  const getTotalDuration = () => {
+    if (segments.length === 0) return 0;
+    const firstSegment = segments[0]!;
+    const lastSegment = segments[segments.length - 1]!;
+    return lastSegment.endTime - firstSegment.startTime;
+  };
+
+  const totalDuration = getTotalDuration();
+
+  // 计算每个段的宽度百分比
+  const getSegmentWidth = (segment: ProgressSegment) => {
+    if (totalDuration === 0) return 0;
+    return (segment.duration / totalDuration) * 100;
+  };
+
+  // 十六进制颜色数组
+  const colors = [
+    "#3B82F6", // 蓝色
+    "#10B981", // 绿色
+    "#8B5CF6", // 紫色
+    "#F59E0B", // 橙色
+    "#EC4899", // 粉色
+    "#EF4444", // 红色
+    "#06B6D4", // 青色
+    "#84CC16", // 青绿色
+    "#F97316", // 橙红色
+    "#A855F7", // 紫罗兰
+  ];
+
+  // 获取段的背景颜色
+  const getSegmentColor = (index: number) => {
+    return colors[index % colors.length];
+  };
+
+  // 是否是详情
+  const isDetail = pathname.includes('/pods/');
+
+  // 计算当前时间在进度条中的位置
+  const getCurrentTimePosition = () => {
+    if (segments.length === 0) return 0;
+    
+    const currentTime = Date.now();
+    const firstSegment = segments[0]!;
+    const lastSegment = segments[segments.length - 1]!;
+    
+    const totalStartTime = firstSegment.startTime;
+    const totalEndTime = lastSegment.endTime;
+    
+    if (currentTime < totalStartTime) return 0;
+    if (currentTime > totalEndTime) return 100;
+    
+    const totalDuration = totalEndTime - totalStartTime;
+    const elapsed = currentTime - totalStartTime;
+    
+    return (elapsed / totalDuration) * 100;
+  };
+
+  const currentPosition = getCurrentTimePosition();
 
   return (
-    <div>
-      {/* 进度条 */}
-      <div className="mb-2">
-        <div className="w-full h-[10px] border border-black relative bg-white">
-          
-          {/* 进度填充 */}
-          <div 
-            className="absolute top-0 left-0 h-full transition-all duration-300 bg-black"
-            style={{ 
-              width: `${progress}%`,
-              background: "url(/progressbg.png) left center repeat-x",
-              backgroundSize: "10px 100%",
-              zIndex: 1,
-            }}
-          />
-        </div>
-      </div>
+    <div className={`mb-6 space-y-2 rounded-md ${isDetail ? '' : 'p-2 bg-white border border-black'}`}>
 
-      {/* 里程碑标签和金额 */}
-      <div className="relative h-8 mt-2 text-xs progress-bar">
-        {/* 创建时间节点（起始点） */}
-        {milestones.length > 0 && milestones[0]?.createdAt && (
-          <div className="absolute flex flex-col items-start min-w-[60px] hover:z-10" style={{ left: '0%' }}>
-            <Tooltip 
-              color="foreground"
-              content={
-                <div className="flex flex-col gap-1 p-2 text-center">
-                  <small>Project Created</small>
-                  <small>Created: {formatDate(milestones[0].createdAt, 'MM.DD')}</small>
-                </div>
-              } 
-              placement="top" 
-              showArrow={true}
+      {children && children}
+      
+      {/* 进度条容器 */}
+      <div className="relative">
+        {/* 进度条 */}
+        <div className={`relative flex w-full rounded-sm overflow-visible bg-gray-200 ${isDetail ? 'mb-2 h-4' : 'h-2 mb-1'}`}>
+        {segments.map((segment, index) => (
+          <Tooltip
+            key={index}
+            color="foreground"
+            content={
+              <div className="flex flex-col gap-1 p-2 text-left">
+                <b className="font-bold">{segment.name}</b>
+                <small>Duration: {segment.days} days</small>
+                <small>Start: {formatDate(new Date(segment.startTime))}</small>
+                <small>End: {formatDate(new Date(segment.endTime))}</small>
+                {segment.milestone && (
+                  <small>Amount: {segment.milestone.amount} USDT</small>
+                )}
+              </div>
+            }
+            placement="top"
+            showArrow={true}
+          >
+            <div
+              className="h-full transition-all duration-300 cursor-pointer hover:opacity-80"
+              style={{ 
+                width: `${getSegmentWidth(segment)}%`,
+                backgroundColor: getSegmentColor(index)
+              }}
+            />
+          </Tooltip>
+        ))}
+        </div>
+
+        {/* 当前时间指示器 - 显示为有投影的圆 */}
+        {isDetail && (
+          <Tooltip
+            color="foreground"
+            content={
+              <div className="flex flex-col gap-1 p-2 text-center">
+                <small className="font-semibold">Current Time</small>
+                <small>{formatDate(new Date())}</small>
+                <small>Progress: {Math.round(currentPosition)}%</small>
+              </div>
+            }
+            placement="top"
+            showArrow={true}
+          >
+            <div 
+              className="absolute top-0 z-10 w-4 h-4 transition-all duration-300 bg-white border-2 rounded-full shadow-lg cursor-pointer border-primary hover:scale-110 hover:shadow-xl"
+              style={{ left: `${currentPosition}%` }}
             >
-              <span className="font-bold text-center cursor-pointer progress-milestone whitespace-nowrap">
-                <small className="p-1 overflow-hidden bg-gray-400 hover:bg-primary rounded-xl">Start</small>
-              </span>
-            </Tooltip>
-          </div>
+              <div className="w-full h-full rounded-full bg-primary opacity-20"></div>
+            </div>
+          </Tooltip>
         )}
 
-        {/* 里程碑节点 */}
-        {milestones.map((milestone, index) => {
-          // 计算每个里程碑在时间跨度中的位置百分比
-          const firstMilestone = milestones[0];
-          const lastMilestone = milestones[milestones.length - 1];
-          
-          if (!firstMilestone?.createdAt || !lastMilestone?.deadline) return null;
-          
-          const startTime = new Date(firstMilestone.createdAt).getTime();
-          const endTime = new Date(lastMilestone.deadline).getTime();
-          const milestoneTime = new Date(milestone.deadline).getTime();
-          
-          // 计算里程碑的位置百分比
-          const totalDuration = endTime - startTime;
-          const milestoneOffset = milestoneTime - startTime;
-          const positionPercent = totalDuration > 0 ? Math.min(100, Math.max(0, (milestoneOffset / totalDuration) * 100)) : 0;
-          
-          // 判断是否为最后一个里程碑
-          const isLastMilestone = index === milestones.length - 1;
-          
-          return (
-            <div 
-              key={index} 
-              className={`absolute flex flex-col min-w-[60px]  hover:z-10 ${
-                isLastMilestone ? 'items-end -translate-x-full' : 'items-center -translate-x-1/2'
-              }`}
-              style={{ left: `${positionPercent}%` }}
-            >
-              <Tooltip 
-                color="foreground"
-                content={
-                  <div className="flex flex-col gap-1 p-2 text-center">
-                    <small>{milestone.name}</small>
-                    <small>Deadline: {formatDate(milestone.deadline, 'MM.DD')}</small>
-                  </div>
-                } 
-                placement="top" 
-                showArrow={true}
-              >
-                <span className="gap-2 font-bold text-center cursor-pointer progress-milestone hover:text-black whitespace-nowrap">
-                  {
-                    milestone.status === 'COMPLETED' && <i className="mr-1 text-green-500 ri-check-line"></i>
-                  }
-                  <small className="p-1 overflow-hidden bg-gray-400 hover:bg-primary rounded-xl">{`${formatDate(milestone.deadline,'MM.DD')}`}</small>
-                  {/* -{milestone.amount}U */}
-                </span>
-              </Tooltip>
-            </div>
-          );
-        })}
+        {/* 时间标签 */}
+        {segments.length > 0 && (
+          <div className="flex justify-between text-xs text-gray-600">
+            <span>Start: {formatDate(new Date(segments[0]!.startTime))}</span>
+            <span>End: {formatDate(new Date(segments[segments.length - 1]!.endTime))}</span>
+          </div>
+        )}
       </div>
+
+      {/* 图例 - 只在 pod 详情页面显示 */}
+      {isDetail && (
+        <div className="flex items-center justify-center gap-4 text-xs">
+          {segments.map((segment, index) => (
+            <div key={index} className="flex items-center gap-1">
+              <div 
+                className="w-3 h-3 rounded"
+                style={{ backgroundColor: getSegmentColor(index) }}
+              ></div>
+              <span>{segment.name} ({segment.days}d)</span>
+            </div>
+          ))}
+        </div>
+      )}
+
     </div>
   );
 } 

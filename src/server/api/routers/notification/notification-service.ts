@@ -41,7 +41,7 @@ export class NotificationService {
         params: params || {},
         metadata: metadata || {},
       }
-      console.log('创建通知===>', data);
+      console.log('Create notification ===>', data);
       // 校验解析
       createNotificationSchema.parse(data);
       const notification = await db.notification.create({
@@ -59,7 +59,7 @@ export class NotificationService {
 
       return notification;
     } catch (error) {
-      console.error("创建通知失败:", error);
+      console.error("Failed to create notification:", error);
       throw error;
     }
   }

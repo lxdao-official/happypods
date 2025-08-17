@@ -35,7 +35,7 @@ export default function PodVersionReviewModal({
 
   const approveMutation = api.pod.approveVersion.useMutation({
     onSuccess: () => {
-      toast.success("版本审核通过！");
+      toast.success("Version approved!");
       onReviewComplete();
       onClose();
     }
@@ -43,7 +43,7 @@ export default function PodVersionReviewModal({
 
   const rejectMutation = api.pod.rejectVersion.useMutation({
     onSuccess: () => {
-      toast.success("版本已驳回！");
+      toast.success("Version rejected!");
       onReviewComplete();
       onClose();
     }

@@ -56,17 +56,17 @@ export const milestoneMutations = {
       });
 
       if (!milestone) {
-        throw new Error("Milestone不存在");
+        throw new Error("Milestone does not exist");
       }
 
       // 检查当前用户是否是Pod的申请者
       if (milestone.pod.applicantId !== ctx.user!.id) {
-        throw new Error("没有权限提交此Milestone");
+        throw new Error("You do not have permission to submit this Milestone");
       }
 
       // 检查milestone状态是否为ACTIVE
       if (milestone.status !== "ACTIVE") {
-        throw new Error("只能提交状态为ACTIVE的Milestone");
+        throw new Error("Only Milestones with status ACTIVE can be submitted");
       }
 
       // 获取当前的deliveryInfo数组
@@ -74,7 +74,7 @@ export const milestoneMutations = {
       
       // 检查提交次数是否超过3次
       if (currentDeliveryInfo.length >= 3) {
-        throw new Error("已达到最大提交次数限制（3次）");
+        throw new Error("The maximum number of submissions (3) has been reached");
       }
 
       // 根据milestonesID查询gp创建者id与pod名称
@@ -84,7 +84,7 @@ export const milestoneMutations = {
       });
 
       if(!gpOwnerId){
-        throw new Error("Grants Pool不存在");
+        throw new Error("Grants Pool does not exist");
       }
 
       // !todo 校验提交之前需要检查国库余额是否充足
@@ -93,7 +93,7 @@ export const milestoneMutations = {
        const safeTransaction = await PLATFORM_CHAINS[optimism.id]?.safeApiKit.getTransaction(input.transactionHash);
        console.log('safeTransaction', safeTransaction);
        if(!safeTransaction){
-         throw new Error("TransactionHash无效");
+         throw new Error("Invalid TransactionHash");
        }
 
       // 创建新的交付信息
@@ -129,8 +129,8 @@ export const milestoneMutations = {
         type: NotificationType.MILESTONE_DELIVERY_SUBMIT,
         senderId: ctx.user.id,
         receiverId: gpOwnerId.ownerId,
-        title: `Pod milestone 交付提交`,
-        content: `${milestone.pod.title} milestone 交付已提交，请及时审核!`
+        title: `Pod milestone delivery submitted`,
+        content: `${milestone.pod.title} milestone delivery has been submitted, please review it in time!`
       });
 
       return updatedMilestone;
@@ -151,17 +151,17 @@ export const milestoneMutations = {
       });
 
       if (!milestone) {
-        throw new Error("Milestone不存在");
+        throw new Error("Milestone does not exist");
       }
 
       // 检查当前用户是否是 Grants Pool 的拥有者
       if (milestone.pod.grantsPool.ownerId !== ctx.user!.id) {
-        throw new Error("没有权限审核此Milestone");
+        throw new Error("You do not have permission to review this Milestone");
       }
 
       // 检查milestone状态是否为REVIEWING
       if (milestone.status !== "REVIEWING") {
-        throw new Error("只能审核状态为REVIEWING的Milestone");
+        throw new Error("Only Milestones with status REVIEWING can be reviewed");
       }
 
       // 获取当前的deliveryInfo数组
@@ -192,7 +192,7 @@ export const milestoneMutations = {
          //!todo 检查是safeTransaction
         const safeTransaction = await PLATFORM_CHAINS[optimism.id]?.safeApiKit.getTransaction(input.safeTransactionHash!);
         if(!safeTransaction){
-          throw new Error("TransactionHash无效");
+          throw new Error("Invalid TransactionHash");
         }
 
         // 如果所有milestone都完成，则更新pod状态为COMPLETED
@@ -217,7 +217,7 @@ export const milestoneMutations = {
             ctx.db, 
             milestone.podId, 
             input.safeTransactionHash!, 
-            "Milestone交付三次被拒绝"
+            "Milestone delivery rejected three times"
           );
         }
       else {
@@ -239,8 +239,8 @@ export const milestoneMutations = {
         type: NotificationType.POD_REVIEW,
         senderId: ctx.user.id,
         receiverId: milestone.pod.applicantId,
-        title: `GP${input.approved ? '通过' : '拒绝'} 审核结果`,
-        content: `您的 Pod milestone 交付已${input.approved ? '通过' : '拒绝'} ，备注：${input.comment}`,
+        title: `GP review result: ${input.approved ? 'Approved' : 'Rejected'}`,
+        content: `Your Pod milestone delivery has been ${input.approved ? 'approved' : 'rejected'}. Comment: ${input.comment}`,
       });
 
       return updatedMilestone;
@@ -264,17 +264,17 @@ export const milestoneMutations = {
       });
 
       if (!pod) {
-        throw new Error("Pod不存在");
+        throw new Error("Pod does not exist");
       }
 
       // 检查当前用户是否是 Grants Pool 的拥有者
       if (pod.grantsPool.ownerId !== ctx.user!.id) {
-        throw new Error("没有权限终止此Pod");
+        throw new Error("You do not have permission to terminate this Pod");
       }
 
       // 检查Pod状态是否允许终止
       if (pod.status === PodStatus.TERMINATED) {
-        throw new Error("Pod已经终止，不能重复终止");
+        throw new Error("Pod has already been terminated and cannot be terminated again");
       }
 
       // 将所有ACTIVE状态的milestone设置为TERMINATED
@@ -299,8 +299,8 @@ export const milestoneMutations = {
         type: NotificationType.POD_REVIEW,
         senderId: ctx.user.id,
         receiverId: pod.applicant.id,
-        title: `您的 Pod ${pod.title} 因交付超时，已被 GP Onwer 终止`,
-        content: `由于Milestone交付超时，您的Pod已被GP终止， 请完成退款操作！`,
+        title: `Your Pod ${pod.title} has been terminated by the GP Owner due to delivery timeout`,
+        content: `Your Pod has been terminated by the GP due to Milestone delivery timeout. Please complete the refund process!`,
       });
 
       return true;

@@ -22,6 +22,7 @@ import { useMemo } from "react";
 import useStore from "~/store";
 import Tag from "~/components/tag";
 import PodMilestoneTimeoutActions from "~/components/pod-milestone-timeout-actions";
+import ExpandableText from "~/components/expandable-text";
 
 
 export default function PodDetailPage() {
@@ -126,7 +127,7 @@ export default function PodDetailPage() {
             <div className="space-y-6">
               <div>
                 <p className="leading-relaxed">
-                  {podDetail.description}
+                  <ExpandableText text={podDetail.description} maxLines={3} showExpandButton={true} />
                 </p>
               </div>
             </div>

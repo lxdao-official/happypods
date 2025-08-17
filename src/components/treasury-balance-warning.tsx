@@ -90,9 +90,9 @@ export default function TreasuryBalanceWarning({pod}: TreasuryBalanceWarningProp
                 shortage>0 ? pod.grantsPool.treasuryWallet : pod.walletAddress, 
                 transfers as any
             );
-            toast.success('交易发起成功');
+            toast.success('Transaction initiated successfully');
        } catch (error) {
-        toast.error('交易发起失败');
+        toast.error('Transaction initiation failed');
        } finally {
         setIsSending(false);
        }
@@ -107,7 +107,7 @@ export default function TreasuryBalanceWarning({pod}: TreasuryBalanceWarningProp
     const endContent = (
         <div className="flex gap-2">     
             {
-                needSign && <AppBtn btnProps={{ color: "warning",onPress:sendTx, isLoading:isSending }}>发起交易</AppBtn>
+                needSign && <AppBtn btnProps={{ color: "warning",onPress:sendTx, isLoading:isSending }}>Initiate Transaction</AppBtn>
             }
 
             <Link
@@ -128,25 +128,25 @@ export default function TreasuryBalanceWarning({pod}: TreasuryBalanceWarningProp
             <Alert
             color="warning"
             variant="bordered"
-            title="Pod 国库余额不足！"
+            title="Pod Treasury Balance Insufficient!"
             className="mb-4"
             classNames={{ base: "bg-background" }}
             endContent={endContent}
             >
             <small className="mt-1 text-secondary">
-                请协调 GP 国库多签用户完成 Pod 注入缺额资金 <b className="text-warning">{formatToken(shortage)} {pod.currency}</b>，否则 Milestone 将无法交付！
+                Please coordinate with the GP treasury multi-sig user to inject the missing funds <b className="text-warning">{formatToken(shortage)} {pod.currency}</b>, otherwise the Milestone cannot be delivered!
             </small>
             </Alert> :
             <Alert
             color="warning"
             variant="bordered"
-            title="Pod 国库余额超额！"
+            title="Pod Treasury Balance Exceeded!"
             className="mb-4"
             classNames={{ base: "bg-background" }}
             endContent={endContent}
         >
             <small className="mt-1 text-secondary">
-            Pod 国库余额超额 <b className="text-warning">{formatToken(Math.abs(shortage))} {pod.currency}</b>，您可以发起退换 GP 国库操作！
+            Pod treasury balance exceeded by <b className="text-warning">{formatToken(Math.abs(shortage))} {pod.currency}</b>. You can initiate a refund to the GP treasury!
             </small>
         </Alert>
     );

@@ -8,6 +8,7 @@ import { formatDate } from "~/lib/utils";
 import { MilestoneStatus, type GrantsPool, type Milestone, type Pod } from "@prisma/client";
 import { useEffect, useMemo } from "react";
 import useStore from "~/store";
+import ExpandableText from "./expandable-text";
 
 interface MilestonesSectionProps {
   milestones: Milestone[];
@@ -63,7 +64,7 @@ export default function MilestonesSection({ milestones, podDetail }: MilestonesS
                   { new Date(milestone.deadline) < new Date() && !milestone.deliveryInfo.length && milestone.status === MilestoneStatus.PENDING_DELIVERY &&
                   <div className="flex items-center gap-1 px-1 mb-2 text-xs text-yellow-600 border border-yellow-500 rounded-md bg-yellow-400/10">
                     <i className="text-xl ri-error-warning-fill"></i>
-                    <span>Deadline 交付已超时，如需延期请及时与 GP Moderator 沟通，否则 GP 可能将关闭当前 Pod 并退回所有资金！</span>
+                    <span>Deadline for delivery has passed. If an extension is needed, please communicate with the GP Moderator in time, otherwise the GP may close the current Pod and return all funds!</span>
                     </div>
                   }
 
@@ -71,7 +72,7 @@ export default function MilestonesSection({ milestones, podDetail }: MilestonesS
                      milestone.status === 'PENDING_DELIVERY' && waitPodTreasuryRecharge &&
                       <div className="flex items-center gap-1 px-1 mb-2 text-xs text-red-600 border border-red-500 rounded-md bg-red-400/10">
                         <i className="text-xl ri-error-warning-fill"></i>
-                        <span>Pod 国库余额不足，请 GP Moderator 转入后，可提交交付！</span>
+                        <span>Pod treasury balance is insufficient. Please ask the GP Moderator to transfer funds before submitting the delivery!</span>
                       </div>
                   }
               </div>
@@ -108,7 +109,7 @@ export default function MilestonesSection({ milestones, podDetail }: MilestonesS
               </div>
               <div className="flex items-center gap-4 mb-4 text-xs text-gray-600">
                 
-                <div className="flex items-center gap-1">
+                <div className="flex items-center gap-1 text-primary">
                   <img src={`/tokens/${currency}.svg`} alt={currency} className="w-4 h-4" />
                   <b>{milestone.amount.toString()} {currency}</b>
                 </div>
@@ -117,9 +118,9 @@ export default function MilestonesSection({ milestones, podDetail }: MilestonesS
 
               </div>
 
-              <p className="text-sm text-gray-700">
-                {milestone.description}
-              </p>
+              <div className="text-sm text-gray-700">
+                <ExpandableText text={milestone.description} maxLines={3} showExpandButton={true} />
+              </div>
               
               {/* Display multiple submissions */}
               {milestone.deliveryInfo && milestone.deliveryInfo.length > 0 && (

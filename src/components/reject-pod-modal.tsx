@@ -28,8 +28,8 @@ export default function RejectPodModal({
       handleClose();
     },
     onError: (error) => {
-      console.error("拒绝Pod失败:", error);
-      alert(`拒绝失败: ${error.message}`);
+      console.error("Failed to reject Pod:", error);
+      alert(`Failed to reject: ${error.message}`);
     },
     onSettled: () => {
       setIsSubmitting(false);
@@ -44,7 +44,7 @@ export default function RejectPodModal({
 
   const handleSubmit = async () => {
     if (!rejectReason.trim()) {
-      alert("请输入拒绝理由");
+      alert("Please enter a reason for rejection");
       return;
     }
 
@@ -70,24 +70,24 @@ export default function RejectPodModal({
     >
       <ModalContent>
         <ModalHeader className="flex flex-col gap-1">
-            您即将拒绝 【{podTitle}】 的提案申请
+            You are about to reject the proposal application for [{podTitle}]
         </ModalHeader>
         <ModalBody>
           <div className="space-y-4">
             
             <div>
               <Textarea
-                placeholder="请详细说明拒绝的原因，这将帮助申请者改进他们的提案..."
+                placeholder="Please explain the reason for rejection in detail, this will help the applicant to improve their proposal..."
                 value={rejectReason}
                 onChange={(e: React.ChangeEvent<HTMLInputElement>) => setRejectReason(e.target.value)}
                 minRows={4}
                 maxRows={8}
                 maxLength={1000}
                 isInvalid={!rejectReason.trim() && rejectReason !== ""}
-                errorMessage={!rejectReason.trim() && rejectReason !== "" ? "拒绝理由不能为空" : ""}
+                errorMessage={!rejectReason.trim() && rejectReason !== "" ? "Reason for rejection cannot be empty" : ""}
               />
               <p className="mt-1 text-xs text-gray-500">
-                {rejectReason.length}/1000 字符
+                {rejectReason.length}/1000 characters
               </p>
             </div>
           </div>
@@ -99,7 +99,7 @@ export default function RejectPodModal({
             onPress={handleClose}
             isDisabled={isSubmitting}
           >
-            取消
+            Cancel
           </Button>
           <Button 
             color="danger" 
@@ -107,7 +107,7 @@ export default function RejectPodModal({
             isLoading={isSubmitting}
             isDisabled={!rejectReason.trim()}
           >
-            确认拒绝
+            Confirm Rejection
           </Button>
         </ModalFooter>
       </ModalContent>

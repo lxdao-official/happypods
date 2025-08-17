@@ -56,12 +56,12 @@ const CreateSafeModal = ({
   // 验证表单
   const validateForm = () => {
     if (owners.length === 0) {
-      toast.error("至少需要一个所有者");
+      toast.error("At least one owner is required");
       return false;
     }
 
     if (threshold < 1 || threshold > owners.length) {
-      toast.error(`权限阈值必须在 1 到 ${owners.length} 之间`);
+      toast.error(`The threshold must be between 1 and ${owners.length}`);
       return false;
     }
 
@@ -70,12 +70,12 @@ const CreateSafeModal = ({
 
   const handleCreateSafe = async () => {
     if (!address || !userInfo?.walletAddress) {
-      toast.error("请先连接钱包");
+      toast.error("Please connect your wallet first");
       return;
     }
 
     if (address.toLowerCase() !== userInfo.walletAddress.toLowerCase()) {
-      toast.error(`请使用钱包 ${userInfo.walletAddress} 创建多签钱包！`);
+      toast.error(`Please use wallet ${userInfo.walletAddress} to create the multi-sig wallet!`);
       return;
     }
 
@@ -89,24 +89,24 @@ const CreateSafeModal = ({
       onConfirm(safeAddress);
     } catch (error) {
       console.error("Failed to create Safe:", error);
-      toast.error("创建多签钱包失败");
+      toast.error("Failed to create multi-sig wallet");
     }
   };
 
   return (
     <Modal isOpen={isOpen} onClose={onClose} size="3xl" scrollBehavior="inside">
       <ModalContent>
-        <ModalHeader>创建Safe多签钱包</ModalHeader>
+        <ModalHeader>Create Safe Multi-sig Wallet</ModalHeader>
         <ModalBody>
           <div className="space-y-6">
-            <p className="text-default-600">{description ??  'Grants Pool 资金将由当前创建的 Safe 多签钱包管理!'}</p>
+            <p className="text-default-600">{description ??  'Grants Pool funds will be managed by the currently created Safe multi-sig wallet!'}</p>
             
             <CornerFrame backgroundColor="var(--color-background)" color="gray">
               <div className="space-y-4">
                 <div>
-                  <h3 className="mb-2 font-medium">多签钱包信息</h3>
+                  <h3 className="mb-2 font-medium">Multi-sig Wallet Information</h3>
                   <div className="space-y-2 text-xs text-default-500">
-                    <div>网络: Optimism Mainnet</div>
+                    <div>Network: Optimism Mainnet</div>
                   </div>
                 </div>
 
@@ -139,7 +139,7 @@ const CreateSafeModal = ({
         </ModalBody>
         <ModalFooter>
           <Button variant="light" onPress={onClose}>
-            取消
+            Cancel
           </Button>
           <Button 
             color="success" 
@@ -147,7 +147,7 @@ const CreateSafeModal = ({
             isLoading={status === 'loading'}
             isDisabled={owners.length === 0 || threshold < 1 || threshold > owners.length}
           >
-            {status === 'loading' ? "创建中..." : "创建多签钱包"}
+            {status === 'loading' ? "Creating..." : "Create Multi-sig Wallet"}
           </Button>
         </ModalFooter>
       </ModalContent>

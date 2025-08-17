@@ -4,6 +4,7 @@ import StatusChip from './status-chip';
 import { formatDate, formatToken } from '~/lib/utils';
 import { MilestoneStatus, type Milestone, type Pod } from '@prisma/client';
 import Decimal from "decimal.js"
+import ExpandableText from './expandable-text';
 interface PodsItemProps {
   pod: Pod & {
     milestones: Milestone[];
@@ -46,7 +47,7 @@ const PodsItem = ({ pod, onClick, className = "" }: PodsItemProps) => {
       {/* 卡片头部 */}
       <div className="flex items-center p-4 space-x-4 bg-white border-b border-black">
         <img src={pod.avatar || ""} alt="" className="w-10 h-10 rounded-full" />
-        <div className="text-xl font-bold text-gray-900">{pod.title}</div>
+        <div className="text-xl font-bold text-gray-900"><ExpandableText text={pod.title} maxLines={1} /></div>
       </div>
 
       {/* 卡片内容 */}
@@ -65,17 +66,19 @@ const PodsItem = ({ pod, onClick, className = "" }: PodsItemProps) => {
 
         {/* 描述 */}
         <p className="mb-4 text-sm leading-relaxed">
-          {pod.description}
+        <ExpandableText text={pod.description} maxLines={3} />
         </p>
 
         {/* 资金进度 */}
         <div className="mb-4">
-          <div className="flex justify-between mb-2 text-sm">
-            <small className='text-xs'>申请金额：{formatToken(totalFunding)} {pod.currency}</small>
-            <small className='text-xs text-green-500'>已解锁：{formatToken(unlocked)} {pod.currency}</small>
-          </div>
+         
           
-          <ProgressMilestoneBar milestones={milestonesForProgress}/>
+          <ProgressMilestoneBar milestones={milestonesForProgress}>
+            <div className="flex justify-between text-sm">
+              <small className='text-xs'>申请金额：{formatToken(totalFunding)} {pod.currency}</small>
+              <small className='text-xs text-green-500'>已解锁：{formatToken(unlocked)} {pod.currency}</small>
+            </div>
+          </ProgressMilestoneBar>
 
         </div>
 
