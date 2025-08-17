@@ -1,12 +1,13 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+@import url('https://fonts.googleapis.com/css2?family=M+PLUS+Rounded+1c&display=swap');
 :root {
     /* 主题色 */
     --color-background: #1F1F1D;
     --color-foreground: #f8fafc;
     /* 主要颜色 */
-    --color-primary: #FF6B6B;
+    --color-primary: #ff6b6b;
     --color-secondary: #7b7e87;
     /* 辅助色 */
     --color-green2: #02BC59;
@@ -34,6 +35,9 @@
 body,
 html {
     background: var(--color-background);
+    font-family: "M PLUS Rounded 1c", sans-serif;
+    font-weight: 400;
+    font-style: normal;
 }
 
 input,

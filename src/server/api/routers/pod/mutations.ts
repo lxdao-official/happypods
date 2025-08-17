@@ -68,7 +68,7 @@ export const podMutations = {
           description: podData.description,
           links: podData.links,
           currency: podData.currency,
-          tags: podData.tags,
+          tags: podData.tags as any,
           applicantId: ctx.user.id,
         },
         include: {
@@ -214,7 +214,7 @@ export const podMutations = {
   edit: protectedProcedure
     .input(editPodSchema)
     .mutation(async ({ ctx, input }) => {
-      return await PodEditService.editPod(ctx as any, input);
+      return await PodEditService.editPod(ctx as any, input as any);
     }),
 
   // 审核通过版本

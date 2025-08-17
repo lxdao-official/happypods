@@ -26,17 +26,17 @@ const SafeConfigForm = ({
   // 添加新的owner
   const addOwner = () => {
     if (!newOwnerInput.trim()) {
-      toast.error("请输入有效的钱包地址");
+      toast.error("please input a valid wallet address");
       return;
     }
     
     if (!isAddress(newOwnerInput)) {
-      toast.error("请输入有效的以太坊地址");
+      toast.error("please input a valid wallet address");
       return;
     }
 
     if (owners.includes(newOwnerInput.toLowerCase())) {
-      toast.error("该地址已存在");
+      toast.error("this address already exists");
       return;
     }
 
@@ -48,7 +48,7 @@ const SafeConfigForm = ({
   // 删除owner
   const removeOwner = (index: number) => {
     if (owners.length <= 1) {
-      toast.error("至少需要一个所有者");
+      toast.error("at least one owner is required");
       return;
     }
 
@@ -56,7 +56,7 @@ const SafeConfigForm = ({
     
     // 检查是否尝试删除当前用户地址
     if (currentUserAddress && ownerToRemove?.toLowerCase() === currentUserAddress.toLowerCase()) {
-      toast.error("不能删除当前用户地址");
+      toast.error("cannot delete current user address");
       return;
     }
     
@@ -78,7 +78,7 @@ const SafeConfigForm = ({
     <div className="space-y-4">
       {/* 所有者配置 */}
       <div>
-        <h4 className="mb-3 font-medium">多签参与者 ({owners.length})</h4>
+        <h4 className="mb-3 font-medium">Signers ({owners.length})</h4>
         
         {/* 所有者列表 */}
         <div className="mb-4 space-y-2">
@@ -97,7 +97,7 @@ const SafeConfigForm = ({
                   <span className="font-mono text-sm">{owner}</span>
                   {isCurrentUserAddress && (
                     <span className="px-2 py-1 ml-2 text-xs rounded-full text-primary-600 bg-primary-100">
-                      创建者
+                      Creator
                     </span>
                   )}
                 </div>
@@ -121,7 +121,7 @@ const SafeConfigForm = ({
         {!isReadOnly && (
           <div className="flex gap-2">
             <Input
-              label="输入钱包地址(0x...)"
+              label="Input wallet address(0x...)"
               value={newOwnerInput}
               size="sm"
               onValueChange={setNewOwnerInput}
@@ -142,16 +142,16 @@ const SafeConfigForm = ({
 
       {/* 权限阈值配置 */}
       <div>
-        <h4 className="mb-3 font-medium">签名阈值</h4>
+        <h4 className="mb-3 font-medium">Threshold</h4>
         <div className="flex items-center gap-4">
           {isReadOnly ? (
             <div className="p-2 rounded-lg bg-default-100">
-              <span className="text-sm">需要 <span className="text-green-500">{threshold}</span> / {owners.length} 个签名</span>
+              <span className="text-sm">Need <span className="text-green-500">{threshold}</span> / {owners.length} signatures</span>
             </div>
           ) : (
             <>
               <Select
-                label="需要签名数"
+                label="Number of signatures required"
                 selectedKeys={[threshold.toString()]}
                 defaultSelectedKeys={[threshold.toString()]}
                 onSelectionChange={(keys) => {
@@ -170,7 +170,7 @@ const SafeConfigForm = ({
                   </SelectItem>
                 )}
               </Select>
-              <span className="text-sm text-default-500">/ {owners.length} 个所有者</span>
+              <span className="text-sm text-default-500">/ {owners.length} owners</span>
             </>
           )}
         </div>

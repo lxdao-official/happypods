@@ -17,7 +17,7 @@ export const createPodSchema = z.object({
   description: z.string().min(1, "项目描述不能为空").max(1000),
   links: z.any().optional(),
   currency: z.string().min(1, "币种不能为空").max(10),
-  tags: z.string().optional().transform(val => val ? val.split(',').map(s => s.trim()) : []).pipe(z.string().array().max(3).optional()),
+  tags: z.string().optional(),
   milestones: z.array(milestoneSchema).min(1, "至少需要一个里程碑"),
   isCheck: z.boolean().optional(),
 });
@@ -29,7 +29,7 @@ export const updatePodSchema = z.object({
   description: z.string().min(1, "项目描述不能为空").max(1000).optional(),
   links: z.any().optional(),
   currency: z.string().min(1, "币种不能为空").max(10).optional(),
-  tags: z.string().optional().transform(val => val ? val.split(',').map(s => s.trim()) : []).pipe(z.string().array().max(3).optional()),
+  tags: z.string().optional(),
   status: z.enum(["REVIEWING", "APPROVED", "REJECTED", "IN_PROGRESS", "COMPLETED", "TERMINATED"]).optional(),
 });
 
@@ -64,7 +64,7 @@ export const editPodSchema = z.object({
   title: z.string().min(1, "项目标题不能为空").max(100),
   description: z.string().min(1, "项目描述不能为空").max(1000),
   links: z.any().optional(),
-  tags: z.string().optional().transform(val => val ? val.split(',').map(s => s.trim()) : []).pipe(z.string().array().max(3).optional()),
+  tags: z.string().optional(),
   milestones: z.array(milestoneSchema).min(1, "至少需要一个里程碑"),
 });
 

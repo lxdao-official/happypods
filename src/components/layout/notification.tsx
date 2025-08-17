@@ -53,7 +53,7 @@ export function NotificationDrawer() {
                   <h2 className="text-lg font-semibold">Notifications</h2>
                   {
                     noReadNotification > 0 && <span className="text-sm text-default-500">
-                      {noReadNotification} unread
+                      （{noReadNotification} unread）
                     </span>
                   }
                 </div>
@@ -80,21 +80,18 @@ export function NotificationDrawer() {
                           {/* 内容区域 */}
                           <div className="flex-1 min-w-0">
                             <div className="flex items-start justify-between gap-2 mb-2">
-                              <div className="text-sm font-medium line-clamp-1 text-foreground">
+                              <div className="text-sm font-medium break-all line-clamp-1 text-foreground">
                                 {notification.title}
                               </div>
                             </div>
 
-                            <p className="mb-2 text-xs line-clamp-2 text-default-600">
+                            <div className="pr-2 mb-2 text-xs leading-5 break-all line-clamp-2 text-default-600">
                               {notification.content}
-                            </p>
+                            </div>
 
                             <div className="flex items-center justify-between">
                               <span className="text-xs text-default-400">
-                                {formatDate(
-                                  notification.createdAt.toISOString(),
-                                  "MM-DD HH:mm",
-                                )}
+                                {formatDate(notification.createdAt)}
                               </span>
                             </div>
                           </div>
@@ -106,7 +103,7 @@ export function NotificationDrawer() {
               </DrawerBody>
               {
                 noReadNotification > 0 && <DrawerFooter>
-                  <Button color="default" className="w-full" onPress={readAll}>Mark All as Read</Button>
+                  <Button color="default" className="w-full" onPress={readAll}>Read All</Button>
                 </DrawerFooter>
               }
             </>

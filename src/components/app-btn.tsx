@@ -14,8 +14,8 @@ const AppBtn = ({children, btnProps={color:"primary"},className=""}: {children: 
   }
 
   const padding = {
-    md: "py-1 px-4",
-    sm: "py-0.5 px-4",
+    md: "py-2 px-4",
+    sm: "py-1 px-4",
     lg: "py-2 px-6"
   }
 
@@ -23,7 +23,7 @@ const AppBtn = ({children, btnProps={color:"primary"},className=""}: {children: 
 
   return (
     <div className={`p-[3px] bg-white rounded-md border-1 border-black ${className}`}>
-        <button {...rest} onClick={onPress as ()=>void} disabled={isLoading} className={`${isLoading ? 'cursor-not-allowed' : ''} font-bold text-[14px] text-black border-black rounded-md border-1  ${colorMap[color || "primary"]} ${currentPadding}`}  >
+        <button {...rest} onClick={onPress as ()=>void} disabled={isLoading} className={`${isLoading ? 'cursor-not-allowed' : ''} font-bold text-[14px] text-black border-black rounded-md border-1 text-nowrap  ${colorMap[color || "primary"]} ${currentPadding}`}  >
              {isLoading ? 'loading...' : children}
         </button>
     </div>

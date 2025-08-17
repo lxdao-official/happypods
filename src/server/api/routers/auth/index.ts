@@ -30,7 +30,7 @@ export const authRouter = createTRPCRouter({
         
         // 检查签名是否过期（5分钟内有效）
         if (currentTime - input.timestamp > 300) {
-          throw new Error("签名已过期，请重新签名");
+          throw new Error("Signature expired, please sign again");
         }
 
         // 构造TypedData
@@ -57,7 +57,7 @@ export const authRouter = createTRPCRouter({
         console.log('Signature verification result:', isValid);
 
         if (!isValid) {
-          throw new Error("签名验证失败");
+          throw new Error("Signature verification failed");
         }
 
         // 查找或创建用户（通过email，因为email包含钱包地址）
@@ -74,11 +74,11 @@ export const authRouter = createTRPCRouter({
             },
           });
           NotificationService.createNotification({
-            title: "欢迎加入 HappyPods",
+            title: "Welcome to HappyPods",
             type: NotificationType.GENERAL,
             senderId: user.id,
             receiverId: user.id,
-            content: "欢迎加入 HappyPods，我们致力于为开发者提供一个公平、公正、透明的社区，让开发者能够更好地申请Grants!",
+            content: "Welcome to HappyPods, we are committed to providing a fair, transparent, and open community for developers, enabling them to apply for Grants more effectively!", 
           });
         }
 
@@ -94,7 +94,7 @@ export const authRouter = createTRPCRouter({
         };
       } catch (error) {
         console.error('Signature verification error:', error);
-        throw new Error(error instanceof Error ? error.message : "签名验证失败");
+        throw new Error(error instanceof Error ? error.message : "Signature verification failed");
       }
     }),
 
@@ -104,7 +104,7 @@ export const authRouter = createTRPCRouter({
     .query(async ({ ctx, input }) => {
       const payload = verifyToken(input.token);
       if (!payload) {
-        throw new Error("无效的token");
+        throw new Error("Invalid token");
       }
 
       const user = await ctx.db.user.findUnique({
@@ -119,7 +119,7 @@ export const authRouter = createTRPCRouter({
       });
 
       if (!user) {
-        throw new Error("用户不存在");
+        throw new Error("User not found");
       }
 
       return {

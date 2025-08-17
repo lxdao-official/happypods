@@ -39,7 +39,11 @@ export const milestoneQueries = {
 
       // 找到第一个状态为ACTIVE的milestone的index，并且没有待支付的milestone
       const activeMilestone = milestones.find(v=>v.status === MilestoneStatus.ACTIVE);
-      if(activeMilestone && activeMilestone.pod.status === PodStatus.IN_PROGRESS){
+      if(
+        activeMilestone && 
+        activeMilestone.pod.status === PodStatus.IN_PROGRESS &&
+        !milestones.some(v=>v.status === MilestoneStatus.REVIEWING)
+      ){
         activeMilestone.status = MilestoneStatus.PENDING_DELIVERY;
       }
       

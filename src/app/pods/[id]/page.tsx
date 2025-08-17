@@ -23,6 +23,8 @@ import useStore from "~/store";
 import Tag from "~/components/tag";
 import PodMilestoneTimeoutActions from "~/components/pod-milestone-timeout-actions";
 import ExpandableText from "~/components/expandable-text";
+import TooltipInfo from "~/components/TooltipInfo";
+import { FEE_CONFIG } from "~/lib/config";
 
 
 export default function PodDetailPage() {
@@ -78,7 +80,7 @@ export default function PodDetailPage() {
 
       {/* 国库余额不足警告 */}
       {
-        (isGPOwner || isPodOwner) && ![PodStatus.REJECTED].includes(podDetail.status as any) && 
+        (isGPOwner || isPodOwner) && ![PodStatus.REJECTED,PodStatus.REVIEWING].includes(podDetail.status as any) && 
         <TreasuryBalanceWarning pod={podDetail as any}/>
       }
 
@@ -164,7 +166,10 @@ export default function PodDetailPage() {
             
               <div className="p-2 text-black rounded-md">
                 <div className="text-xl font-bold">{formatToken(podDetail.podTreasuryBalances)}</div>
-                <div className="text-xs text-secondary">Locked</div>
+                <div className="flex items-center gap-1 text-xs text-secondary">
+                    <span>Locked</span>
+                    <TooltipInfo width="60" content={`Includes platform fees ${FEE_CONFIG.TRANSACTION_FEE_RATE * 100}%, which will be deducted when each Milestone is delivered`}/>
+                </div>
               </div>
 
               <div className="p-2 text-red-500 rounded-md">

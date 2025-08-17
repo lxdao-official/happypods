@@ -20,17 +20,17 @@ export function Header() {
 
 
   return (
-    <header className="p-4 border-b border-border bg-background">
+    <header className="sticky top-0 z-30 p-4 border-b border-border backdrop-blur bg-[#212121d1]">
       <div className="flex items-center justify-between">
         {/* Logo */}
-        <div className="flex items-center basis-1/5">
+        <div className="flex items-center w-[150px] md:basis-1/5">
           <NextLink href="/" className="flex items-center transition-all duration-100 hover:scale-105">
             <img src="/logo.svg" alt="HappyPods" className="h-8" />
           </NextLink>
         </div>
 
         {/* 桌面端导航 */}
-        <nav className="flex items-center justify-center flex-1 gap-10 ">
+        <nav className="items-center justify-center flex-1 hidden gap-10 md:flex">
           {navs.map(nav => (
             <NextLink
               key={nav.href}

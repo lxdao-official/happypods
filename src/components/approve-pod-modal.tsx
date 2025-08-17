@@ -28,7 +28,7 @@ export default function ApprovePodModal({
   const [isApproving, setIsApproving] = useState(false);
   const {getTransactionHash, proposeOrExecuteTransaction} = useSafeWallet();
   const {mutateAsync:approvePod} = api.pod.approve.useMutation();
-  const {id:podId, title:podTitle, appliedAmount, currency, walletAddress, treasuryWallet} = podDetail as any;
+  const {id:podId, title:podTitle, appliedAmount, currency, walletAddress, grantsPool:{treasuryWallet} } = podDetail as any;
 
   // 计算总金额和手续费
   const financialInfo = useMemo(() => {
@@ -62,8 +62,8 @@ export default function ApprovePodModal({
       }]
       console.log('safeTransaction', safeTransaction);
 
-      const {safeTxHash} = await getTransactionHash(treasuryWallet, safeTransaction);
-      console.log('txHash', safeTxHash);
+      // const {safeTxHash} = await getTransactionHash(treasuryWallet, safeTransaction);
+      // console.log('txHash', safeTxHash);
       await proposeOrExecuteTransaction(treasuryWallet, safeTransaction);
 
       await approvePod({id: podId});

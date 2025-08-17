@@ -38,7 +38,7 @@ export default function ReviewMilestoneModal({ milestone, podDetail, onReview }:
       // 调用父组件的回调
       onReview?.({ action: reviewAction, comment: comment.trim() });
       const actionText = reviewAction === 'approve' ? 'Approve' : 'Reject';
-      toast.success(`Milestone review ${actionText}d successfully!`);
+      toast.success(`Milestone review successfully!`);
       await delay_s(2000);
       window.location.reload();
     },

@@ -73,7 +73,23 @@ export default function CreateGrantsPoolPage() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
+    setShowSafeModal(true);
+  };
+
+  const handleInputChange = (field: string, value: string) => {
+    setFormData(prev => ({ ...prev, [field]: value }));
+  };
+
+  const handleSafeConfirm = (address: string) => {
+    console.log('收到地址',address);
+    setSafeAddress(address);
+    setShowSafeModal(false);
+    // 直接使用传入的地址进行提交，避免状态更新延迟问题
+    submitFormWithAddress(address);
+  };
+
+  // 使用指定地址进行提交的函数
+  const submitFormWithAddress = async (address: string) => {
     // 验证基本信息
     if (!formData.avatar || !formData.name || !formData.description) {
       toast.error("Please fill in avatar URL, Grants Pool name and description");
@@ -105,9 +121,9 @@ export default function CreateGrantsPoolPage() {
       }
     }
 
-    // 如果没有Safe地址，先创建Safe多签钱包
-    if (!safeAddress) {
-      setShowSafeModal(true);
+    // 验证Safe地址
+    if (!address) {
+      toast.error("Safe address is required");
       return;
     }
 
@@ -132,7 +148,7 @@ export default function CreateGrantsPoolPage() {
         name: formData.name,
         description: formData.description,
         tags: selectedTags.length > 0 ? selectedTags.join(',') : undefined,
-        treasuryWallet: safeAddress, // 使用Safe地址
+        treasuryWallet: address, // 使用传入的地址
         chainType: formData.chainType,
         links: Object.keys(links).length > 0 ? links : undefined,
         rfps, // 传递所有RFP
@@ -147,17 +163,6 @@ export default function CreateGrantsPoolPage() {
     } finally {
       setIsSubmitting(false);
     }
-  };
-
-  const handleInputChange = (field: string, value: string) => {
-    setFormData(prev => ({ ...prev, [field]: value }));
-  };
-
-  const handleSafeConfirm = (address: string) => {
-    setSafeAddress(address);
-    setShowSafeModal(false);
-    // 自动提交表单
-    handleSubmit(new Event('submit') as any);
   };
 
   return (

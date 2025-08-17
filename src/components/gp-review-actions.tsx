@@ -33,21 +33,20 @@ export default function GpReviewActions({ podDetail }: {podDetail: Pod}) {
       {podStatus === PodStatus.REVIEWING && (
         <Alert
           variant="bordered"
-          color="warning"
-          title="Pod 提交了申请，请完成审核！"
-          className="mb-4"
-          classNames={{ base: "bg-background" }}
+          color="default"
+          title="Pod applied, please review!"
+          className="mb-4 bg-background shadow-medium"
           endContent={
             <div className="flex items-center gap-4">
               <AppBtn
                 btnProps={{ size: "sm", color: "danger", onPress: handleReject }}
               >
-                拒绝
+                Reject
               </AppBtn>
               <AppBtn
                 btnProps={{ size: "sm", color: "success", onPress: handleApprove }}
               >
-                通过
+                Approve
               </AppBtn>
             </div>
           }

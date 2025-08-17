@@ -16,21 +16,13 @@ import { toast } from "sonner";
 import LoadingSkeleton from "~/components/loading-skeleton";
 import { useUserInfo } from "../../hooks/useUserInfo";
 
-// 定义链接类型
-interface UserLinks {
-  x?: string;
-  telegram?: string;
-  github?: string;
-  website?: string;
-}
-
 interface FormData {
   avatar: string;
   name: string;
   email: string;
   role: "ADMIN" | "GP_MOD" | "APPLICANT" | "VIEWER";
   description: string;
-  links: UserLinks;
+  links: Record<string, string>;
 }
 
 export default function ProfilePage() {
@@ -91,7 +83,7 @@ export default function ProfilePage() {
         email: userData.email ?? "",
         role: userData.role ?? "APPLICANT",
         description: userData.description ?? "",
-        links: (userData.links as UserLinks) ?? {},
+        links: userData.links as any ?? {},
       });
       setIsLoading(false);
     }
@@ -117,12 +109,6 @@ export default function ProfilePage() {
       return;
     }
 
-    const links = Object.keys(formData.links).length > 0 
-      ? Object.fromEntries(
-          Object.entries(formData.links).filter(([_, value]) => (value as string)?.trim())
-        ) as Record<string, string> 
-      : undefined;
-
     const submitData = {
       id: currentUser.id,
       avatar: formData.avatar || undefined,
@@ -130,7 +116,7 @@ export default function ProfilePage() {
       email: formData.email.trim(),
       role: formData.role,
       description: formData.description.trim() || undefined,
-      links,
+      links:formData.links,
     };
 
     updateUser.mutate(submitData);
@@ -203,21 +189,11 @@ export default function ProfilePage() {
 
           {/* Social Links */}
           <RelatedLinksSection 
-            links={{
-              website: formData.links.website || '',
-              github: formData.links.github || '',
-              twitter: formData.links.x || '',
-              telegram: formData.links.telegram || ''
-            }}
+            links={formData.links}
             onLinksChange={(links: Record<string, string>) => {
               setFormData(prev => ({
                 ...prev,
-                links: {
-                  website: links.website || undefined,
-                  github: links.github || undefined,
-                  x: links.twitter || undefined,
-                  telegram: links.telegram || undefined,
-                }
+                links
               }));
             }}
           />

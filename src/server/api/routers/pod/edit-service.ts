@@ -83,11 +83,7 @@ export class PodEditService {
     newMilestones: any[]
   ) {
     // 校验milestone数量
-    const completedMilestones = originalPod.milestones.filter(
-      (m: any) => m.status === MilestoneStatus.COMPLETED
-    );
-    
-    if (newMilestones.length + completedMilestones.length > 3) {
+    if (newMilestones.length > 3) {
       throw new Error("Milestone总数不能超过3个（不包含已完成的）");
     }
 
@@ -197,9 +193,10 @@ export class PodEditService {
       });
 
 
-      // 筛选需要失效的 milestone
+      // 筛选需要失效的 milestone，将删除的 active 失效
       const milestonesIds = versionData.milestones.map((v:any)=>v.id);
-      const needInactiveMilestones = existingPod.milestones.filter(v=>v.status === MilestoneStatus.ACTIVE)
+      const needInactiveMilestones = existingPod.milestones
+      .filter(v=>v.status === MilestoneStatus.ACTIVE)
       .filter(v=>!milestonesIds.includes(v.id));
 
       // todo 会多次被插入，需要优化

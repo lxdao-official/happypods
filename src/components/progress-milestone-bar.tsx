@@ -89,10 +89,10 @@ export default function ProgressMilestoneBar({ milestones = [], children }: Prog
 
   // 十六进制颜色数组
   const colors = [
-    "#3B82F6", // 蓝色
-    "#10B981", // 绿色
-    "#8B5CF6", // 紫色
-    "#F59E0B", // 橙色
+    "#874ef1", // 蓝色
+    "#1cc127", // 绿色
+    "#F59E0B", // 紫色
+    "#166dc3", // 橙色
     "#EC4899", // 粉色
     "#EF4444", // 红色
     "#06B6D4", // 青色
@@ -132,18 +132,17 @@ export default function ProgressMilestoneBar({ milestones = [], children }: Prog
   const currentPosition = getCurrentTimePosition();
 
   return (
-    <div className={`mb-6 space-y-2 rounded-md ${isDetail ? '' : 'p-2 bg-white border border-black'}`}>
+    <div className={`mb-6 space-y-2 ${isDetail ? '' : 'p-2 bg-white border border-black rounded-md'}`}>
 
       {children && children}
       
       {/* 进度条容器 */}
       <div className="relative">
         {/* 进度条 */}
-        <div className={`relative flex w-full rounded-sm overflow-visible bg-gray-200 ${isDetail ? 'mb-2 h-4' : 'h-2 mb-1'}`}>
+        <div className={`relative flex w-full rounded-full overflow-hidden bg-gray-200 ${isDetail ? 'mb-2 h-4' : 'h-2 mb-1'}`}>
         {segments.map((segment, index) => (
           <Tooltip
             key={index}
-            color="foreground"
             content={
               <div className="flex flex-col gap-1 p-2 text-left">
                 <b className="font-bold">{segment.name}</b>
@@ -172,7 +171,6 @@ export default function ProgressMilestoneBar({ milestones = [], children }: Prog
         {/* 当前时间指示器 - 显示为有投影的圆 */}
         {isDetail && (
           <Tooltip
-            color="foreground"
             content={
               <div className="flex flex-col gap-1 p-2 text-center">
                 <small className="font-semibold">Current Time</small>
@@ -184,7 +182,7 @@ export default function ProgressMilestoneBar({ milestones = [], children }: Prog
             showArrow={true}
           >
             <div 
-              className="absolute top-0 z-10 w-4 h-4 transition-all duration-300 bg-white border-2 rounded-full shadow-lg cursor-pointer border-primary hover:scale-110 hover:shadow-xl"
+              className="absolute top-0 z-10 w-4 h-4 transition-all duration-300 scale-125 bg-white border-2 rounded-full shadow-lg cursor-pointer border-primary hover:scale-150 hover:shadow-xl"
               style={{ left: `${currentPosition}%` }}
             >
               <div className="w-full h-full rounded-full bg-primary opacity-20"></div>

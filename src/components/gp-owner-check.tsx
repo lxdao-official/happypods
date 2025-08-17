@@ -31,17 +31,17 @@ export default function GpOwnerCheck({ onwerId }: {onwerId?: number}) {
       <Modal isOpen={showModal} onClose={handleCloseModal} size="md" isDismissable={false}>
         <ModalContent>
           <ModalHeader className="text-xl font-bold">
-            无法申请自己的 Grants Pool
+           Cannot apply for your own Grants Pool
           </ModalHeader>
           <ModalBody>
-            <small>您是该 Grants Pool 的创建者，不能申请自己创建的 GP 下的 Pod 项目。作为 GP 创建者，您的职责是管理和审核其他人的 Pod 申请。</small>
+            <small>You are the creator of this Grants Pool, you cannot apply for your own GP.</small>
           </ModalBody>
           <ModalFooter>
             <Button variant="light" onPress={handleCloseModal}>
-              关闭
+              Close
             </Button>
             <Button color="primary" onPress={handleConfirm}>
-              确定
+              Confirm
             </Button>
           </ModalFooter>
         </ModalContent>

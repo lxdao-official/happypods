@@ -17,12 +17,12 @@ interface TreasuryBalanceWarningProps {
 }
 
 export default function TreasuryBalanceWarning({pod}: TreasuryBalanceWarningProps) {
-    const {status, getTransactionHash, isReady: safeWalletReady, getTransactionDetail, proposeOrExecuteTransaction} = useSafeWallet();
+    const {getTransactionHash, isReady: safeWalletReady, getTransactionDetail, proposeOrExecuteTransaction} = useSafeWallet();
     const [shortageSafeHash, setShortageSafeHash] = useState<string>();//当前交易的 hash
     const [transfers, setTransfers] = useState<any[]>([]);
 
     const requiredAmount = pod.milestones.
-    filter(milestone => [MilestoneStatus.ACTIVE].includes(milestone.status as any))
+    filter(milestone => [MilestoneStatus.ACTIVE,MilestoneStatus.REVIEWING].includes(milestone.status as any))
     .reduce((acc, milestone) => Decimal(acc).plus(milestone.amount).toNumber(), 0);
 
     // 如果国库余额交付+手续费不足，则显示提醒
@@ -103,6 +103,8 @@ export default function TreasuryBalanceWarning({pod}: TreasuryBalanceWarningProp
     const safeWalletUrl = 'https://app.safe.global/transactions/tx?safe=oeth:' + (shortage>0 ? 
     `${pod.grantsPool.treasuryWallet}&id=multisig_${pod.grantsPool.treasuryWallet}_${shortageSafeHash}` : 
     `${pod.walletAddress}&id=multisig_${pod.walletAddress}_${shortageSafeHash}`);
+
+    // todo 判断当前钱包是否在权限内
     
     const endContent = (
         <div className="flex gap-2">     

@@ -7,6 +7,7 @@ import { keccak256, encodeFunctionData, type Address, erc20Abi } from "viem";
 import { toast } from "sonner";
 import { PLATFORM_CHAINS } from "~/lib/config";
 import type { GrantsPoolTokens } from "@prisma/client";
+import { delay_s } from "~/lib/utils";
 
   // 基于 {token, from, to, amount}[] 构建 ERC20 转账 SafeTransaction
   type TransferInput = Readonly<{
@@ -33,7 +34,7 @@ const useSafeWallet = () => {
 
   useEffect(() => {
     if (sendTransactionStatus === 'error') {
-      toast.error('多签钱包未创建！');
+      toast.error('multisig wallet not created');
       setStatus('idle');
     }
     if (sendTransactionStatus === 'success') {
@@ -44,7 +45,7 @@ const useSafeWallet = () => {
   // 通用的钱包连接检查
   const validateWalletConnection = useCallback(() => {
     if (!walletClient || !publicClient) {
-      throw new Error("请先连接钱包");
+      throw new Error("please connect wallet first");
     }
   }, [walletClient, publicClient]);
 
@@ -142,15 +143,20 @@ const useSafeWallet = () => {
   // 提案或者执行交易
   const proposeOrExecuteTransaction = async (safeAddress: string, transfers: TransferInput[]) => {
     const {safeTxHash} = await getTransactionHash(safeAddress, transfers);
+    console.log('safeTxHash11===>',safeTxHash);
     if(!safeTxHash) return;
-    const safeTransaction = await buildErc20TransfersSafeTransaction(safeAddress, transfers);
+
+    const safeErc20Transaction = await buildErc20TransfersSafeTransaction(safeAddress, transfers);
+    console.log('safeErc20Transaction===>',safeErc20Transaction);
+
     const safeWallet = await initSafeInstance(safeAddress);
-     //如果多签钱包阈值为1，直接就执行交易
+    console.log('safeWallet===>',safeWallet, safeAddress);
+
      const {threshold, owners} = await apiKit.getSafeInfo(safeAddress);
      console.log('owners===>',owners);
 
      const osOwners = owners.some(owner => owner.toLocaleLowerCase() === address?.toLocaleLowerCase());
-     if(!osOwners) return toast.error('您不是多签钱包的拥有者，无法发起交易');
+     if(!osOwners) return toast.error('You are not the owner of the multi-sig wallet, cannot initiate transactions');
 
      // 查询交易
      let transactionInfo;
@@ -160,27 +166,27 @@ const useSafeWallet = () => {
       console.log('get transactionInfo error===>',error);
      }
 
-    //  交易不存在，且阈值为 1 则直接发起
-     if(!transactionInfo && threshold === 1) {
-      console.log('直接执行==>');
-      const signature = await safeWallet.signHash(safeTxHash);
-      await apiKit.confirmTransaction(safeTxHash, signature.data);
-      return safeTxHash;
-     }
-
-
-     // 交易不存在，且需要多签，需要签名并发起提案
-     if (!transactionInfo && threshold > 1) {
+     // 交易不存在，需要签名并发起提案
+     if (!transactionInfo) {
       console.log('签名并发起提案==>');
        const senderSignature = await safeWallet.signHash(safeTxHash);
+       toast.info('Signed and proposed transaction');
        await apiKit.proposeTransaction({
          safeAddress,
-         safeTransactionData: safeTransaction.data,
+         safeTransactionData: safeErc20Transaction.data,
          safeTxHash: safeTxHash,
          senderAddress: address!,
          senderSignature: senderSignature.data
        });
-       return safeTxHash;
+     }
+
+    //  交易不存在，且阈值为 1 则直接确认，发起
+     if(threshold === 1) {
+      console.log('直接执行==>');
+      toast.info('Execute transaction');
+      const safeTransaction = await apiKit.getTransaction(safeTxHash)
+      await safeWallet.executeTransaction(safeTransaction);
+      return safeTxHash;
      }
 
     //  交易存在，且自己已经签名，但是未执行，等待其他人签名
@@ -188,6 +194,7 @@ const useSafeWallet = () => {
       transactionInfo &&
       transactionInfo.confirmations?.length && 
       !transactionInfo.isExecuted &&
+      transactionInfo.confirmationsRequired > transactionInfo.confirmations?.length &&
       transactionInfo.confirmations.some(confirmation => confirmation.owner.toLocaleLowerCase() === address?.toLocaleLowerCase())
     ) {
       console.log('交易存在，且自己已经签名，等待其他人签名==>');
@@ -202,12 +209,31 @@ const useSafeWallet = () => {
       !transactionInfo.confirmations.some(confirmation => confirmation.owner.toLocaleLowerCase() === address?.toLocaleLowerCase())
      ) {
         console.log('交易存在，且加上自己的签名可以直接执行，则直接执行==>');
+
+        toast.info('Confirm transaction');
         const signature = await safeWallet.signHash(safeTxHash);
         await apiKit.confirmTransaction(safeTxHash, signature.data);
-        const safeTransaction = await apiKit.getTransaction(safeTxHash);
+
+        toast.info('Execute transaction');
+        await delay_s(300);
+
+        const safeTransaction = await apiKit.getTransaction(safeTxHash)
         await safeWallet.executeTransaction(safeTransaction);
         return safeTxHash;
      }
+
+    //  存在交易，签名准备完成，直接可以交易
+    if(
+      transactionInfo &&
+      transactionInfo.confirmations?.length && 
+      transactionInfo.confirmations.length+1 >= transactionInfo.confirmationsRequired
+    ) {
+      console.log('交易存在，签名准备完成，直接可以交易==>');
+      toast.info('Execute transaction');
+      const safeTransaction = await apiKit.getTransaction(safeTxHash)
+      await safeWallet.executeTransaction(safeTransaction);
+      return safeTxHash;
+    }
 
      return safeTxHash;
   };

@@ -40,7 +40,7 @@ export default function ApplicantInfoModal({
         onClick={handleOpen}
       ></i>
 
-      <Modal isOpen={isOpen} onClose={handleClose} size="md">
+      <Modal isOpen={isOpen} onClose={handleClose} size="xl">
         <ModalContent>
           <ModalHeader className="text-xl font-bold">Applicant Information</ModalHeader>
           <ModalBody className="pb-6">

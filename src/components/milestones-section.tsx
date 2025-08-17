@@ -4,7 +4,7 @@ import MilestoneSubmissionDisplay from "./milestone-submission-display";
 import ReviewMilestoneModal from "./review-milestone-modal";
 import ProgressMilestoneBar from "./progress-milestone-bar";
 import StatusChip from "./status-chip";
-import { formatDate } from "~/lib/utils";
+import { formatDate, formatToken } from "~/lib/utils";
 import { MilestoneStatus, type GrantsPool, type Milestone, type Pod } from "@prisma/client";
 import { useEffect, useMemo } from "react";
 import useStore from "~/store";
@@ -111,7 +111,7 @@ export default function MilestonesSection({ milestones, podDetail }: MilestonesS
                 
                 <div className="flex items-center gap-1 text-primary">
                   <img src={`/tokens/${currency}.svg`} alt={currency} className="w-4 h-4" />
-                  <b>{milestone.amount.toString()} {currency}</b>
+                  <b className="font-bold">{formatToken(milestone.amount)} {currency}</b>
                 </div>
                 
                 <b>Deadline: {formatDate(milestone.deadline)}</b>

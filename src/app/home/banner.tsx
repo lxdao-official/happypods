@@ -2,7 +2,7 @@ import { Highlighter } from "~/components/highlighter";
 
 const Banner = () => {
   return (
-    <div className="flex items-center h-screen banner">
+    <div className="flex items-center banner py-[300px]">
       <div className="py-10 text-4xl leading-[60px] text-center">
         <Highlighter action="underline" color="#FF9800">HappyPod</Highlighter>
         &nbsp; supply funding, resources, and guidance to promising projects,  helping them grow into 

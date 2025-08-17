@@ -177,7 +177,7 @@ export function LoginModal() {
               ) : (
                 <i className="text-xl ri-wallet-line"></i>
               )}
-              <span>{username}</span>
+              <span className="hidden md:block">{username}</span>
               <i className="text-xl ri-arrow-down-s-line"></i>
             </Button>
           </DropdownTrigger>

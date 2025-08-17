@@ -16,7 +16,6 @@ import { api } from "~/trpc/react";
 import { toast } from "sonner";
 import LoadingSkeleton from "~/components/loading-skeleton";
 import { DEFAULT_MILESTONE_AMOUNTS } from "~/lib/config";
-import { c } from "node_modules/framer-motion/dist/types.d-Bq-Qm38R";
 
 
 interface Milestone {
