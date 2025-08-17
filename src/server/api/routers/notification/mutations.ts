@@ -5,6 +5,7 @@ import {
   markAllNotificationsReadSchema,
   deleteNotificationSchema 
 } from "./schemas";
+import { NotificationType } from "@prisma/client";
 
 export const notificationMutations = {
   // 创建通知的通用方法
@@ -13,7 +14,7 @@ export const notificationMutations = {
     .mutation(async ({ ctx, input }) => {
       const notification = await ctx.db.notification.create({
         data: {
-          type: input.type,
+          type: input.type  as NotificationType,
           senderId: input.senderId,
           receiverId: input.receiverId,
           title: input.title,

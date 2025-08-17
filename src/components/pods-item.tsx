@@ -1,8 +1,8 @@
 import NextLink from 'next/link';
 import ProgressMilestoneBar from './progress-milestone-bar';
 import StatusChip from './status-chip';
-import { formatDate } from '~/lib/utils';
-import type { Milestone, Pod } from '@prisma/client';
+import { formatDate, formatToken } from '~/lib/utils';
+import { MilestoneStatus, type Milestone, type Pod } from '@prisma/client';
 import Decimal from "decimal.js"
 interface PodsItemProps {
   pod: Pod & {
@@ -18,11 +18,8 @@ const PodsItem = ({ pod, onClick, className = "" }: PodsItemProps) => {
   
   // 计算总资金和已解锁资金
   const totalFunding = pod.milestones?.reduce((sum, milestone) => Decimal(sum).plus(milestone.amount).toNumber(), 0) || 0;
-  const unlocked = pod.milestones?.filter(milestone => milestone.status === 'COMPLETED').reduce((sum, milestone) => Decimal(sum).plus(milestone.amount).toNumber(), 0) || 0;
+  const unlocked = pod.milestones?.filter(milestone => milestone.status === MilestoneStatus.COMPLETED).reduce((sum, milestone) => Decimal(sum).plus(milestone.amount).toNumber(), 0) || 0;
   
-
-  // 格式化最后更新时间
-  const lastUpdate = formatDate(pod.updatedAt);
   
   // 转换里程碑数据以适配 ProgressMilestoneBar 组件
   const milestonesForProgress = pod.milestones?.map((milestone, index) => ({
@@ -74,10 +71,8 @@ const PodsItem = ({ pod, onClick, className = "" }: PodsItemProps) => {
         {/* 资金进度 */}
         <div className="mb-4">
           <div className="flex justify-between mb-2 text-sm">
-            <div className="flex items-center gap-1">
-              <b>{unlocked} / {totalFunding} {pod.currency}</b>
-              <small><i className="ri-lock-line"></i></small>
-            </div>
+            <small className='text-xs'>申请金额：{formatToken(totalFunding)} {pod.currency}</small>
+            <small className='text-xs text-green-500'>已解锁：{formatToken(unlocked)} {pod.currency}</small>
           </div>
           
           <ProgressMilestoneBar milestones={milestonesForProgress}/>
@@ -86,7 +81,7 @@ const PodsItem = ({ pod, onClick, className = "" }: PodsItemProps) => {
 
         {/* 最后更新 */}
         <div className="flex items-center justify-between">
-          <i className="block text-xs text-gray-500">Last update: {lastUpdate}</i>
+          <i className="block text-xs text-gray-500">Last update: {formatDate(pod.updatedAt)}</i>
           <StatusChip status={pod.status} />
         </div>
       </div>

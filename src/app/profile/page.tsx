@@ -14,7 +14,7 @@ import { api } from "~/trpc/react";
 import { getUser } from "~/lib/auth-storage";
 import { toast } from "sonner";
 import LoadingSkeleton from "~/components/loading-skeleton";
-import { useUserInfo } from "../hooks/useUserInfo";
+import { useUserInfo } from "../../hooks/useUserInfo";
 
 // 定义链接类型
 interface UserLinks {

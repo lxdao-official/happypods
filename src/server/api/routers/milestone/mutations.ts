@@ -1,5 +1,5 @@
 import { protectedProcedure } from "~/server/api/trpc";
-import { submitMilestoneDeliverySchema, reviewMilestoneDeliverySchema, confirmPaymentSchema, initiatePodRefundSchema } from "./schemas";
+import { submitMilestoneDeliverySchema, reviewMilestoneDeliverySchema, initiatePodRefundSchema } from "./schemas";
 import { NotificationService } from "../notification/notification-service";
 import { MilestoneStatus, NotificationType, PodStatus } from "@prisma/client";
 import { optimism } from "viem/chains";
@@ -37,7 +37,7 @@ const handlePodRefund = async (
         podId: podId,
         status: MilestoneStatus.ACTIVE
       },
-      data: { status: MilestoneStatus.REJECTED }
+      data: { status: MilestoneStatus.TERMINATED }
     });
   }
 
@@ -89,7 +89,7 @@ export const milestoneMutations = {
 
       // !todo 校验提交之前需要检查国库余额是否充足
 
-       //!todo 验证提交的transactionHash是否有效
+      //!todo 验证提交的transactionHash是否有效
        const safeTransaction = await PLATFORM_CHAINS[optimism.id]?.safeApiKit.getTransaction(input.transactionHash);
        console.log('safeTransaction', safeTransaction);
        if(!safeTransaction){
@@ -176,34 +176,47 @@ export const milestoneMutations = {
         reviewedAt: new Date().toISOString(),
       };
 
+      // 通过审核与最后一次拒绝，检查是否需要提供safeTransactionHash
+      if(
+        (input.approved && !input.safeTransactionHash) ||
+        (!input.approved && currentDeliveryInfo.length >= 3 && !input.safeTransactionHash)
+      ){
+        throw new Error("safeTransactionHash is required");
+      }
+
       // 确定新的milestone状态
       let newStatus;
       if (input.approved) {
         // 审核通过，milestone完成
         newStatus = MilestoneStatus.COMPLETED;
-
          //!todo 检查是safeTransaction
-        if(!milestone.safeTransactionHash) throw new Error("safeTransactionHash不存在");
-        const safeTransaction = await PLATFORM_CHAINS[optimism.id]?.safeApiKit.getTransaction(milestone.safeTransactionHash);
+        const safeTransaction = await PLATFORM_CHAINS[optimism.id]?.safeApiKit.getTransaction(input.safeTransactionHash!);
         if(!safeTransaction){
           throw new Error("TransactionHash无效");
         }
-        
-      } 
-      else if (currentDeliveryInfo.length >= 3) {
-          //! 已经3次提交都被拒绝，milestone失败，需要存入退款
-          // 第三次拒绝时必须提供退款交易hash
-          if (!input.refundSafeTransactionHash) {
-            throw new Error("第三次拒绝时必须提供退款交易hash");
+
+        // 如果所有milestone都完成，则更新pod状态为COMPLETED
+        const remainingActiveMilestones = await ctx.db.milestone.count({
+          where: {
+            podId: milestone.podId,
+            status: MilestoneStatus.ACTIVE
           }
-          
-          newStatus = MilestoneStatus.REJECTED;
+        });
+        if(remainingActiveMilestones <= 0){
+          await ctx.db.pod.update({
+            where: { id: milestone.podId },
+            data: { status: PodStatus.COMPLETED }
+          });
+        }
+      } else if (currentDeliveryInfo.length >= 3) {
+          //! 已经3次提交都被拒绝，milestone失败，需要存入退款
+          newStatus = MilestoneStatus.TERMINATED;
           
           // 使用通用退款函数
           await handlePodRefund(
             ctx.db, 
             milestone.podId, 
-            input.refundSafeTransactionHash, 
+            input.safeTransactionHash!, 
             "Milestone交付三次被拒绝"
           );
         }
@@ -211,9 +224,7 @@ export const milestoneMutations = {
         // 还可以重新提交
         newStatus = MilestoneStatus.ACTIVE;
       }
-
-     
-
+      
       // 更新milestone
       const updatedMilestone = await ctx.db.milestone.update({
         where: { id: input.milestoneId },
@@ -235,59 +246,9 @@ export const milestoneMutations = {
       return updatedMilestone;
     }),
 
-  // 确认转账
-  confirmPayment: protectedProcedure
-    .input(confirmPaymentSchema)
-    .mutation(async ({ ctx, input }) => {
-      // 检查milestone是否存在
-      const milestone = await ctx.db.milestone.findUnique({
-        where: { id: input.milestoneId },
-        include: { 
-          pod: { 
-            include: { grantsPool: true } 
-          } 
-        },
-      });
 
-      if (!milestone) {
-        throw new Error("Milestone不存在");
-      }
-
-      // 检查当前用户是否是 Grants Pool 的拥有者
-      if (milestone.pod.grantsPool.ownerId !== ctx.user!.id) {
-        throw new Error("没有权限确认支付此Milestone");
-      }
-
-      // 更新milestone状态为COMPLETED
-      const updatedMilestone = await ctx.db.milestone.update({
-        where: { id: input.milestoneId },
-        data: {
-          status: MilestoneStatus.COMPLETED,
-        },
-        include: {
-          pod: {
-            include: {
-              applicant: true,
-              grantsPool: true,
-            },
-          },
-        },
-      });
-
-      // 给用户发送通知
-      await NotificationService.createNotification({
-        type: NotificationType.POD_REVIEW,
-        senderId: ctx.user.id,
-        receiverId: milestone.pod.applicantId,
-        title: `Milestone 支付完成`,
-        content: `您的 Milestone "${milestone.title}" 支付已完成！`,
-      });
-
-      return updatedMilestone;
-    }),
-
-  // GP直接发起退款（用于milestone超时等情况）
-  initiatePodRefund: protectedProcedure
+  // GP直接终止Pod（用于milestone超时等情况）
+  terminatePod: protectedProcedure
     .input(initiatePodRefundSchema)
     .mutation(async ({ ctx, input }) => {
       // 检查Pod是否存在
@@ -296,8 +257,7 @@ export const milestoneMutations = {
         include: { 
           grantsPool: true,
           milestones: {
-            where: { status: MilestoneStatus.ACTIVE },
-            orderBy: { deadline: "asc" }
+            where: { status: MilestoneStatus.ACTIVE }
           },
           applicant: true
         },
@@ -309,48 +269,40 @@ export const milestoneMutations = {
 
       // 检查当前用户是否是 Grants Pool 的拥有者
       if (pod.grantsPool.ownerId !== ctx.user!.id) {
-        throw new Error("没有权限发起此Pod的退款");
+        throw new Error("没有权限终止此Pod");
       }
 
-      // 检查Pod状态是否允许退款
+      // 检查Pod状态是否允许终止
       if (pod.status === PodStatus.TERMINATED) {
-        throw new Error("Pod已经终止，不能重复退款");
+        throw new Error("Pod已经终止，不能重复终止");
       }
 
-      // 检查是否存在超时未交付的milestone
-      const now = new Date();
-      const hasTimeoutMilestone = pod.milestones.some(milestone => {
-        const deadline = new Date(milestone.deadline);
-        return deadline < now && milestone.status === MilestoneStatus.ACTIVE;
+      // 将所有ACTIVE状态的milestone设置为TERMINATED
+      if (pod.milestones.length > 0) {
+        await ctx.db.milestone.updateMany({
+          where: { 
+            podId: input.podId,
+            status: MilestoneStatus.ACTIVE
+          },
+          data: { status: MilestoneStatus.TERMINATED }
+        });
+      }
+
+      // 更新Pod状态为TERMINATED
+      await ctx.db.pod.update({
+        where: { id: input.podId },
+        data: { status: PodStatus.TERMINATED }
       });
-
-      if (!hasTimeoutMilestone) {
-        throw new Error("没有超时未交付的Milestone，无法发起退款");
-      }
-
-      // 验证退款交易hash是否有效
-      const safeTransaction = await PLATFORM_CHAINS[optimism.id]?.safeApiKit.getTransaction(input.refundSafeTransactionHash);
-      if (!safeTransaction) {
-        throw new Error("退款TransactionHash无效");
-      }
-
-      // 使用通用退款函数
-      const updatedPod = await handlePodRefund(
-        ctx.db, 
-        input.podId, 
-        input.refundSafeTransactionHash, 
-        "GP发起Milestone超时退款"
-      );
 
       // 通知Pod申请者
       await NotificationService.createNotification({
         type: NotificationType.POD_REVIEW,
         senderId: ctx.user.id,
-        receiverId: updatedPod.applicant.id,
-        title: `Pod 已被终止`,
-        content: `由于Milestone交付超时，您的Pod已被GP终止并发起退款`,
+        receiverId: pod.applicant.id,
+        title: `您的 Pod ${pod.title} 因交付超时，已被 GP Onwer 终止`,
+        content: `由于Milestone交付超时，您的Pod已被GP终止， 请完成退款操作！`,
       });
 
-      return updatedPod;
+      return true;
     }),
 };

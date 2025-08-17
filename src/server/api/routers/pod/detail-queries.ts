@@ -2,6 +2,7 @@ import { MilestoneStatus, PodStatus } from "@prisma/client";
 import { z } from "zod";
 import { createTRPCRouter, protectedProcedure, publicProcedure } from "~/server/api/trpc";
 import { getBalance } from "../wallet/queries";
+import Decimal from "decimal.js";
 
 export const podDetailQueries = {
   // 获取Pod详情（包含完整信息）
@@ -55,9 +56,18 @@ export const podDetailQueries = {
         tokenType: pod.currency,
       });
 
+      const milestones = await ctx.db.milestone.findMany({
+        where: { podId: pod.id },
+      });
+
+      const appliedAmount = milestones.filter(milestone => ![MilestoneStatus.TERMINATED, MilestoneStatus.INACTIVE].includes(milestone.status as any)).reduce((acc, milestone) => Decimal(acc).plus(milestone.amount).toNumber(), 0);
+      const funded = milestones.filter(milestone => milestone.status === MilestoneStatus.COMPLETED).reduce((acc, milestone) => Decimal(acc).plus(milestone.amount).toNumber(), 0);
+
       return {
         ...pod,
         podTreasuryBalances: balances.rawBalance,
+        appliedAmount: appliedAmount,
+        funded: funded
       };
     }),
 

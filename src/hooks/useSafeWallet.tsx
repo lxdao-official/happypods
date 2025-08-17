@@ -8,6 +8,14 @@ import { toast } from "sonner";
 import { PLATFORM_CHAINS } from "~/lib/config";
 import type { GrantsPoolTokens } from "@prisma/client";
 
+  // 基于 {token, from, to, amount}[] 构建 ERC20 转账 SafeTransaction
+  type TransferInput = Readonly<{
+    token: GrantsPoolTokens;
+    from?: string; // 可选，若提供则校验与 safeAddress 一致
+    to: string;
+    amount: string; // 推荐字符串，便于按 decimals 精确转换
+  }>;
+
 const useSafeWallet = () => {
   const { address } = useAccount();
   const { data: walletClient } = useWalletClient();
@@ -118,89 +126,94 @@ const useSafeWallet = () => {
   };
 
   // 创建并计算哈希多签交易：传入已构建的 SafeTransaction，返回 safeTxHash
-  const getTransactionHash = async (safeAddress: string, safeTransaction: SafeTransaction, signPropose: boolean = false) => {
+  const getTransactionHash = async (safeAddress: string, transfers: TransferInput[]) => {
     return withErrorHandling(async () => {
+    const safeTransaction = await buildErc20TransfersSafeTransaction(safeAddress, transfers);
       const safeWallet = await initSafeInstance(safeAddress);
       const safeTxHash = await safeWallet.getTransactionHash(safeTransaction);
       console.log('safeTxHash===>',safeTxHash);
+      return {
+        safeTxHash,
+        transfers
+      };
+    }, '交易 hash 获取失败');
+  };
 
-      const {threshold} = await apiKit.getSafeInfo(safeAddress);
-      if(threshold === 1 && signPropose) { //如果多签钱包阈值为1，直接就执行交易
-        console.log('直接执行==>');
-       await executeSafeTransaction(safeAddress, safeTransaction);
-       return safeTxHash;
-      }
+  // 提案或者执行交易
+  const proposeOrExecuteTransaction = async (safeAddress: string, transfers: TransferInput[]) => {
+    const {safeTxHash} = await getTransactionHash(safeAddress, transfers);
+    if(!safeTxHash) return;
+    const safeTransaction = await buildErc20TransfersSafeTransaction(safeAddress, transfers);
+    const safeWallet = await initSafeInstance(safeAddress);
+     //如果多签钱包阈值为1，直接就执行交易
+     const {threshold, owners} = await apiKit.getSafeInfo(safeAddress);
+     console.log('owners===>',owners);
 
-      if (signPropose) {
-        const senderSignature = await safeWallet.signHash(safeTxHash);
-        await apiKit.proposeTransaction({
-          safeAddress,
-          safeTransactionData: safeTransaction.data,
-          safeTxHash,
-          senderAddress: address!,
-          senderSignature: senderSignature.data
-        });
-      }
+     const osOwners = owners.some(owner => owner.toLocaleLowerCase() === address?.toLocaleLowerCase());
+     if(!osOwners) return toast.error('您不是多签钱包的拥有者，无法发起交易');
 
+     // 查询交易
+     let transactionInfo;
+     try {
+      transactionInfo = await getTransactionDetail(safeTxHash);
+     } catch (error) {
+      console.log('get transactionInfo error===>',error);
+     }
+
+    //  交易不存在，且阈值为 1 则直接发起
+     if(!transactionInfo && threshold === 1) {
+      console.log('直接执行==>');
+      const signature = await safeWallet.signHash(safeTxHash);
+      await apiKit.confirmTransaction(safeTxHash, signature.data);
       return safeTxHash;
-    }, '发送多签交易失败');
+     }
+
+
+     // 交易不存在，且需要多签，需要签名并发起提案
+     if (!transactionInfo && threshold > 1) {
+      console.log('签名并发起提案==>');
+       const senderSignature = await safeWallet.signHash(safeTxHash);
+       await apiKit.proposeTransaction({
+         safeAddress,
+         safeTransactionData: safeTransaction.data,
+         safeTxHash: safeTxHash,
+         senderAddress: address!,
+         senderSignature: senderSignature.data
+       });
+       return safeTxHash;
+     }
+
+    //  交易存在，且自己已经签名，但是未执行，等待其他人签名
+    if(
+      transactionInfo &&
+      transactionInfo.confirmations?.length && 
+      !transactionInfo.isExecuted &&
+      transactionInfo.confirmations.some(confirmation => confirmation.owner.toLocaleLowerCase() === address?.toLocaleLowerCase())
+    ) {
+      console.log('交易存在，且自己已经签名，等待其他人签名==>');
+      return safeTxHash;
+    }
+
+     // 交易存在，且加上自己的签名可以直接执行，则直接执行
+     if(
+      transactionInfo &&
+      transactionInfo.confirmations?.length && 
+      transactionInfo.confirmations.length+1 >= transactionInfo.confirmationsRequired &&
+      !transactionInfo.confirmations.some(confirmation => confirmation.owner.toLocaleLowerCase() === address?.toLocaleLowerCase())
+     ) {
+        console.log('交易存在，且加上自己的签名可以直接执行，则直接执行==>');
+        const signature = await safeWallet.signHash(safeTxHash);
+        await apiKit.confirmTransaction(safeTxHash, signature.data);
+        const safeTransaction = await apiKit.getTransaction(safeTxHash);
+        await safeWallet.executeTransaction(safeTransaction);
+        return safeTxHash;
+     }
+
+     return safeTxHash;
   };
+  
 
-  // 获取待处理交易列表（多签未执行/未完成）
-  const getPendingTransactions = async (safeAddress: string) => {
-    return withErrorHandling(async () => {
-      if (!chainId) {
-        throw new Error('无法获取网络 ID');
-      }
-      const pending = await apiKit.getPendingTransactions(safeAddress);
-      return pending;
-    }, '获取待处理交易失败', false);
-  };
 
-  // 对 SafeTransaction 进行签名
-  const signSafeTransaction = async (safeAddress: string, safeTransaction: SafeTransaction) => {
-    return withErrorHandling(async () => {
-      const safeWallet = await initSafeInstance(safeAddress);
-      await safeWallet.signTransaction(safeTransaction);
-      return true;
-    }, '签名交易失败');
-  };
-
-  // 执行已签名完成的 SafeTransaction
-  const executeSafeTransaction = async (safeAddress: string, safeTransaction: SafeTransaction) => {
-    return withErrorHandling(async () => {
-      const safeWallet = await initSafeInstance(safeAddress);
-      
-      const execResponse = await safeWallet.executeTransaction(safeTransaction);
-      const txHash = ((execResponse as any).transactionResponse?.hash || (execResponse as any).hash) as
-        | `0x${string}`
-        | undefined;
-
-      let receipt: unknown = undefined;
-      if (txHash) {
-        receipt = await publicClient!.waitForTransactionReceipt({ hash: txHash });
-      }
-
-      return { txHash, receipt };
-    }, '执行交易失败');
-  };
-
-  // 根据当前的交易hash获取交易对象,并完成转账执行
-  const executeSafeTransactionByHash = async (safeAddress: string, safeTransactionHash: string) => {
-    return withErrorHandling(async () => {
-      const safeWallet = await initSafeInstance(safeAddress);
-      const safeTransaction = await apiKit.getTransaction(safeTransactionHash);
-      return await safeWallet.executeTransaction(safeTransaction);
-    }, '执行交易失败', false);
-  };
-
-  // 基于 {token, from, to, amount}[] 构建 ERC20 转账 SafeTransaction
-  type TransferInput = Readonly<{
-    token: GrantsPoolTokens;
-    from?: string; // 可选，若提供则校验与 safeAddress 一致
-    to: string;
-    amount: string; // 推荐字符串，便于按 decimals 精确转换
-  }>;
 
   const buildErc20TransfersSafeTransaction = async (
     safeAddress: string,
@@ -253,37 +266,18 @@ const useSafeWallet = () => {
     }, '构建ERC20转账交易失败');
   };
 
-  // 传入交易数据,构建交易获取hash,发起交易
-  const buildAndExecuteSafeTransaction = async (safeAddress: string, transfers: ReadonlyArray<TransferInput>) => {
-    return withErrorHandling(async () => {
-      console.log('transfers==>', transfers);
-      const safeTransaction = await buildErc20TransfersSafeTransaction(safeAddress, transfers);
-      console.log('safeTransaction==>', safeTransaction);
-      const safeTxHash = await getTransactionHash(safeAddress, safeTransaction, true);
-      console.log('safeTxHash==>', safeTxHash);
-      const res = await executeSafeTransactionByHash(safeAddress, safeTxHash);
-      return {
-        res,
-        safeTxHash
-      };
-    }, '构建并执行Safe交易失败', false);
-  };
-
   // 获取交易详情
   const getTransactionDetail = async (safeTransactionHash: string) => {
     return withErrorHandling(async () => {
-      return await apiKit.getTransaction(safeTransactionHash);
+      try {
+        const transaction = await apiKit.getTransaction(safeTransactionHash);
+        return transaction;
+      } catch (error) {
+        return null;
+      }
     }, '获取交易详情失败', false);
   };
 
-  // 通过构建的交易获取 hash
-  const getHashFromSafeTransaction = async (safeAddress: string,  transfers: ReadonlyArray<TransferInput>, signPropose:boolean=false) => {
-    return withErrorHandling(async () => {
-      const safeTransaction = await buildErc20TransfersSafeTransaction(safeAddress, transfers);
-      const safeTxHash = await getTransactionHash(safeAddress, safeTransaction, signPropose);
-      return safeTxHash;
-    }, '获取交易hash失败', false);
-  };
 
   // 检查环境是否已经准备好
   const isReady = useMemo(()=>{
@@ -296,14 +290,9 @@ const useSafeWallet = () => {
   return {
     deploySafe,
     getTransactionHash,
-    getHashFromSafeTransaction,
-    getPendingTransactions,
-    signSafeTransaction,
-    executeSafeTransaction,
     buildErc20TransfersSafeTransaction,
-    executeSafeTransactionByHash,
-    buildAndExecuteSafeTransaction,
     getTransactionDetail,
+    proposeOrExecuteTransaction,
     status,
     isReady
   };

@@ -55,7 +55,7 @@ export const rejectPodSchema = z.object({
 
 export const approvePodSchema = z.object({
   id: z.number(),
-  transactionHash: z.string(),
+  transactionHash: z.string().optional(),
 });
 
 export const editPodSchema = z.object({

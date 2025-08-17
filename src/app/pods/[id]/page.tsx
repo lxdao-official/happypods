@@ -2,7 +2,7 @@
 
 import { useParams } from "next/navigation";
 import NextLink from 'next/link';
-import { formatDate } from "~/lib/utils";
+import { formatDate, formatToken } from "~/lib/utils";
 import { QRCodeTooltip } from "~/components/qr-code-tooltip";
 import MilestonesSection from "~/components/milestones-section";
 import CardBox from "~/components/card-box";
@@ -20,10 +20,7 @@ import JsonInfoDisplay from "~/components/json-info-display";
 import { LinkDisplay } from "~/components/link-display";
 import { useMemo } from "react";
 import useStore from "~/store";
-import Decimal from "decimal.js";
 import Tag from "~/components/tag";
-import PodRejectedActions from "~/components/pod-rejected-actions";
-import { useUserInfo } from "~/app/hooks/useUserInfo";
 import PodMilestoneTimeoutActions from "~/components/pod-milestone-timeout-actions";
 
 
@@ -56,10 +53,6 @@ export default function PodDetailPage() {
       return userInfo && userInfo?.id === podDetail?.applicantId;
     },[userInfo,podDetail]);
 
-    // 当前用户是管理员
-    const { isPlatformAdmin } = useUserInfo();
-
-
     // 存在超时milestone
     const hasTimeoutMilestone = useMemo(()=>{
       return podDetail?.milestones?.some(milestone => milestone.status === MilestoneStatus.ACTIVE && new Date(milestone.deadline) < new Date());
@@ -72,18 +65,7 @@ export default function PodDetailPage() {
     </div>
   }
 
-  const funded = podDetail.milestones.filter(milestone => milestone.status === MilestoneStatus.COMPLETED).reduce((acc, milestone) => Decimal(acc).plus(milestone.amount).toNumber(), 0);
-  const appliedAmount = podDetail.milestones.reduce((acc, milestone) => Decimal(acc).plus(milestone.amount).toNumber(), 0);
-
   // 转换数据格式以匹配现有 UI
-  const pod = {
-    ...podDetail,
-    tags: podDetail.tags?.split(',').map(tag => tag.trim()).filter(Boolean) || [],
-    treasury: {
-      appliedAmount,
-      funded
-    },
-  };
 
   return (
     <div className="container px-4 py-8 mx-auto space-y-4 fadeIn">
@@ -93,34 +75,16 @@ export default function PodDetailPage() {
         <PodMilestoneTimeoutActions pod={podDetail} />
       }
 
-      {
-        pod.status === PodStatus.TERMINATED && 
-        (pod.safeTransactionHash as Record<string, string>)[`out_${Number(pod.podTreasuryBalances)}`] && 
-        (isGPOwner || isPodOwner) && 
-        Number(pod.podTreasuryBalances) > 0 && (
-          <PodRejectedActions pod={podDetail} />
-        )
-      }
-
       {/* 国库余额不足警告 */}
       {
-        (isGPOwner || isPodOwner) && pod.status === PodStatus.IN_PROGRESS && 
-        <TreasuryBalanceWarning pod={pod as any}/>
+        (isGPOwner || isPodOwner) && ![PodStatus.REJECTED].includes(podDetail.status as any) && 
+        <TreasuryBalanceWarning pod={podDetail as any}/>
       }
 
       {/* GP 审核操作 */}
       {
         isGPOwner && 
-        <GpReviewActions 
-            podStatus={pod.status}
-            grantsPoolId={pod.grantsPool.id}
-            podId={pod.id}
-            podTitle={pod.title}
-            podWalletAddress={pod.walletAddress}
-            podCurrency={pod.currency}
-            appliedAmount={pod.treasury.appliedAmount}
-            treasuryWallet={pod.grantsPool.treasuryWallet}
-          />
+        <GpReviewActions podDetail={podDetail as any}/>
       }
 
       <CardBox
@@ -128,14 +92,14 @@ export default function PodDetailPage() {
       title={
        <div className="flex items-center justify-between">
          <div className="flex items-center">
-            <img src={pod.avatar || ''} alt="" className="w-10 h-10 rounded-full" />
-            <span className="ml-2 text-2xl font-bold">{pod.title}</span>
+            <img src={podDetail.avatar || ''} alt="" className="w-10 h-10 rounded-full" />
+            <span className="ml-2 text-2xl font-bold">{podDetail.title}</span>
           </div>
 
           <ShareButton 
             url={typeof window !== 'undefined' ? window.location.href : ''}
-            title={`${pod.title} - ${pod.description}`}
-            description={pod.description}
+            title={`${podDetail.title} - ${podDetail.description}`}
+            description={podDetail.description}
             size="sm"
             color="primary"
           />
@@ -156,13 +120,13 @@ export default function PodDetailPage() {
               {
                 isGPOwner && <Tag color="success">GP Owner</Tag>
               }
-              {pod.tags.map((tag, index) => <Tag key={index}>{tag}</Tag>)}
+              {podDetail.tags?.split(',').map((tag:string, index:number) => <Tag key={index}>{tag}</Tag>)}
             </div>
             
             <div className="space-y-6">
               <div>
                 <p className="leading-relaxed">
-                  {pod.description}
+                  {podDetail.description}
                 </p>
               </div>
             </div>
@@ -172,14 +136,7 @@ export default function PodDetailPage() {
 
           <div>
             {milestones && 
-            <MilestonesSection 
-              milestones={milestones} 
-              gpOwnerId={pod.grantsPool.ownerId} 
-              podOwnerId={pod.applicant.id} 
-              podCurrency={pod.currency}
-              safeAddress={pod.walletAddress}
-              podDetail={podDetail}
-            />}
+            <MilestonesSection milestones={milestones} podDetail={podDetail as any}/>}
           </div>
         </div>
 
@@ -190,14 +147,14 @@ export default function PodDetailPage() {
                 <span className="text-xl font-bold">Treasury</span>
                 <div className="flex items-center gap-1 text-sm">
                   (
-                    <img src={`/tokens/${pod.currency}.svg`} alt="" className="w-4 h-4" />
-                    <small>{pod.currency}</small>
+                    <img src={`/tokens/${podDetail.currency}.svg`} alt="" className="w-4 h-4" />
+                    <small>{podDetail.currency}</small>
                   )
                 </div>
               </div>
               <div className="flex items-center gap-1 space-x-2">
-                <QRCodeTooltip content={pod.walletAddress}/>
-                <a href={`https://app.safe.global/home?safe=oeth:${pod.walletAddress}`} target="_blank" rel="noopener noreferrer">
+                <QRCodeTooltip content={podDetail.walletAddress}/>
+                <a href={`https://app.safe.global/home?safe=oeth:${podDetail.walletAddress}`} target="_blank" rel="noopener noreferrer">
                   <i className="text-xl ri-external-link-line hover:opacity-70"></i>
                 </a>
               </div>
@@ -205,17 +162,17 @@ export default function PodDetailPage() {
             <div className="grid grid-cols-3 gap-1 text-left">
             
               <div className="p-2 text-black rounded-md">
-                <div className="text-xl font-bold">{pod.podTreasuryBalances}</div>
+                <div className="text-xl font-bold">{formatToken(podDetail.podTreasuryBalances)}</div>
                 <div className="text-xs text-secondary">Locked</div>
               </div>
 
               <div className="p-2 text-red-500 rounded-md">
-                <div className="text-xl font-bold">{pod.treasury.appliedAmount}</div>
+                <div className="text-xl font-bold">{formatToken(podDetail.appliedAmount)}</div>
                 <div className="text-xs text-secondary">Application</div>
               </div>
               
               <div className="p-2 text-green-500 rounded-md">
-                <div className="text-xl font-bold">{pod.treasury.funded}</div>
+                <div className="text-xl font-bold">{formatToken(podDetail.funded)}</div>
                 <div className="text-xs text-secondary">Funded</div>
               </div>
             </div>
@@ -229,7 +186,7 @@ export default function PodDetailPage() {
 
                 <div className="flex items-center justify-between space-x-2">
                   <div className="mb-1 text-sm text-secondary">Status</div>
-                  <StatusChip status={pod.status as any} />
+                  <StatusChip status={podDetail.status as any} />
                 </div>
                 
                 <div className="flex items-center justify-between space-x-2">
@@ -237,24 +194,26 @@ export default function PodDetailPage() {
                   <div className="flex items-center gap-2">
                     <div className="flex items-center gap-2 text-sm">
                       {
-                        pod.applicant.avatar ? (
-                          <img src={pod.applicant.avatar} alt="" className="w-6 h-6 bg-white rounded-full" />
+                        podDetail.applicant.avatar ? (
+                          <img src={podDetail.applicant.avatar} alt="" className="w-6 h-6 bg-white rounded-full" />
                         ) : (
                           <i className="ri-user-2-line"></i>
                         )
                       }
-                      <span>{pod.applicant.name}</span>
+                      <span>{podDetail.applicant.name}</span>
                     </div>
-                    <ApplicantInfoModal applicant={podDetail.applicant} />
+                    {
+                      (isPodOwner || isGPOwner) && <ApplicantInfoModal applicant={podDetail.applicant} />
+                    }
                   </div>
                 </div>
 
                 <div className="flex items-center justify-between space-x-2">
                   <div className="mb-1 text-sm text-secondary shrink-0">Grants Pool</div>
                   <div className="flex items-center gap-2">
-                    <img src={pod.grantsPool.avatar || ''} alt="" className="w-6 h-6 rounded-full" />
-                    <span className="text-sm">{pod.grantsPool.name}</span>
-                    <NextLink href={`/grants-pool/${pod.grantsPool.id}`} target="_blank">
+                    <img src={podDetail.grantsPool.avatar || ''} alt="" className="w-6 h-6 rounded-full" />
+                    <span className="text-sm">{podDetail.grantsPool.name}</span>
+                    <NextLink href={`/grants-pool/${podDetail.grantsPool.id}`} target="_blank">
                       <i className="text-sm ri-external-link-line hover:opacity-70"></i>
                     </NextLink>
                   </div>
@@ -270,7 +229,7 @@ export default function PodDetailPage() {
                 <div className="flex items-center justify-between space-x-2">
                   <div className="mb-1 text-sm text-secondary shrink-0">Created</div>
                   <span className="text-sm">
-                    {formatDate(pod.createdAt.toISOString())}
+                    {formatDate(podDetail.createdAt.toISOString())}
                   </span>
                 </div>
 
@@ -289,10 +248,10 @@ export default function PodDetailPage() {
 
             <EdgeLine color="var(--color-background)"/>
 
-            {pod.links && (
+            {podDetail.links && (
               <div>
                 <h2 className="mb-4 text-xl font-bold">Links</h2>
-                <LinkDisplay links={pod.links as Record<string, string>} theme="light" />
+                <LinkDisplay links={podDetail.links as Record<string, string>} theme="light" />
                 
                 {/* 历史版本组件 */}
                 <PodHistorySection pod={podDetail as any} />

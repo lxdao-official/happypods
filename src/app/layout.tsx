@@ -7,6 +7,7 @@ import { HeroUIProvider } from "@heroui/react";
 
 import { TRPCReactProvider } from "~/trpc/react";
 import { RainbowKitProviderWrapper } from "~/components/providers/rainbowkit-provider";
+import { ConfirmProvider } from "~/components/providers/confirm-provider";
 import { AppLayout } from "~/components/layout/app-layout";
 import { GridBackground } from "~/components/layout/grid-background";
 import { Toaster } from "sonner";
@@ -62,8 +63,10 @@ export default function RootLayout({
         <HeroUIProvider locale="en-US">
           <RainbowKitProviderWrapper>
             <TRPCReactProvider>
-              <AppLayout>{children}</AppLayout>
-              <Toaster position="top-center" richColors theme="dark" />
+              <ConfirmProvider>
+                <AppLayout>{children}</AppLayout>
+                <Toaster position="top-center" richColors theme="dark" />
+              </ConfirmProvider>
             </TRPCReactProvider>
           </RainbowKitProviderWrapper>
         </HeroUIProvider>

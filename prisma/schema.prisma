@@ -157,10 +157,10 @@ enum MilestoneStatus {
   ACTIVE // 有效
   INACTIVE // 失效
   COMPLETED // 完成
-  REJECTED // 拒绝
   APPROVED // 批准
   REVIEWING // 审核中
   PENDING_DELIVERY // 待交付
+  TERMINATED // 被终止 || 拒绝
 }
 
 model Notification {

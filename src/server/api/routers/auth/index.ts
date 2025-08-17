@@ -8,7 +8,7 @@ import { NotificationType } from "@prisma/client";
 
 // 定义TypedData结构
 const domain = {
-  name: 'Happy Pods',
+  name: 'HappyPods',
   version: '1',
 } as const;
 
@@ -21,35 +21,15 @@ const types = {
 } as const;
 
 export const authRouter = createTRPCRouter({
-  // 获取随机nonce用于签名
-  getNonce: publicProcedure.query(() => {
-    const nonce = Math.random().toString(36).substring(2, 15);
-    const timestamp = Math.floor(Date.now() / 1000);
-    
-    return {
-      nonce,
-      timestamp,
-      message: `欢迎登录 Happy Pods！\n\n请签名此消息以验证您的身份。\n\nNonce: ${nonce}\nTimestamp: ${timestamp}`,
-    };
-  }),
-
   // 验证签名并生成JWT token
   verifySignature: publicProcedure
     .input(verifySignatureSchema)
     .mutation(async ({ ctx, input }) => {
       try {
-        // 解析消息中的时间戳
-        const timestampRegex = /Timestamp: (\d+)/;
-        const timestampMatch = timestampRegex.exec(input.message);
-        if (!timestampMatch) {
-          throw new Error("消息格式无效");
-        }
-
-        const timestamp = parseInt(timestampMatch[1]!);
         const currentTime = Math.floor(Date.now() / 1000);
         
         // 检查签名是否过期（5分钟内有效）
-        if (currentTime - timestamp > 300) {
+        if (currentTime - input.timestamp > 300) {
           throw new Error("签名已过期，请重新签名");
         }
 
@@ -60,12 +40,11 @@ export const authRouter = createTRPCRouter({
           primaryType: 'LoginMessage' as const,
           message: {
             message: input.message,
-            nonce: input.nonce,
-            timestamp: BigInt(timestamp),
+            nonce: input.timestamp.toString(),
+            timestamp: BigInt(input.timestamp),
           },
         };
 
-        // 验证签名
         const isValid = await verifyTypedData({
           address: input.address as `0x${string}`,
           domain: typedData.domain,
@@ -74,6 +53,8 @@ export const authRouter = createTRPCRouter({
           message: typedData.message,
           signature: input.signature as `0x${string}`,
         });
+
+        console.log('Signature verification result:', isValid);
 
         if (!isValid) {
           throw new Error("签名验证失败");

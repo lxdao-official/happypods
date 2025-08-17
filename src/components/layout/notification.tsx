@@ -13,7 +13,7 @@ import {
   DrawerFooter,
 } from "@heroui/react";
 import { formatDate } from "~/lib/utils";
-import useNotifcation from "~/app/hooks/useNotifcation";
+import useNotifcation from "~/hooks/useNotifcation";
 import Empty from "../empty";
 
 export function NotificationDrawer() {

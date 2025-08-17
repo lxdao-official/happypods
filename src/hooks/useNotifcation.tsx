@@ -1,7 +1,7 @@
 import { useEffect } from "react";
 import useStore from "~/store";
 import { api } from "~/trpc/react";
-import { useUserInfo } from "./useUserInfo";
+import { useUserInfo } from "~/hooks/useUserInfo";
 
 const useNotifcation = () => {
     const { data: notifications,refetch:refetchNotification } = api.notification.getUserNotifications.useQuery();

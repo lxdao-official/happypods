@@ -2,12 +2,9 @@
 
 import { Alert } from "@heroui/react";
 import AppBtn from "~/components/app-btn";
-import Link from "next/link";
-import type { Pod, GrantsPoolTokens } from "@prisma/client";
-import useSafeWallet from "~/app/hooks/useSafeWallet";
-import { useEffect, useMemo, useState } from "react";
+import { useState } from "react";
+import type { Pod } from "@prisma/client";
 import { toast } from "sonner";
-import useStore from "~/store";
 import { api } from "~/trpc/react";
 import { delay_s } from "~/lib/utils";
 
@@ -19,80 +16,39 @@ interface PodMilestoneTimeoutActionsProps {
 }
 
 export default function PodMilestoneTimeoutActions({pod}: PodMilestoneTimeoutActionsProps) {
-  const {userInfo} = useStore();
-  const [confirmations, setConfirmations] = useState<string[]>([]);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const {getTransactionDetail, executeSafeTransactionByHash, buildAndExecuteSafeTransaction} = useSafeWallet();
-
-  // 新增：initiatePodRefund mutation
-  const initiatePodRefundMutation = api.milestone.initiatePodRefund.useMutation({
+  // terminatePod mutation
+  const terminatePodMutation = api.milestone.terminatePod.useMutation({
     onSuccess: async () => {
-      toast.success('退款发起成功！');
+      toast.success('Pod终止成功！');
       await delay_s(2000);
       window.location.reload();
     },
     onError: (error) => {
-      console.error("发起退款失败:", error);
-      toast.error(`发起退款失败: ${error.message}`);  
+      console.error("终止Pod失败:", error);
+      toast.error(`终止Pod失败: ${error.message}`);  
     },
     onSettled: () => {
       setIsSubmitting(false);
     },
   });
 
-  const refundSafeTransactionHash = (pod.safeTransactionHash as Record<string, string>)[`out_${Number(pod.podTreasuryBalances)}`];
-
-  const getTxData = async () => {
-    if (refundSafeTransactionHash) {
-      const transaction = await getTransactionDetail(refundSafeTransactionHash);
-      console.log('transaction==?',transaction);
-      setConfirmations(transaction.confirmations?.map(item=>item.owner.toLowerCase()) || []);
-    }
-  }
-
-  useEffect(() => {
-    getTxData()
-  }, [refundSafeTransactionHash]);
-
-  // 只显示未确认的按钮
-  const isConfirmed = useMemo(()=>{
-    if(!userInfo?.walletAddress) return false;
-    return confirmations.includes(userInfo?.walletAddress.toLowerCase());
-  },[confirmations,userInfo]);
-
-  const refund = async () => {
-    if (!pod.walletAddress || !refundSafeTransactionHash) throw new Error('退款失败');
-    await executeSafeTransactionByHash(pod.walletAddress, refundSafeTransactionHash);
-    toast.success('退款成功');
-  }
-  
-
-  // 发起退款多签提案
-  const proposeRefund = async () => {
+  // 终止Pod
+  const handleTerminatePod = async () => {
     if (isSubmitting) return;
     
     setIsSubmitting(true);
     
     try {
-      // 构建并执行Safe交易，类似review-milestone-modal的实现
-      const res = await buildAndExecuteSafeTransaction(pod.walletAddress, [{
-        token: pod.currency as GrantsPoolTokens,
-        to: pod.grantsPool.treasuryWallet,
-        amount: Number(pod.podTreasuryBalances).toString()
-      }]);
-      
-      // 调用后端接口，传入podId和退款交易hash
-      await initiatePodRefundMutation.mutateAsync({
-        podId: pod.id,
-        refundSafeTransactionHash: res.safeTxHash
+      await terminatePodMutation.mutateAsync({
+        podId: pod.id
       });
     } catch (error) {
-      console.error('发起退款失败:', error);
+      console.error('终止Pod失败:', error);
       setIsSubmitting(false);
     }
   };
-
 
   return (
     <Alert
@@ -103,46 +59,20 @@ export default function PodMilestoneTimeoutActions({pod}: PodMilestoneTimeoutAct
       classNames={{base: 'bg-background'}}
       endContent={
         <div className="flex items-center gap-4">
-          
-          {
-            refundSafeTransactionHash &&
-              <AppBtn 
-                btnProps={{
-                  size: "sm", 
-                  color: "warning",
-                  onPress: proposeRefund,
-                  isLoading: isSubmitting,
-                  isDisabled: isSubmitting
-                }}
-                >发起退款多签</AppBtn>
-          }
-          
-          {
-            !isConfirmed &&
-              <AppBtn 
-                btnProps={{
-                  size: "sm", 
-                  color: "warning",
-                  onPress: refund
-                }}
-                > 确认退款</AppBtn>
-          }
-          {
-            refundSafeTransactionHash &&
-              <Link href={`https://app.safe.global/transactions/tx?safe=oeth:${pod.walletAddress}&id=multisig_${pod.walletAddress}_${refundSafeTransactionHash}`} target="_blank">
-                <AppBtn btnProps={{color: "default", size: "sm", variant: "bordered"}}>
-                  <div className="flex gap-2">
-                    <span>交易详情</span>
-                    <i className="ri-external-link-line"></i>
-                  </div>
-                </AppBtn>
-              </Link>
-          }
+          <AppBtn 
+            btnProps={{
+              size: "sm", 
+              color: "warning",
+              onPress: handleTerminatePod,
+              isLoading: isSubmitting,
+              isDisabled: isSubmitting
+            }}
+            >终止 Pod</AppBtn>
         </div>
       }
     >
       <div className="space-y-1">
-        <small className="text-secondary">若 Milestone 交付超时，您可以终止 Pod 并发起资金退回多签交易！</small>
+        <small className="text-secondary">若 Milestone 交付超时，请及时联系 Pod owner 或终止 Pod！</small>
       </div>
     </Alert>
   );

@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { Modal, ModalContent, ModalHeader, ModalBody, ModalFooter, Button, Input } from "@heroui/react";
 import CornerFrame from "~/components/corner-frame";
 import SafeConfigForm from "~/components/safe-config-form";
-import useSafeWallet from "~/app/hooks/useSafeWallet";
+import useSafeWallet from "~/hooks/useSafeWallet";
 import { useAccount } from "wagmi";
 import { type Address } from "viem";
 import { toast } from "sonner";

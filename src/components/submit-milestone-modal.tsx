@@ -4,19 +4,19 @@ import RelatedLinksSection from "./related-links-section";
 import { api } from "~/trpc/react";
 import { toast } from "sonner";
 import { delay_s } from "~/lib/utils";
-import useSafeWallet from "~/app/hooks/useSafeWallet";
+import useSafeWallet from "~/hooks/useSafeWallet";
 
 interface SubmitMilestoneModalProps {
   milestoneId: string | number;
   safeTransactionHash: string | null;
 }
 
-export default function SubmitMilestoneModal({ milestoneId, safeTransactionHash }: SubmitMilestoneModalProps) {
+export default function SubmitMilestoneModal({ milestoneId }: SubmitMilestoneModalProps) {
   const { isOpen, onOpen, onClose } = useDisclosure();
   const [description, setDescription] = useState("");
   const [links, setLinks] = useState<Record<string, string>>({});
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const {buildErc20TransfersSafeTransaction,getTransactionHash} = useSafeWallet();
+  const {proposeOrExecuteTransaction,getTransactionHash} = useSafeWallet();
   const {data: safeTransactionData} = api.milestone.getPaymentTransactionData.useQuery({milestoneId: Number(milestoneId)});
   console.log('safeTransactionData',safeTransactionData);
 
@@ -49,27 +49,24 @@ export default function SubmitMilestoneModal({ milestoneId, safeTransactionHash 
 
     if(!safeTransactionData) return toast.error("safeTransactionData is null");
 
-    // 构建转账+手续费交易
-    const safeTransaction = await buildErc20TransfersSafeTransaction(safeTransactionData.treasuryWallet, 
-      safeTransactionData.transactions.map(transaction => ({
-        token: transaction.token,
-        to: transaction.to,
-        amount: transaction.amount
-      }))
-    )
-    console.log('safeTransaction', safeTransaction);
+    const transactions = safeTransactionData.transactions.map(transaction => ({
+      token: transaction.token,
+      to: transaction.to,
+      amount: transaction.amount
+    })) as any;
+
     // 获取hash, 签名交易, 提案交易
-    if(!safeTransactionHash){
-      safeTransactionHash = await getTransactionHash(safeTransactionData.treasuryWallet, safeTransaction, true);
-      console.log('safeTransactionHash', safeTransactionHash);
-    }
+    const {safeTxHash} = await getTransactionHash(safeTransactionData.treasuryWallet, transactions);
+    console.log('safeTransactionHash', safeTxHash);
+    
+    await proposeOrExecuteTransaction(safeTransactionData.treasuryWallet, transactions);
 
     try {
       await submitMilestoneDeliveryMutation.mutateAsync({
         milestoneId: Number(milestoneId),
         content: description.trim(),
         links: links,
-        transactionHash: safeTransactionHash
+        transactionHash: safeTxHash
       });
     } catch (error) {
       // 错误处理在mutation的onError中

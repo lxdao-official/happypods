@@ -114,7 +114,7 @@ export const podQueries = {
         include: {
           applicant: { select: { id: true, name: true, avatar: true } },
           grantsPool: { select: { id: true, name: true, avatar: true } },
-          milestones: { orderBy: { createdAt: "asc" } },
+          milestones: { orderBy: { createdAt: "asc" }, where: { status: { notIn: [MilestoneStatus.INACTIVE] } } },
           _count: { select: { milestones: true } },
         },
       });
@@ -137,6 +137,7 @@ export const podQueries = {
           grantsPool: true,
           milestones: {
             orderBy: { createdAt: "asc" },
+            where: { status: { notIn: [MilestoneStatus.INACTIVE] } }
           },
         },
       });

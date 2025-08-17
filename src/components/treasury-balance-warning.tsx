@@ -6,18 +6,20 @@ import AppBtn from "~/components/app-btn";
 import { FEE_CONFIG } from "~/lib/config";
 import Decimal from "decimal.js";
 import { GrantsPoolTokens, MilestoneStatus, type GrantsPool, type Milestone, type Pod } from "@prisma/client";
-import useSafeWallet from "~/app/hooks/useSafeWallet";
+import useSafeWallet from "~/hooks/useSafeWallet";
 import { toast } from "sonner";
 import { useEffect, useState } from "react";
 import useStore from "~/store";
+import { formatToken } from "~/lib/utils";
 
 interface TreasuryBalanceWarningProps {
-  pod: Pod & { milestones: Milestone[],podTreasuryBalances: number, grantsPool: GrantsPool };
+  pod: Pod & { milestones: Milestone[],podTreasuryBalances: number, grantsPool: GrantsPool, currency: string };
 }
 
 export default function TreasuryBalanceWarning({pod}: TreasuryBalanceWarningProps) {
-    const {status, getHashFromSafeTransaction, isReady: safeWalletReady, getTransactionDetail} = useSafeWallet();
-    const [shortageSafeHash, setShortageSafeHash] = useState<string>();
+    const {status, getTransactionHash, isReady: safeWalletReady, getTransactionDetail, proposeOrExecuteTransaction} = useSafeWallet();
+    const [shortageSafeHash, setShortageSafeHash] = useState<string>();//当前交易的 hash
+    const [transfers, setTransfers] = useState<any[]>([]);
 
     const requiredAmount = pod.milestones.
     filter(milestone => [MilestoneStatus.ACTIVE].includes(milestone.status as any))
@@ -35,7 +37,7 @@ export default function TreasuryBalanceWarning({pod}: TreasuryBalanceWarningProp
         
         const transactions = await shortage>0 ? 
         // gp->pod
-        getHashFromSafeTransaction(pod.grantsPool.treasuryWallet, [
+        getTransactionHash(pod.grantsPool.treasuryWallet, [
             {
                 token: pod.currency as GrantsPoolTokens,
                 from: pod.grantsPool.treasuryWallet,
@@ -44,7 +46,7 @@ export default function TreasuryBalanceWarning({pod}: TreasuryBalanceWarningProp
             }
         ]) :
         // pod->gp
-        getHashFromSafeTransaction(pod.walletAddress, [
+        getTransactionHash(pod.walletAddress, [
             {
                 token: pod.currency as GrantsPoolTokens,
                 from: pod.walletAddress,
@@ -52,8 +54,10 @@ export default function TreasuryBalanceWarning({pod}: TreasuryBalanceWarningProp
                 amount: Math.abs(shortage).toString(),
             }
         ]);
-        const hash = await transactions;
-        setShortageSafeHash(hash);
+        const {safeTxHash, transfers} = await transactions;
+        console.log({safeTxHash, transfers});
+        setShortageSafeHash(safeTxHash);
+        setTransfers(transfers as any);
     }
 
     // 获取交易详情，判断当前用户是否需要签名
@@ -62,8 +66,10 @@ export default function TreasuryBalanceWarning({pod}: TreasuryBalanceWarningProp
     const getTransactionInfo = async()=>{
         if(!shortageSafeHash || !userInfo) return;
         const res = await getTransactionDetail(shortageSafeHash);
-        const isSigned = res.confirmations?.some(v => v.owner.toLocaleLowerCase() === userInfo?.walletAddress?.toLocaleLowerCase());
-        setNeedSign(!res.isExecuted && !isSigned);// 交易未完成，并且当前用户未签名需要显示操作
+        console.log('res===>',res);
+        if(!res) return setNeedSign(true); // 没有找到交易，可以发起
+        const isSigned = res?.confirmations?.some(v => v.owner.toLocaleLowerCase() === userInfo?.walletAddress?.toLocaleLowerCase());
+        setNeedSign(!res?.isExecuted && !isSigned);// 交易未完成，并且当前用户未签名需要显示操作
     }
     useEffect(()=>{
         getTransactionInfo();
@@ -75,19 +81,37 @@ export default function TreasuryBalanceWarning({pod}: TreasuryBalanceWarningProp
     },[shortage,pod.grantsPool.treasuryWallet,pod.walletAddress,pod.currency,safeWalletReady])
 
     // 发起交易
+    const [isSending, setIsSending] = useState<boolean>(false);
     const sendTx = async()=>{
-
+        if(!shortageSafeHash || shortage===0 || !transfers.length) return;
+        setIsSending(true);
+        try {
+            await proposeOrExecuteTransaction(
+                shortage>0 ? pod.grantsPool.treasuryWallet : pod.walletAddress, 
+                transfers as any
+            );
+            toast.success('交易发起成功');
+       } catch (error) {
+        toast.error('交易发起失败');
+       } finally {
+        setIsSending(false);
+       }
     }
 
     if (shortage === 0) return null;
+
+    const safeWalletUrl = 'https://app.safe.global/transactions/tx?safe=oeth:' + (shortage>0 ? 
+    `${pod.grantsPool.treasuryWallet}&id=multisig_${pod.grantsPool.treasuryWallet}_${shortageSafeHash}` : 
+    `${pod.walletAddress}&id=multisig_${pod.walletAddress}_${shortageSafeHash}`);
+    
     const endContent = (
         <div className="flex gap-2">     
             {
-                needSign && <AppBtn btnProps={{ color: "warning",onPress:sendTx, isLoading:status === 'loading' }}>发起交易</AppBtn>
+                needSign && <AppBtn btnProps={{ color: "warning",onPress:sendTx, isLoading:isSending }}>发起交易</AppBtn>
             }
 
             <Link
-            href={`https://app.safe.global/transactions/tx?safe=oeth:${pod.grantsPool.treasuryWallet}&id=multisig_${pod.grantsPool.treasuryWallet}_${shortageSafeHash}`}
+            href={safeWalletUrl}
             target="_blank"
             >
             <AppBtn btnProps={{ color: "default" }}>
@@ -104,25 +128,25 @@ export default function TreasuryBalanceWarning({pod}: TreasuryBalanceWarningProp
             <Alert
             color="warning"
             variant="bordered"
-            title="国库余额不足！"
+            title="Pod 国库余额不足！"
             className="mb-4"
             classNames={{ base: "bg-background" }}
             endContent={endContent}
             >
             <small className="mt-1 text-secondary">
-                请协调 GP 国库多签用户完成 Pod 注入缺额资金 <b className="text-warning">{shortage} {pod.currency}</b>，否则 Milestone 将无法交付！
+                请协调 GP 国库多签用户完成 Pod 注入缺额资金 <b className="text-warning">{formatToken(shortage)} {pod.currency}</b>，否则 Milestone 将无法交付！
             </small>
             </Alert> :
             <Alert
             color="warning"
             variant="bordered"
-            title="国库余额超额！"
+            title="Pod 国库余额超额！"
             className="mb-4"
             classNames={{ base: "bg-background" }}
             endContent={endContent}
         >
             <small className="mt-1 text-secondary">
-            国库余额超额 <b className="text-warning">{Math.abs(shortage)} {pod.currency}</b>，您可以发起退换 GP 国库操作！
+            Pod 国库余额超额 <b className="text-warning">{formatToken(Math.abs(shortage))} {pod.currency}</b>，您可以发起退换 GP 国库操作！
             </small>
         </Alert>
     );

@@ -29,7 +29,7 @@ export function useUserInfo() {
           id: userData.data.id,
           name: userData.data.name ?? '',
           email: userData.data.email ?? '',
-          role: userData.data.role ?? 'APPLICANT',
+          role: userData.data.role ?? "APPLICANT",
           address: address ?? '', // 使用当前连接的钱包地址
         };
         
@@ -112,6 +112,7 @@ const handleLogout = useCallback(async() => {
     fetchAndStoreUserInfo,
     refetchUser,
     handleLogout,
-    isPlatformAdmin
+    isPlatformAdmin,
+    address
   };
 }

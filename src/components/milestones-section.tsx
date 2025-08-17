@@ -11,15 +11,12 @@ import useStore from "~/store";
 
 interface MilestonesSectionProps {
   milestones: Milestone[];
-  gpOwnerId: number;
-  podOwnerId: number;
-  podCurrency: string;
-  safeAddress: string;
   podDetail: Pod & {grantsPool: {treasuryWallet:string},podTreasuryBalances:BigInt};
 }
 
-export default function MilestonesSection({ milestones, gpOwnerId, podOwnerId, podCurrency, safeAddress, podDetail }: MilestonesSectionProps) {
+export default function MilestonesSection({ milestones, podDetail }: MilestonesSectionProps) {
   const { userInfo } = useStore();
+  const { grantsPool:{ownerId:gpOwnerId}, applicant:{id:podOwnerId}, currency, walletAddress:safeAddress } = podDetail as any;
   // 转换里程碑数据格式以适配 ProgressMilestoneBar 组件
   const progressMilestones = milestones.map((milestone, index) => ({
     name: milestone.title,
@@ -45,7 +42,6 @@ export default function MilestonesSection({ milestones, gpOwnerId, podOwnerId, p
     const totalAmount = milestones
     .filter(v=>[MilestoneStatus.ACTIVE, MilestoneStatus.PENDING_DELIVERY, MilestoneStatus.REVIEWING].includes(v.status as any))
     .reduce((acc, milestone) => acc + Number(milestone.amount), 0);
-    console.log('totalAmount-',totalAmount,podDetail.podTreasuryBalances);
     return totalAmount > Number(podDetail.podTreasuryBalances);
   },[milestones, podDetail])
 
@@ -104,10 +100,7 @@ export default function MilestonesSection({ milestones, gpOwnerId, podOwnerId, p
                   {milestone.status === 'REVIEWING' && isGpOwner && (
                     <ReviewMilestoneModal 
                       podDetail={podDetail as any}
-                      safeAddress={safeAddress}
-                      milestoneId={milestone.id}
-                      deliveryInfo={milestone.deliveryInfo as any[]}
-                      safeTransactionHash={milestone.safeTransactionHash}
+                      milestone={milestone as any}
                     />
                   )}
                   
@@ -116,8 +109,8 @@ export default function MilestonesSection({ milestones, gpOwnerId, podOwnerId, p
               <div className="flex items-center gap-4 mb-4 text-xs text-gray-600">
                 
                 <div className="flex items-center gap-1">
-                  <img src={`/tokens/${podCurrency}.svg`} alt={podCurrency} className="w-4 h-4" />
-                  <b>{milestone.amount.toString()} {podCurrency}</b>
+                  <img src={`/tokens/${currency}.svg`} alt={currency} className="w-4 h-4" />
+                  <b>{milestone.amount.toString()} {currency}</b>
                 </div>
                 
                 <b>Deadline: {formatDate(milestone.deadline)}</b>

@@ -101,7 +101,7 @@ export default function EditPodPage() {
       const activeMilestones = podMilestones
         .filter(m => ['ACTIVE','PENDING_DELIVERY'].includes(m.status))
         .map((milestone, index) => ({
-          id: (index + 1).toString(),
+          id: `${milestone.id}`,
           title: milestone.title,
           description: milestone.description,
           amount: (Number(milestone.amount) / (10 ** 6)).toString(),
@@ -146,6 +146,7 @@ export default function EditPodPage() {
       const links = Object.fromEntries(
         Object.entries(relatedLinks).filter(([_, value]) => value && value.trim() !== '')
       );
+      
 
       // 处理里程碑数据
       const processedMilestones = milestones.map(milestone => ({

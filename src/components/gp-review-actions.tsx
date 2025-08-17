@@ -5,29 +5,12 @@ import { useRouter } from "next/navigation";
 import AppBtn from "~/components/app-btn";
 import RejectPodModal from "~/components/reject-pod-modal";
 import ApprovePodModal from "~/components/approve-pod-modal";
-import { PodStatus, type Milestone } from "@prisma/client";
+import { PodStatus, type Milestone, type Pod } from "@prisma/client";
 import { Alert } from "@heroui/react";
 
-interface GpReviewActionsProps {
-  podStatus: string;
-  grantsPoolId: number;
-  podId: number;
-  podTitle: string;
-  podWalletAddress: string;
-  podCurrency: string;
-  appliedAmount: number;
-  treasuryWallet: string;
-}
 
-export default function GpReviewActions({ 
-  podStatus, 
-  podId,
-  podTitle,
-  podWalletAddress,
-  podCurrency,  
-  appliedAmount,
-  treasuryWallet
-}: GpReviewActionsProps) {
+export default function GpReviewActions({ podDetail }: {podDetail: Pod}) {
+  const {status:podStatus, id:podId, title:podTitle} = podDetail as any;
   const router = useRouter();
   const [isRejectModalOpen, setIsRejectModalOpen] = useState(false);
   const [isApproveModalOpen, setIsApproveModalOpen] = useState(false);
@@ -85,12 +68,7 @@ export default function GpReviewActions({
       <ApprovePodModal
         isOpen={isApproveModalOpen}
         onClose={() => setIsApproveModalOpen(false)}
-        podId={podId}
-        podTitle={podTitle}
-        appliedAmount={appliedAmount}
-        currency={podCurrency}
-        walletAddress={podWalletAddress}
-        treasuryWallet={treasuryWallet}
+        podDetail={podDetail}
       />
     </>
   );

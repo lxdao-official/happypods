@@ -14,7 +14,7 @@ export function RainbowKitProviderWrapper({
   return (
     <WagmiProvider config={config}>
       <QueryClientProvider client={queryClient} >
-        <RainbowKitProvider theme={darkTheme()}>
+        <RainbowKitProvider theme={darkTheme()} locale='en-US'>
           {children}
         </RainbowKitProvider>
       </QueryClientProvider>

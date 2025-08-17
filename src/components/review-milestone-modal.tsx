@@ -3,8 +3,8 @@ import { Button, Modal, ModalBody, ModalContent, ModalHeader, ModalFooter, Texta
 import { api } from "~/trpc/react";
 import { toast } from "sonner";
 import { delay_s } from "~/lib/utils";
-import useSafeWallet from "~/app/hooks/useSafeWallet";
-import type { GrantsPoolTokens, Pod } from "@prisma/client";
+import useSafeWallet from "~/hooks/useSafeWallet";
+import type { GrantsPoolTokens, Milestone, Pod } from "@prisma/client";
 
 interface DeliveryInfo {
   content: string;
@@ -16,20 +16,20 @@ interface DeliveryInfo {
 }
 
 interface ReviewMilestoneModalProps {
-  milestoneId: string | number;
-  deliveryInfo: DeliveryInfo[];
-  safeTransactionHash: string | null;
+  milestone: Milestone;
   onReview?: (data: { action: 'approve' | 'reject'; comment: string }) => void;
-  safeAddress: string
   podDetail: Pod & {grantsPool: {treasuryWallet:string}, podTreasuryBalances:BigInt};
 }
 
-export default function ReviewMilestoneModal({ milestoneId, deliveryInfo, safeTransactionHash, safeAddress, podDetail, onReview }: ReviewMilestoneModalProps) {
+export default function ReviewMilestoneModal({ milestone, podDetail, onReview }: ReviewMilestoneModalProps) {
   const { isOpen, onOpen, onClose } = useDisclosure();
   const [reviewAction, setReviewAction] = useState<'approve' | 'reject'>('approve');
   const [comment, setComment] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const {executeSafeTransactionByHash, buildAndExecuteSafeTransaction} = useSafeWallet();
+  const {deliveryInfo,id:milestoneId} = milestone;
+  const {data: safeTransactionData} = api.milestone.getPaymentTransactionData.useQuery({milestoneId: Number(milestoneId)});
+
+  const {getTransactionHash, proposeOrExecuteTransaction} = useSafeWallet();
 
   const reviewMilestoneDeliveryMutation = api.milestone.reviewMilestoneDelivery.useMutation({
     onSuccess: async() => {
@@ -63,30 +63,43 @@ export default function ReviewMilestoneModal({ milestoneId, deliveryInfo, safeTr
       return;
     }
 
+    if(!safeTransactionData) return toast.error("safeTransactionData is null");
+    const transactions = safeTransactionData.transactions.map(transaction => ({
+      token: transaction.token,
+      to: transaction.to,
+      amount: transaction.amount
+    })) as any;
+
     setIsSubmitting(true);
+
+    const safeTransactionHash = await getTransactionHash(podDetail.walletAddress, transactions);
     
     try {
+
+      let safeTxHash;
+      // 审核通过，转账给用户
       if(isApproved && safeTransactionHash){
-        const res = await executeSafeTransactionByHash(safeAddress, safeTransactionHash);
-        console.log('res11==>',res);
+        const res = await proposeOrExecuteTransaction(podDetail.walletAddress, transactions);
+        safeTxHash = res ? res.toString() : undefined;
       }
 
-      let refundSafeTransactionHash;
+      // 最后一次审核失败，需要将资金退回给GP
       if(!isApproved && isLastReject){
-        const res = await buildAndExecuteSafeTransaction(podDetail.walletAddress, [{
+        const res = await proposeOrExecuteTransaction(podDetail.walletAddress, [{
           token: podDetail.currency as GrantsPoolTokens,
           to: podDetail.grantsPool.treasuryWallet,
           amount: Number(podDetail.podTreasuryBalances).toString()
         }]);
-        refundSafeTransactionHash = res.safeTxHash;
+        safeTxHash = res ? res.toString() : undefined;
       }
-      console.log('refundSafeTransactionHash==>',refundSafeTransactionHash);
+
+      console.log('safeTxHash==>',safeTxHash);
 
       await reviewMilestoneDeliveryMutation.mutateAsync({
         milestoneId: Number(milestoneId),
         approved: isApproved,
         comment: comment.trim(),
-        refundSafeTransactionHash
+        safeTransactionHash: safeTxHash
       });
     } catch (error) {
       // 错误处理在mutation的onError中
@@ -102,7 +115,7 @@ export default function ReviewMilestoneModal({ milestoneId, deliveryInfo, safeTr
   };
 
   // 找到最新的待审核的提交
-  const latestPendingDeliveryIndex = deliveryInfo.findIndex(delivery => delivery.approved === null);
+  const latestPendingDeliveryIndex = deliveryInfo.findIndex((delivery: any) => !delivery?.approved);
   const isApproved = reviewAction === 'approve';
 
   // 最后一次的拒绝操作

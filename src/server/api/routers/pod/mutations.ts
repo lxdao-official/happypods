@@ -3,12 +3,8 @@ import { createPodSchema, rejectPodSchema, approvePodSchema, editPodSchema } fro
 import { NotificationService } from "../notification/notification-service";
 import { NotificationType, PodStatus } from "@prisma/client";
 import { getBalance } from "../wallet/queries";
-import { PLATFORM_CHAINS } from "~/lib/config";
-import { optimism } from "viem/chains";
 import { PodEditService } from "./edit-service";
 import { z } from "zod";
-import { parseSafeTransactionHash } from "~/lib/utils";
-import { getPodAssets } from "./queries";
 
 export const podMutations = {
   // 创建Pod
@@ -181,7 +177,7 @@ export const podMutations = {
         throw new Error("只能通过处于审核中状态的Pod");
       }
 
-      // 检查建议id是否合法
+      // todo 检查建议id是否合法, 这部分删除，直接全部通过，金额处理统一在详情顶部组件处理
       /*
       const {totalAmountWithFee} = await getPodAssets(pod.id);
       const {from,to,amount} = await parseSafeTransactionHash(input.transactionHash, {
@@ -199,8 +195,7 @@ export const podMutations = {
         where: { id: input.id },
         data: {
           status: PodStatus.IN_PROGRESS,
-          approvedAt: new Date(),
-          // safeTransactionHash
+          approvedAt: new Date()
         }
       });
 

@@ -1,6 +1,8 @@
 import dayjs from "dayjs";
 import { PLATFORM_CHAINS } from "./config";
 import { optimism } from "viem/chains";
+import type Decimal from "decimal.js";
+import { formatUnits } from "viem";
 
  /**
  * 字符串省略方法
@@ -71,3 +73,48 @@ export const parseSafeTransactionHash = async(hash: string, {from,to,amount}:{fr
     throw new Error("TransactionHash无效");
   }
 };
+
+// 数字格式化
+export function toFixed(
+  value: number | string,
+  fixed: number = 6,
+  type: 'floor' | 'round' = 'floor',
+  localFormat: boolean = true
+): string {
+  value = Number(value);
+  const minValue = 1 / Math.pow(10, fixed);
+  if (value > 0 && value < minValue) {
+    return `<${minValue}`;
+  }
+
+  let formattedValue: string;
+  
+  if (type === 'round') {
+    formattedValue = value.toFixed(fixed);
+  } else {
+    const pow = Math.pow(10, fixed);
+    formattedValue = `${Math.floor(value * pow) / pow}`;
+  }
+
+  // 如果需要本地格式化
+  if (localFormat) {
+    // 只去除小数点后的0，保留小数点前的0
+    return new Intl.NumberFormat(undefined, {
+      minimumFractionDigits: 0,
+      maximumFractionDigits: fixed,
+    }).format(Number(formattedValue)).replace(/(\.[0-9]*?)0+$/, '$1');
+  }
+
+  return formattedValue;
+}
+
+// token 的格式化
+export const formatToken = (amount: string|number|BigInt|Decimal, decimals: number = 6) => {
+  try {
+    if(!amount) return '0';
+    amount = formatUnits(BigInt(Number(amount)), decimals);
+    return toFixed(Number(amount), decimals, 'round', true);
+  } catch (error) {
+    return '0';
+  }
+}

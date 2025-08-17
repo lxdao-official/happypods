@@ -6,39 +6,29 @@ import { api } from "~/trpc/react";
 import { FEE_CONFIG } from "~/lib/config";
 import Decimal from "decimal.js";
 import { toast } from "sonner";
-import useSafeWallet from "~/app/hooks/useSafeWallet";
-import type { GrantsPoolTokens, Milestone } from "@prisma/client";
-import { delay_s } from "~/lib/utils";
+import useSafeWallet from "~/hooks/useSafeWallet";
+import type { GrantsPoolTokens, Milestone, Pod } from "@prisma/client";
+import { delay_s, formatToken } from "~/lib/utils";
 
 
 
 interface ApprovePodModalProps {
   isOpen: boolean;
   onClose: () => void;
-  podId: number;
-  podTitle: string;
-  appliedAmount: number;
-  currency: string;
-  walletAddress: string;
-  treasuryWallet: string;
+  podDetail: Pod;
   onSuccess?: () => void;
 }
 
 export default function ApprovePodModal({
   isOpen,
   onClose,
-  podId,
-  podTitle,
-  appliedAmount,
-  currency,
-  walletAddress,
-  treasuryWallet
+  podDetail
 }: ApprovePodModalProps) {
   const [isTransferring, setIsTransferring] = useState(false);
   const [isApproving, setIsApproving] = useState(false);
-  const {buildErc20TransfersSafeTransaction, getTransactionHash} = useSafeWallet();
+  const {getTransactionHash, proposeOrExecuteTransaction} = useSafeWallet();
   const {mutateAsync:approvePod} = api.pod.approve.useMutation();
-
+  const {id:podId, title:podTitle, appliedAmount, currency, walletAddress, treasuryWallet} = podDetail as any;
 
   // 计算总金额和手续费
   const financialInfo = useMemo(() => {
@@ -65,17 +55,18 @@ export default function ApprovePodModal({
       setIsTransferring(true);
 
       // 构建两笔交易
-      const safeTransaction = await buildErc20TransfersSafeTransaction(treasuryWallet, [{
+      const safeTransaction =[{
         token: currency as GrantsPoolTokens,
         to: walletAddress,
         amount: financialInfo.totalWithFee.toString()
-      }])
+      }]
       console.log('safeTransaction', safeTransaction);
 
-      const transactionHash = await getTransactionHash(treasuryWallet, safeTransaction, true);
-      console.log('txHash', transactionHash);
+      const {safeTxHash} = await getTransactionHash(treasuryWallet, safeTransaction);
+      console.log('txHash', safeTxHash);
+      await proposeOrExecuteTransaction(treasuryWallet, safeTransaction);
 
-      await approvePod({id: podId, transactionHash});
+      await approvePod({id: podId});
       
       setIsTransferring(false);
       onClose();
@@ -116,7 +107,7 @@ export default function ApprovePodModal({
                   <div className="flex justify-between">
                     <span className="text-sm">里程碑总额</span>
                     <span className="font-mono text-sm">
-                      {financialInfo.appliedAmount} {currency}
+                      {formatToken(financialInfo.appliedAmount)} {currency}
                     </span>
                   </div>
                   <div className="flex justify-between">
@@ -124,7 +115,7 @@ export default function ApprovePodModal({
                       平台手续费 ({financialInfo.feeRate}%)
                     </span>
                     <span className="font-mono text-sm text-orange-600">
-                      {financialInfo.fee} {currency}
+                      {formatToken(financialInfo.fee)} {currency}
                     </span>
                   </div>
                   <div className="flex justify-between">
@@ -150,7 +141,7 @@ export default function ApprovePodModal({
                   <div className="flex justify-between font-semibold">
                     <span className="text-base">总计转账金额</span>
                     <span className="font-mono text-base text-green-600">
-                      {financialInfo.totalWithFee} {currency}
+                      {formatToken(financialInfo.totalWithFee)} {currency}
                     </span>
                   </div>
                 </div>
