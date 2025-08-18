@@ -1,3 +1,4 @@
+'use client';
 import { useState } from "react";
 import { Input, Button } from "@heroui/react";
 import CornerFrame from "~/components/corner-frame";
