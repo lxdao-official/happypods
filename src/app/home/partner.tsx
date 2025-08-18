@@ -12,13 +12,13 @@ const partners = [
 ]
 const Partner = () => {
   return (
-    <div className="flex flex-col items-center gap-4 pt-[60px] pb-[100px]">
-        <img src="/partner.svg" alt="partner" className="h-[100px] mb-8" />
-        <div className="flex items-center space-x-6">
+    <div className="flex flex-col items-center gap-4 p-6 mb-10">
+        <img src="/partner.svg" alt="partner" className="w-[200px] md:h-[100px] md:mb-8" />
+        <div className="grid grid-cols-2 md:grid-cols-8 items-center gap-4 md:flex">
             {
                 partners.map((partner, index) => (
                     <div key={index}>
-                        <img src={partner.image} alt={partner.name} className="h-[60px]"/>
+                        <img src={partner.image} alt={partner.name} className="h-full"/>
                     </div>
                 ))
             }

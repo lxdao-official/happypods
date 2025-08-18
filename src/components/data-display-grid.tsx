@@ -120,7 +120,7 @@ export const DataDisplayGrid = ({
               isClearable
               variant={type === 'gp' ? 'bordered' : 'faded'}
               color='primary'
-              className="w-[300px]"
+              className="md:w-[300px]"
               onClear={() => setSearchInput('')}
             />
             <Select

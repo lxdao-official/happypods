@@ -6,7 +6,7 @@ export function Footer() {
   return (
     <footer className="py-8 border-t bg-background border-border text-foreground">
       <div className="container px-4 mx-auto">
-        <div className="flex items-start justify-between gap-8">
+        <div className="md:flex items-start justify-between gap-8">
           <div className="space-y-4">
             <img src="/logo.svg" alt="logo" className="h-[40px]" />
             <p className="text-sm text-muted-foreground">
@@ -14,7 +14,7 @@ export function Footer() {
             </p>
           </div>
           
-          <div className="flex gap-16">
+          <div className="flex gap-16 mt-4 md:mt-0">
             
             <div className="space-y-2">
               <p className="text-xl font-medium text-foreground">Links</p>

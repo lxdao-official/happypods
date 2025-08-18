@@ -17,6 +17,7 @@ import { toast } from "sonner";
 import { delay_s, truncateString } from "~/lib/utils";
 import { useUserInfo } from "~/hooks/useUserInfo";
 import useStore from "~/store";
+import { useMobile } from "~/hooks/useMobile";
 
 // 定义TypedData结构 - 需要与后端保持一致
 const domain = {
@@ -161,13 +162,15 @@ export function LoginModal() {
     },
   ];
 
+  const isMobile = useMobile();
+
   return (
     <div>
       {userInfo ? (
         // 已登录用户显示下拉菜单
         <Dropdown className="text-black bg-foreground" placement="bottom-end">
           <DropdownTrigger>
-            <Button variant="bordered" className="flex items-center space-x-1">
+            <Button variant="bordered" className="flex items-center space-x-1" size={isMobile ? "sm" : "md"}>
               {storeUserInfo?.avatar ? (
                 <img
                   src={storeUserInfo.avatar}

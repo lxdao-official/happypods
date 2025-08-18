@@ -94,7 +94,7 @@ export default function PodDetailPage() {
        <div className="flex items-center justify-between">
          <div className="flex items-center">
             <img src={podDetail.avatar || ''} alt="" className="w-10 h-10 rounded-full" />
-            <span className="ml-2 text-2xl font-bold">{podDetail.title}</span>
+            <span className="ml-2 text-xl md:text-2xl font-bold">{podDetail.title}</span>
           </div>
 
           <ShareButton 
@@ -127,7 +127,7 @@ export default function PodDetailPage() {
             <div className="space-y-6">
               <div>
                 <p className="leading-relaxed">
-                  <ExpandableText text={podDetail.description} maxLines={3} showExpandButton={true} />
+                  <ExpandableText className="text-sm" text={podDetail.description} maxLines={3} showExpandButton={true} />
                 </p>
               </div>
             </div>
@@ -140,6 +140,8 @@ export default function PodDetailPage() {
             <MilestonesSection milestones={milestones} podDetail={podDetail as any}/>}
           </div>
         </div>
+
+        <EdgeLine color="var(--color-background)" className="md:hidden"/>
 
         <div className="space-y-6">
           <div>

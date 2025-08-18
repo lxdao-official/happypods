@@ -2,13 +2,14 @@
 
 import { LoginModal } from '~/components/login-modal';
 import { NotificationDrawer } from '~/components/layout/notification';
+import { MobileMenu } from '~/components/layout/mobile-menu';
 import NextLink from 'next/link';
 import { usePathname } from 'next/navigation';
 import useStore from '~/store';
 
 export function Header() {
   const pathname = usePathname();
-  const {userInfo} = useStore();
+  const { userInfo } = useStore();
 
   const navs = [
     { href: '/', label: 'Home' },
@@ -16,8 +17,6 @@ export function Header() {
     { href: '/grants-pool', label: 'Grants Pool' },
     { href: '/how-it-works', label: 'How It Works' },
   ];
-
-
 
   return (
     <header className="sticky top-0 z-30 p-4 border-b border-border backdrop-blur bg-[#212121d1]">
@@ -38,20 +37,23 @@ export function Header() {
               className={
                 (pathname === nav.href || (nav.href !== '/' && pathname.startsWith(nav.href)))
                   ? 'text-primary' : 'hover:text-primary'
-                  }
-                >
+              }
+            >
               {nav.label}
             </NextLink>
           ))}
         </nav>
 
-        {/* 登录按钮 */}
-        <div className="flex items-center justify-end gap-8 basis-1/5">
+        {/* 登录按钮和移动端菜单 */}
+        <div className="flex items-center justify-end gap-4 basis-1/5">
           {
             userInfo?.id && <NotificationDrawer />
           }
-          
+
           <LoginModal />
+
+          {/* 移动端菜单 */}
+          <MobileMenu navs={navs} />
         </div>
       </div>
     </header>

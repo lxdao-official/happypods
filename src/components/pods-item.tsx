@@ -45,7 +45,7 @@ const PodsItem = ({ pod, onClick, className = "" }: PodsItemProps) => {
       }}
     >
       {/* 卡片头部 */}
-      <div className="flex items-center p-4 space-x-4 bg-white border-b border-black">
+      <div className="flex items-center p-2 md:p-4 space-x-4 bg-white border-b border-black">
         <img src={pod.avatar || ""} alt="" className="w-10 h-10 rounded-full" />
         <div className="text-xl font-bold text-gray-900"><ExpandableText text={pod.title} maxLines={1} /></div>
       </div>
@@ -65,7 +65,7 @@ const PodsItem = ({ pod, onClick, className = "" }: PodsItemProps) => {
         </div>
 
         {/* 描述 */}
-        <p className="mb-4 text-sm leading-relaxed">
+        <p className="mb-4 text-xs md:text-sm leading-relaxed">
         <ExpandableText text={pod.description} maxLines={3} />
         </p>
 

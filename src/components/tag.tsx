@@ -7,7 +7,7 @@ const Tag = ({children,className,color}:{children:React.ReactNode,className?:str
         info: 'text-info border-info',
     }
   return (
-    <div className={`inline-block px-3 py-1 text-xs text-black border border-black rounded-full ${className} ${colorMap[color||'']}`}>
+    <div className={`inline-block px-3 py-1 text-[10px] md:text-xs text-black border border-black rounded-full ${className} ${colorMap[color||'']}`}>
       {children}
     </div>
   );

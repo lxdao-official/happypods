@@ -201,7 +201,7 @@ export default function ProgressMilestoneBar({ milestones = [], children }: Prog
 
       {/* 图例 - 只在 pod 详情页面显示 */}
       {isDetail && (
-        <div className="flex items-center justify-center gap-4 text-xs">
+        <div className="hidden md:flex items-center justify-center gap-4 text-xs">
           {segments.map((segment, index) => (
             <div key={index} className="flex items-center gap-1">
               <div 

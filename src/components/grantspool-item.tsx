@@ -108,7 +108,7 @@ const GrantspoolItem = ({ grantsPool, className = "", children, type = "list" }:
         )}
         {/* Request-For-Proposal 部分 */}
         <div>
-          <h2 className="mb-4 text-2xl font-bold">Request-For-Proposal</h2>
+          <h2 className="mb-4 text-xl md:text-2xl font-bold">Request-For-Proposal</h2>
           <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-4">
             {grantsPool.rfps && grantsPool.rfps.map((rfp) => (
               <GrantspoolRFPItem

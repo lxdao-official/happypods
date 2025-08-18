@@ -76,7 +76,7 @@ const CornerFrame = ({
       />
       
       {/* 内容区域 */}
-      <div className="relative z-10 p-6">
+      <div className="relative z-10 p-4 md:p-6">
         {children}
       </div>
     </div>

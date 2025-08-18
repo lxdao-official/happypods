@@ -118,7 +118,7 @@ export default function MilestonesSection({ milestones, podDetail }: MilestonesS
 
               </div>
 
-              <div className="text-sm text-gray-700">
+              <div className="text-xs md:text-sm text-gray-700">
                 <ExpandableText text={milestone.description} maxLines={3} showExpandButton={true} />
               </div>
               

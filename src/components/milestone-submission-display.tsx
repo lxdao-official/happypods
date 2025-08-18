@@ -62,9 +62,9 @@ export default function MilestoneSubmissionDisplay({ deliveryInfo, status }: Mil
                   <i className="text-xl text-gray-500 ri-file-close-line"></i> :
                   <i className="text-xl text-purple-500 ri-file-history-line"></i>
                 }
-                <span className="font-medium text-gray-900">
+                <b className="font-medium text-gray-900 text-xs md:text-sm">
                   Submission • {formatDate(submission.submittedAt)}
-                </span>
+                </b>
                 <small>{isLatest && <span className="ml-1 text-xs text-blue-600">(Latest)</span>}</small>
               </div>
               <i
