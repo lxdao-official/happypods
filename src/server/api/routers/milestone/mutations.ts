@@ -4,45 +4,8 @@ import { NotificationService } from "../notification/notification-service";
 import { MilestoneStatus, NotificationType, PodStatus } from "@prisma/client";
 import { optimism } from "viem/chains";
 import { PLATFORM_CHAINS } from "~/lib/config";
+import { handlePodTermited } from "../pod/mutations";
 
-// 通用的退款逻辑函数
-const handlePodRefund = async (
-  db: any,
-  podId: number,
-  refundSafeTransactionHash: string,
-  reason: string
-) => {
-  // 更新Pod状态为TERMINATED，并记录退款交易hash
-  const updatedPod = await db.pod.update({
-    where: { id: podId },
-    data: { 
-      status: PodStatus.TERMINATED,
-      refundSafeTransactionHash: refundSafeTransactionHash 
-    },
-    include: {
-      applicant: true,
-      grantsPool: {
-        select: { ownerId: true }
-      },
-      milestones: {
-        where: { status: MilestoneStatus.ACTIVE }
-      }
-    }
-  });
-
-  // 将所有ACTIVE状态的milestone设置为REJECTED
-  if (updatedPod.milestones.length > 0) {
-    await db.milestone.updateMany({
-      where: { 
-        podId: podId,
-        status: MilestoneStatus.ACTIVE
-      },
-      data: { status: MilestoneStatus.TERMINATED }
-    });
-  }
-
-  return updatedPod;
-};
 
 export const milestoneMutations = {
   // 提交milestone交付
@@ -213,10 +176,10 @@ export const milestoneMutations = {
           newStatus = MilestoneStatus.TERMINATED;
           
           // 使用通用退款函数
-          await handlePodRefund(
+          await handlePodTermited(
             ctx.db, 
             milestone.podId, 
-            input.safeTransactionHash!, 
+            ctx,
             "Milestone delivery rejected three times"
           );
         }
@@ -251,58 +214,12 @@ export const milestoneMutations = {
   terminatePod: protectedProcedure
     .input(initiatePodRefundSchema)
     .mutation(async ({ ctx, input }) => {
-      // 检查Pod是否存在
-      const pod = await ctx.db.pod.findUnique({
-        where: { id: input.podId },
-        include: { 
-          grantsPool: true,
-          milestones: {
-            where: { status: MilestoneStatus.ACTIVE }
-          },
-          applicant: true
-        },
-      });
-
-      if (!pod) {
-        throw new Error("Pod does not exist");
-      }
-
-      // 检查当前用户是否是 Grants Pool 的拥有者
-      if (pod.grantsPool.ownerId !== ctx.user!.id) {
-        throw new Error("You do not have permission to terminate this Pod");
-      }
-
-      // 检查Pod状态是否允许终止
-      if (pod.status === PodStatus.TERMINATED) {
-        throw new Error("Pod has already been terminated and cannot be terminated again");
-      }
-
-      // 将所有ACTIVE状态的milestone设置为TERMINATED
-      if (pod.milestones.length > 0) {
-        await ctx.db.milestone.updateMany({
-          where: { 
-            podId: input.podId,
-            status: MilestoneStatus.ACTIVE
-          },
-          data: { status: MilestoneStatus.TERMINATED }
-        });
-      }
-
-      // 更新Pod状态为TERMINATED
-      await ctx.db.pod.update({
-        where: { id: input.podId },
-        data: { status: PodStatus.TERMINATED }
-      });
-
-      // 通知Pod申请者
-      await NotificationService.createNotification({
-        type: NotificationType.POD_REVIEW,
-        senderId: ctx.user.id,
-        receiverId: pod.applicant.id,
-        title: `Your Pod ${pod.title} has been terminated by the GP Owner due to delivery timeout`,
-        content: `Your Pod has been terminated by the GP due to Milestone delivery timeout. Please complete the refund process!`,
-      });
-
+      await handlePodTermited(
+        ctx.db, 
+        input.podId, 
+        ctx,
+        "Milestone delivery rejected three times"
+      );
       return true;
     }),
 };

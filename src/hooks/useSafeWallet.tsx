@@ -304,6 +304,13 @@ const useSafeWallet = () => {
     }, '获取交易详情失败', false);
   };
 
+  // 获取钱包信息
+  const getWallet = async (safeAddress: string) => {
+    return withErrorHandling(async () => {
+      const wallet = await apiKit.getSafeInfo(safeAddress);
+      return wallet;
+    }, '获取钱包信息失败', false);
+  };
 
   // 检查环境是否已经准备好
   const isReady = useMemo(()=>{
@@ -319,6 +326,7 @@ const useSafeWallet = () => {
     buildErc20TransfersSafeTransaction,
     getTransactionDetail,
     proposeOrExecuteTransaction,
+    getWallet,
     status,
     isReady
   };

@@ -27,8 +27,9 @@ const useNotifcation = () => {
 
     useEffect(()=>{
         setNotificationList([]);
+        if(!userInfo?.id) return;
         refetchNotification();
-    },[userInfo]);
+    },[userInfo?.id]);
 
     return {
         notifications:notifications||[],

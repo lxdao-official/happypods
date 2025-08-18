@@ -1,8 +1,9 @@
 import { NotificationService } from "../notification/notification-service";
 import { NotificationType, PodStatus, MilestoneStatus } from "@prisma/client";
 import { getBalance } from "../wallet/queries";
-import type { PrismaClient } from "@prisma/client";
+import type { Prisma, PrismaClient } from "@prisma/client";
 import { formatDate } from "~/lib/utils";
+import { handlePodTermited } from "./mutations";
 
 interface EditPodInput {
   id: number;
@@ -158,8 +159,8 @@ export class PodEditService {
       type: NotificationType.POD_REVIEW,
       senderId: updatedPod.applicantId,
       receiverId: updatedPod.grantsPool.ownerId,
-      title: `Pod编辑审核通知`,
-      content: `${updatedPod.applicant.name} 编辑了Pod "${updatedPod.title}"，请及时审核新版本!`,
+      title: `Pod Edit Review`,
+      content: `${updatedPod.applicant.name} edited Pod "${updatedPod.title}"`,
       params: {
         podId: updatedPod.id,
         action: 'edit_review'
@@ -199,14 +200,12 @@ export class PodEditService {
       .filter(v=>v.status === MilestoneStatus.ACTIVE)
       .filter(v=>!milestonesIds.includes(v.id));
 
-      // todo 会多次被插入，需要优化
-
       await Promise.all(needInactiveMilestones.map(v=>ctx.db.milestone.update({
         where: { id: v.id },
         data: { status: MilestoneStatus.INACTIVE, inactiveAt: new Date() }
       })));
 
-      // 处理每个 milestone
+      // 处理每个 milestone，判断操作是否是新增还是更新
       const milestonePromises = versionData.milestones.map((milestone: any) => {
         console.log('milestone==>',milestone);
         const item = {
@@ -231,9 +230,19 @@ export class PodEditService {
         });
         await Promise.all(milestonePromises);
       }
-    
+
+
       // 4. 发送通知
       await this.sendReviewNotification(ctx, existingPod, versionData, isApproved);
+
+      // 如果已经不存在 active 的 milestone 则项目被终止失败
+      if(existingPod.milestones.every(v=>v.status !== MilestoneStatus.ACTIVE)){
+        await handlePodTermited(
+          ctx.db, 
+          existingPod.id, 
+          ctx
+        );
+      }
       
       return isApproved ? { success: true } : { success: true };
   }

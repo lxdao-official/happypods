@@ -2,6 +2,7 @@
 import { QRCodeTooltip } from "./qr-code-tooltip";
 import { api } from "~/trpc/react";
 import type { ChainType, GrantsPoolTokens } from "@prisma/client";
+import { formatToken } from "~/lib/utils";
 
 interface GrantsPoolBalanceProps {
   gpId: number;
@@ -14,7 +15,7 @@ const GrantsPoolBalance = ({ gpId, treasuryWallet, chainType, token }: GrantsPoo
   // 获取资金池余额信息
   const { data: poolBalanceData, isLoading } = api.grantsPool.getPoolBalance.useQuery({ id: gpId });
   
-  // 获取USDC余额
+  // 获取USD余额
   const { data: uBalance } = api.wallet.getBalance.useQuery({
     address: treasuryWallet,
     chainType,
@@ -28,11 +29,11 @@ const GrantsPoolBalance = ({ gpId, treasuryWallet, chainType, token }: GrantsPoo
     return <div>Loading pool balance...</div>;
   }
 
-  const completedAmount = Number(poolBalanceData?.completedAmount) || 0;
-  const totalAmount = Number(poolBalanceData?.totalAmount) || 0;
+  const completedAmount = formatToken(Number(poolBalanceData?.completedAmount) || 0);
+  const totalAmount = formatToken(Number(poolBalanceData?.totalAmount) || 0);
 
-  // 计算余额（USDC + USDT 格式化余额）
-  const availableUSDC = Number(uBalance ? uBalance.formattedBalance : '0');
+  // 计算余额（USD 格式化余额）
+  const availableUSDC = formatToken(Number(uBalance?.rawBalance || 0));
 
   return (
     <div className="space-y-4">
@@ -50,7 +51,7 @@ const GrantsPoolBalance = ({ gpId, treasuryWallet, chainType, token }: GrantsPoo
             <b className="text-xs">{token}</b>
           </div>
           <div className="flex flex-col items-center p-2"><b>{availableUSDC}</b><small>Balance</small></div>
-          <div className="flex flex-col items-center p-2"><b>{totalAmount}</b><small>All Pod grants</small></div>
+          <div className="flex flex-col items-center p-2"><b>{totalAmount}</b><small>Application</small></div>
           <div className="flex flex-col items-center p-2"><b>{completedAmount}</b><small>Funded</small></div>
         </div>
       </div>

@@ -44,8 +44,6 @@ export default function PodDetailPage() {
     { enabled: !!podId }
   );
 
-
-
    // 我是GP owner
    const isGPOwner = useMemo(()=>{
       return userInfo && userInfo?.id === podDetail?.grantsPool.ownerId;

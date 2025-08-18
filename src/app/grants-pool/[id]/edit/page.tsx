@@ -25,13 +25,6 @@ interface RFP {
   description: string;
 }
 
-interface RelatedLinks {
-  website: string;
-  github: string;
-  twitter: string;
-  telegram: string;
-}
-
 export default function EditGrantsPoolPage() {
   const router = useRouter();
   const params = useParams();
@@ -59,12 +52,7 @@ export default function EditGrantsPoolPage() {
   const [rfps, setRfps] = useState<RFP[]>([]);
 
   // Related Links 数据
-  const [relatedLinks, setRelatedLinks] = useState<RelatedLinks>({
-    website: "",
-    github: "",
-    twitter: "",
-    telegram: "",
-  });
+  const [relatedLinks, setRelatedLinks] = useState<Record<string, string>>({});
 
   // 获取 GP 详情
   const { data: grantsPoolData, isLoading: gpLoading } = api.grantsPool.getById.useQuery(
@@ -109,16 +97,7 @@ export default function EditGrantsPoolPage() {
         setRfps(activeRfps.length > 0 ? activeRfps : [{ id: "new-1", title: "", description: "" }]);
       }
 
-      // 设置关联链接
-      const links = grantsPoolData.links as any;
-      if (links) {
-        setRelatedLinks({
-          website: links.website || "",
-          github: links.github || "",
-          twitter: links.twitter || "",
-          telegram: links.telegram || "",
-        });
-      }
+      setRelatedLinks(grantsPoolData.links as any);
 
       setIsLoading(false);
     }
@@ -320,19 +299,9 @@ export default function EditGrantsPoolPage() {
 
           {/* Related Links */}
           <RelatedLinksSection 
-            links={{
-              website: relatedLinks.website,
-              github: relatedLinks.github,
-              twitter: relatedLinks.twitter,
-              telegram: relatedLinks.telegram
-            }}
+            links={relatedLinks as any}
             onLinksChange={(links: Record<string, string>) => {
-              setRelatedLinks({
-                website: links.website || '',
-                github: links.github || '',
-                twitter: links.twitter || '',
-                telegram: links.telegram || ''
-              });
+              setRelatedLinks(links as any);
             }}
           />
 

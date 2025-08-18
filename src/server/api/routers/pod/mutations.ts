@@ -1,10 +1,85 @@
 import { protectedProcedure } from "~/server/api/trpc";
 import { createPodSchema, rejectPodSchema, approvePodSchema, editPodSchema } from "./schemas";
 import { NotificationService } from "../notification/notification-service";
-import { NotificationType, PodStatus } from "@prisma/client";
+import { MilestoneStatus, NotificationType, PodStatus } from "@prisma/client";
 import { getBalance } from "../wallet/queries";
 import { PodEditService } from "./edit-service";
 import { z } from "zod";
+
+
+// 通用的退款逻辑函数
+export const handlePodTermited = async (
+  db: any,
+  podId: number,
+  ctx: any,
+  reason?: string
+) => {
+  // 权限查询
+  // 检查Pod是否存在
+  const pod = await ctx.db.pod.findUnique({
+    where: { id: podId },
+    include: { 
+      grantsPool: true,
+      milestones: {
+        where: { status: MilestoneStatus.ACTIVE }
+      },
+      applicant: true
+    },
+  });
+
+  if (!pod) {
+    throw new Error("Pod does not exist");
+  }
+
+  // 检查当前用户是否是 Grants Pool 的拥有者
+  if (pod.grantsPool.ownerId !== ctx.user!.id) {
+    throw new Error("You do not have permission to terminate this Pod");
+  }
+
+  // 检查Pod状态是否允许终止
+  if (pod.status === PodStatus.TERMINATED) {
+    throw new Error("Pod has already been terminated and cannot be terminated again");
+  }
+
+  // 更新Pod状态为TERMINATED
+  const updatedPod = await db.pod.update({
+    where: { id: podId },
+    data: { 
+      status: PodStatus.TERMINATED
+    },
+    include: {
+      applicant: true,
+      grantsPool: {
+        select: { ownerId: true }
+      },
+      milestones: {
+        where: { status: MilestoneStatus.ACTIVE }
+      }
+    }
+  });
+
+  // 将所有ACTIVE状态的milestone设置为REJECTED
+  if (updatedPod.milestones.length > 0) {
+    await db.milestone.updateMany({
+      where: { 
+        podId: podId,
+        status: MilestoneStatus.ACTIVE
+      },
+      data: { status: MilestoneStatus.TERMINATED }
+    });
+  }
+
+  // 通知用户
+  await NotificationService.createNotification({
+    type: NotificationType.POD_REVIEW,
+    senderId: ctx.user.id,
+    receiverId: updatedPod.applicant.id,
+    title: `Your Pod ${updatedPod.title} has been terminated`,
+    content: reason ?? `Your Pod has been terminated by the GP. Please complete the refund process!`,
+  });
+
+  return updatedPod;
+};
 
 export const podMutations = {
   // 创建Pod

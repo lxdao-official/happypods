@@ -26,16 +26,19 @@ export function ConfirmProvider({ children }: { children: ReactNode }) {
   return (
     <ConfirmContext.Provider value={{ confirm }}>
       {children}
-      <ConfirmModal
-        isOpen={confirmState.isOpen}
-        onClose={confirmState.onCancel!}
-        onConfirm={confirmState.onConfirm!}
-        title={confirmState.title}
-        content={confirmState.content}
-        confirmText={confirmState.confirmText}
-        cancelText={confirmState.cancelText}
-        confirmColor={confirmState.confirmColor}
-      />
+      {confirmState.isOpen && (
+        <ConfirmModal
+          isOpen={confirmState.isOpen}
+          onClose={confirmState.onCancel || (() => {})}
+          onConfirm={confirmState.onConfirm || (() => {})}
+          title={confirmState.title}
+          content={confirmState.content}
+          confirmText={confirmState.confirmText}
+          cancelText={confirmState.cancelText}
+          confirmColor={confirmState.confirmColor}
+          isLoading={confirmState.isLoading}
+        />
+      )}
     </ConfirmContext.Provider>
   );
 }

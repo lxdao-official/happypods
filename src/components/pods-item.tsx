@@ -75,8 +75,8 @@ const PodsItem = ({ pod, onClick, className = "" }: PodsItemProps) => {
           
           <ProgressMilestoneBar milestones={milestonesForProgress}>
             <div className="flex justify-between text-sm">
-              <small className='text-xs'>Applied: {formatToken(totalFunding)} {pod.currency}</small>
-              <small className='text-xs text-green-500'>Unlocked: {formatToken(unlocked)} {pod.currency}</small>
+              <small className='text-xs'>Application: {formatToken(totalFunding)} {pod.currency}</small>
+              <small className='text-xs text-green-500'>Funded: {formatToken(unlocked)} {pod.currency}</small>
             </div>
           </ProgressMilestoneBar>
 

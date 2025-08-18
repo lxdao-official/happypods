@@ -62,7 +62,7 @@ export default function MilestonesSection({ milestones, podDetail }: MilestonesS
 
               <div className="flex flex-col">
                   { new Date(milestone.deadline) < new Date() && !milestone.deliveryInfo.length && milestone.status === MilestoneStatus.PENDING_DELIVERY &&
-                  <div className="flex items-center gap-1 px-1 mb-2 text-xs text-yellow-600 border border-yellow-500 rounded-md bg-yellow-400/10">
+                  <div className="flex items-center gap-1 px-1 mb-4 text-xs text-yellow-600 border border-yellow-500 rounded-md bg-yellow-400/10">
                     <i className="text-xl ri-error-warning-fill"></i>
                     <span>Deadline for delivery has passed. If an extension is needed, please communicate with the GP Moderator in time, otherwise the GP may close the current Pod and return all funds!</span>
                     </div>
@@ -70,7 +70,7 @@ export default function MilestonesSection({ milestones, podDetail }: MilestonesS
 
                   {
                      milestone.status === 'PENDING_DELIVERY' && waitPodTreasuryRecharge &&
-                      <div className="flex items-center gap-1 px-1 mb-2 text-xs text-red-600 border border-red-500 rounded-md bg-red-400/10">
+                      <div className="flex items-center gap-1 px-1 mb-4 text-xs text-red-600 border border-red-500 rounded-md bg-red-400/10">
                         <i className="text-xl ri-error-warning-fill"></i>
                         <span>Pod treasury balance is insufficient. Please ask the GP Moderator to transfer funds before submitting the delivery!</span>
                       </div>

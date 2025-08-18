@@ -12,6 +12,7 @@ interface ConfirmOptions {
 
 interface ConfirmState extends ConfirmOptions {
   isOpen: boolean;
+  isLoading: boolean;
   onConfirm?: () => void | Promise<void>;
   onCancel?: () => void;
 }
@@ -19,6 +20,7 @@ interface ConfirmState extends ConfirmOptions {
 export function useConfirm() {
   const [confirmState, setConfirmState] = useState<ConfirmState>({
     isOpen: false,
+    isLoading: false,
   });
 
   const confirm = useCallback((
@@ -28,6 +30,7 @@ export function useConfirm() {
   ) => {
     setConfirmState({
       isOpen: true,
+      isLoading: false,
       onConfirm,
       onCancel,
       ...options,
@@ -38,12 +41,19 @@ export function useConfirm() {
     setConfirmState(prev => ({
       ...prev,
       isOpen: false,
+      isLoading: false,
     }));
   }, []);
 
   const handleConfirm = useCallback(async () => {
     if (confirmState.onConfirm) {
       try {
+        // 设置加载状态
+        setConfirmState(prev => ({
+          ...prev,
+          isLoading: true,
+        }));
+        
         await confirmState.onConfirm();
       } finally {
         closeConfirm();

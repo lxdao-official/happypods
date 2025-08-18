@@ -60,7 +60,7 @@ export const podDetailQueries = {
         where: { podId: pod.id },
       });
 
-      const appliedAmount = milestones.filter(milestone => ![MilestoneStatus.TERMINATED, MilestoneStatus.INACTIVE].includes(milestone.status as any)).reduce((acc, milestone) => Decimal(acc).plus(milestone.amount).toNumber(), 0);
+      const appliedAmount = milestones.filter(milestone => ![MilestoneStatus.TERMINATED, MilestoneStatus.INACTIVE, MilestoneStatus.COMPLETED].includes(milestone.status as any)).reduce((acc, milestone) => Decimal(acc).plus(milestone.amount).toNumber(), 0);
       const funded = milestones.filter(milestone => milestone.status === MilestoneStatus.COMPLETED).reduce((acc, milestone) => Decimal(acc).plus(milestone.amount).toNumber(), 0);
 
       return {

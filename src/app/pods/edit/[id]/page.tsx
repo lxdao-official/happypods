@@ -31,6 +31,7 @@ export default function EditPodPage() {
   const params = useParams();
   const podId = parseInt(params.id as string);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [podLoading, setPodLoading] = useState(true);
   
   const [formData, setFormData] = useState({
     avatar: "",
@@ -90,6 +91,7 @@ export default function EditPodPage() {
       if (podDetail.links) {
         setRelatedLinks(podDetail.links as Record<string, string>);
       }
+      setPodLoading(false);
     }
   }, [podDetail]);
 
@@ -173,11 +175,12 @@ export default function EditPodPage() {
     setFormData(prev => ({ ...prev, [field]: value }));
   };
 
-  if (isLoading) return (
+  if (isLoading || podLoading) return (
     <div className="container px-4 py-8 mx-auto">
       <LoadingSkeleton/>
     </div>
   );
+
 
   return (
     <div className="container px-4 py-8 mx-auto fadeIn">
@@ -242,8 +245,10 @@ export default function EditPodPage() {
 
           {/* Related Links */}
           <RelatedLinksSection 
-            links={relatedLinks}
-            onLinksChange={setRelatedLinks}
+            links={relatedLinks as any}
+            onLinksChange={(links: Record<string, string>) => {
+              setRelatedLinks(links as any);
+            }}
           />
 
           {/* 提交按钮 */}

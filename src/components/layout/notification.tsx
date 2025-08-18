@@ -85,7 +85,7 @@ export function NotificationDrawer() {
                               </div>
                             </div>
 
-                            <div className="pr-2 mb-2 text-xs leading-5 break-all line-clamp-2 text-default-600">
+                            <div className="pr-2 mb-2 text-xs leading-5 break-all line-clamp-2 text-secondary">
                               {notification.content}
                             </div>
 

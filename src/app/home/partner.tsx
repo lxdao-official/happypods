@@ -16,8 +16,8 @@ const Partner = () => {
         <img src="/partner.svg" alt="partner" className="h-[100px] mb-8" />
         <div className="flex items-center space-x-6">
             {
-                partners.map((partner) => (
-                    <div key={partner.name}>
+                partners.map((partner, index) => (
+                    <div key={index}>
                         <img src={partner.image} alt={partner.name} className="h-[60px]"/>
                     </div>
                 ))
