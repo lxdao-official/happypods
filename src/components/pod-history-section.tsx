@@ -2,7 +2,7 @@ import EdgeLine from "./edge-line";
 import { useParams } from "next/navigation";
 import Link from "next/link";
 import { PodStatus, type GrantsPool, type Pod } from "@prisma/client";
-import Empty from "./empty";
+import Empty from "~/components/empty";
 import { useMemo, useState } from "react";
 import useStore from "~/store";
 import { formatDate } from "~/lib/utils";

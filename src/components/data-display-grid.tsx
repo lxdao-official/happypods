@@ -5,7 +5,7 @@ import { Input, Pagination, Select, SelectItem } from '@heroui/react';
 import PodsItem from './pods-item';
 import { api } from '~/trpc/react';
 import LoadingSkeleton from './loading-skeleton';
-import Empty from './empty';
+import Empty from '~/components/empty';
 import { PodStatus } from '@prisma/client';
 import { STATUS_MAP } from '~/lib/config';
 
