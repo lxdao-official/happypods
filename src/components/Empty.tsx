@@ -1,3 +1,6 @@
+'use client';
+import React from "react";
+
 const Empty = ({ imgClassName = '', textClassName = '', theme = 'light' }: { imgClassName?: string, textClassName?: string, theme?: 'light' | 'dark' }) => {
     return (
         <div className="flex flex-col items-center justify-center gap-4 py-8 fadeIn">
