@@ -33,7 +33,7 @@ export const notificationQueries = {
     markAllNotificationsRead: publicProcedure
     .mutation(async ({ ctx }) => {
       await ctx.db.notification.updateMany({
-        where: { receiverId: ctx.user!.id },
+        where: { receiverId: ctx.user.id },
         data: { read: true },
       });
     }),
@@ -42,7 +42,7 @@ export const notificationQueries = {
     .input(z.object({ id: z.number() }))
     .mutation(async ({ ctx, input }) => {
       await ctx.db.notification.update({
-        where: { id: input.id, receiverId: ctx.user!.id },
+        where: { id: input.id, receiverId: ctx.user.id },
         data: { read: true },
       });
     }),

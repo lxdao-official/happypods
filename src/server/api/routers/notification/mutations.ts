@@ -5,7 +5,7 @@ import {
   markAllNotificationsReadSchema,
   deleteNotificationSchema 
 } from "./schemas";
-import { NotificationType } from "@prisma/client";
+import { type NotificationType } from "@prisma/client";
 
 export const notificationMutations = {
   // 创建通知的通用方法

@@ -59,7 +59,7 @@ export function useUserInfo() {
 
   // 当获取到新的用户数据时，更新本地存储
   useEffect(() => {
-    if (currentUser && currentUser.id && address) {
+    if (currentUser?.id && address) {
       const storedUserInfo: StoredUser = {
         id: currentUser.id,
         name: currentUser.name ?? '',

@@ -1,3 +1,4 @@
+/*
 import { type Prisma } from '@prisma/client';
 import { db } from '~/server/db';
 import { PLATFORM_TREASURY_ADDRESS, PLATFORM_CHAINS } from '~/lib/config';
@@ -249,3 +250,4 @@ if (typeof window === 'undefined') {
     });
   });
 }
+  */

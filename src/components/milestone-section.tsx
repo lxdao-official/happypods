@@ -1,6 +1,6 @@
 import { useMemo, useState } from "react";
 import { Input, Textarea, Button, DatePicker } from "@heroui/react";
-import { parseDate, CalendarDate, getLocalTimeZone, today } from "@internationalized/date";
+import { parseDate, type CalendarDate, getLocalTimeZone, today } from "@internationalized/date";
 import CornerFrame from "~/components/corner-frame";
 import EdgeLine from "./edge-line";
 import { DEFAULT_MILESTONE_AMOUNTS, MAX_MILESTONE_COUNT } from "~/lib/config";

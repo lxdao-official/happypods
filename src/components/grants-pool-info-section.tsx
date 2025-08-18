@@ -43,7 +43,7 @@ const GrantsPoolInfoSection = ({
   // 查询余额（当币种和GP都选择后）
   const { data: balanceData, isLoading: balanceLoading } = api.wallet.getBalance.useQuery({
     address: selectedPool?.treasuryWallet || '',
-    chainType: selectedPool?.chainType as ChainType,
+    chainType: selectedPool?.chainType!,
     tokenType: currency as any
   }, {
     enabled: !!(selectedPool?.treasuryWallet && currency && selectedPool?.chainType)

@@ -18,7 +18,7 @@ interface DeliveryInfo {
 interface ReviewMilestoneModalProps {
   milestone: Milestone;
   onReview?: (data: { action: 'approve' | 'reject'; comment: string }) => void;
-  podDetail: Pod & {grantsPool: {treasuryWallet:string}, podTreasuryBalances:BigInt};
+  podDetail: Pod & {grantsPool: {treasuryWallet:string}, podTreasuryBalances:bigint};
 }
 
 export default function ReviewMilestoneModal({ milestone, podDetail, onReview }: ReviewMilestoneModalProps) {

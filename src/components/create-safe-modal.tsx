@@ -84,7 +84,7 @@ const CreateSafeModal = ({
     }
 
     try {
-      const { safeAddress } = await deploySafe(owners as Address[], threshold);
+      const { safeAddress } = await deploySafe(owners, threshold);
       console.log('safeAddress===?>',safeAddress);
       onConfirm(safeAddress);
     } catch (error) {

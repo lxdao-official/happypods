@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect, useMemo } from "react";
-import { useRouter, useSearchParams } from "next/navigation";
+import { useRouter } from "next/navigation";
 import { 
   Input, 
   Textarea,
@@ -21,7 +21,6 @@ import { toast } from "sonner";
 import { zeroAddress, type Address } from "viem";
 import useStore from "~/store";
 import { DEFAULT_MILESTONE_AMOUNTS, PLATFORM_CHAINS, PLATFORM_MOD_ADDRESS } from "~/lib/config";
-import { optimism } from "viem/chains";
 
 interface RelatedLinks {
   website: string;
@@ -40,21 +39,34 @@ interface Milestone {
 
 export default function CreatePodPage() {
   const router = useRouter();
-  const searchParams = useSearchParams();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [showSafeModal, setShowSafeModal] = useState(false);
   const [showProfileModal, setShowProfileModal] = useState(false);
   const [availableBalance, setAvailableBalance] = useState(0); // 可用余额
   const {userInfo} = useStore();
   
-  // URL参数
-  const gpId = searchParams.get("gpId");
-  const rfpId = searchParams.get("rfpId");
-  const isPreselected = !!(gpId && rfpId);
+  // 使用 useState 和 useEffect 来安全地获取 URL 参数
+  const [urlParams, setUrlParams] = useState<{ gpId: string | null; rfpId: string | null }>({
+    gpId: null,
+    rfpId: null
+  });
+
+  // 在客户端安全地获取 URL 参数
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const searchParams = new URLSearchParams(window.location.search);
+      setUrlParams({
+        gpId: searchParams.get('gpId'),
+        rfpId: searchParams.get('rfpId')
+      });
+    }
+  }, []);
+
+  const isPreselected = !!(urlParams.gpId && urlParams.rfpId);
 
   const [formData, setFormData] = useState({
-    grantsPoolId: gpId || "",
-    rfpId: rfpId || "",
+    grantsPoolId: "",
+    rfpId: "",
     avatar: "",
     title: "",
     description: "",
@@ -104,14 +116,14 @@ export default function CreatePodPage() {
 
   // 确保URL参数正确设置到formData
   useEffect(() => {
-    if (gpId && rfpId) {
+    if (urlParams.gpId && urlParams.rfpId) {
       setFormData(prev => ({
         ...prev,
-        grantsPoolId: gpId,
-        rfpId: rfpId,
+        grantsPoolId: urlParams.gpId || "",
+        rfpId: urlParams.rfpId || "",
       }));
     }
-  }, [gpId, rfpId]);
+  }, [urlParams.gpId, urlParams.rfpId]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -144,7 +156,7 @@ export default function CreatePodPage() {
     setShowSafeModal(true);
   };
 
-  const handleSafeCreated = async (walletAddress: string, isCheck:boolean=false) => {
+  const handleSafeCreated = async (walletAddress: string, isCheck=false) => {
     setShowSafeModal(false);
     setIsSubmitting(true);
 
@@ -218,7 +230,7 @@ export default function CreatePodPage() {
       userInfo?.walletAddress || "",
       grantsPoolDetails?.owner.walletAddress || "",
       PLATFORM_MOD_ADDRESS
-    ].filter(Boolean) as string[];
+    ].filter(Boolean);
   }, [userInfo?.walletAddress, grantsPoolDetails?.owner.walletAddress]);
 
   console.log('predefinedOwners',predefinedOwners);

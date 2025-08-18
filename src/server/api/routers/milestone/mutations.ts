@@ -23,7 +23,7 @@ export const milestoneMutations = {
       }
 
       // 检查当前用户是否是Pod的申请者
-      if (milestone.pod.applicantId !== ctx.user!.id) {
+      if (milestone.pod.applicantId !== ctx.user.id) {
         throw new Error("You do not have permission to submit this Milestone");
       }
 
@@ -118,7 +118,7 @@ export const milestoneMutations = {
       }
 
       // 检查当前用户是否是 Grants Pool 的拥有者
-      if (milestone.pod.grantsPool.ownerId !== ctx.user!.id) {
+      if (milestone.pod.grantsPool.ownerId !== ctx.user.id) {
         throw new Error("You do not have permission to review this Milestone");
       }
 

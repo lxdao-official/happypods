@@ -12,7 +12,7 @@ import { useConfirmModal } from "~/components/providers/confirm-provider";
 interface PodMilestoneTimeoutActionsProps {
   pod: Pod & {
     grantsPool: { treasuryWallet: string };
-    podTreasuryBalances: BigInt;
+    podTreasuryBalances: bigint;
   };
 }
 

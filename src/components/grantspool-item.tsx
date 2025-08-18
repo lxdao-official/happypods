@@ -102,15 +102,15 @@ const GrantspoolItem = ({ grantsPool, className = "", children, type = "list" }:
           grantsPool.tokens.map(token => <GrantsPoolBalance 
             gpId={grantsPool.id}
             treasuryWallet={grantsPool.treasuryWallet}
-            chainType={grantsPool.chainType as ChainType}
-            token={token as GrantsPoolTokens}
+            chainType={grantsPool.chainType}
+            token={token}
           />)
         )}
         {/* Request-For-Proposal 部分 */}
         <div>
           <h2 className="mb-4 text-xl md:text-2xl font-bold">Request-For-Proposal</h2>
           <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-4">
-            {grantsPool.rfps && grantsPool.rfps.map((rfp) => (
+            {grantsPool.rfps?.map((rfp) => (
               <GrantspoolRFPItem
                 key={rfp.id}
                 gpId={grantsPool.id}

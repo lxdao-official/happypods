@@ -16,9 +16,9 @@ import { formatUnits } from "viem";
  */
 export const truncateString = (
   str: string,
-  prefixLength: number = 6,
-  suffixLength: number = 6,
-  separator: string = '...'
+  prefixLength = 6,
+  suffixLength = 6,
+  separator = '...'
 ): string => {
   if (!str) return '';
   
@@ -37,12 +37,12 @@ export const truncateString = (
 };
 
 // dayjs时间格式为指定格式
-export const formatDate = (date: string|Date, format: string = 'MMM DD, YYYY') => {
+export const formatDate = (date: string|Date, format = 'MMM DD, YYYY') => {
   return dayjs(date).format(format);
 };
 
 // 定一个promise的延迟函数
-export const delay_s = (ms: number=300) => new Promise((resolve) => setTimeout(resolve, ms));
+export const delay_s = (ms=300) => new Promise((resolve) => setTimeout(resolve, ms));
 
 // 解析传入的 safe 交易 hash, 并验证是否合法
 export const parseSafeTransactionHash = async(hash: string, {from,to,amount}:{from:string,to:string,amount:string}) => {
@@ -77,9 +77,9 @@ export const parseSafeTransactionHash = async(hash: string, {from,to,amount}:{fr
 // 数字格式化
 export function toFixed(
   value: number | string,
-  fixed: number = 6,
+  fixed = 6,
   type: 'floor' | 'round' = 'floor',
-  localFormat: boolean = true
+  localFormat = true
 ): string {
   value = Number(value);
   const minValue = 1 / Math.pow(10, fixed);
@@ -109,7 +109,7 @@ export function toFixed(
 }
 
 // token 的格式化
-export const formatToken = (amount: string|number|BigInt|Decimal, decimals: number = 6) => {
+export const formatToken = (amount: string|number|bigint|Decimal, decimals = 6) => {
   try {
     if(!amount) return '0';
     amount = formatUnits(BigInt(Number(amount)), decimals);

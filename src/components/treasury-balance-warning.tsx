@@ -5,7 +5,7 @@ import Link from "next/link";
 import AppBtn from "~/components/app-btn";
 import { FEE_CONFIG } from "~/lib/config";
 import Decimal from "decimal.js";
-import { GrantsPoolTokens, MilestoneStatus, type GrantsPool, type Milestone, type Pod } from "@prisma/client";
+import { type GrantsPoolTokens, MilestoneStatus, type GrantsPool, type Milestone, type Pod } from "@prisma/client";
 import useSafeWallet from "~/hooks/useSafeWallet";
 import { toast } from "sonner";
 import { useEffect, useMemo, useState } from "react";

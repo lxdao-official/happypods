@@ -62,7 +62,7 @@ const useSafeWallet = () => {
   const withErrorHandling = useCallback(async <T,>(
     operation: () => Promise<T>,
     errorMessage: string,
-    setLoading: boolean = true
+    setLoading = true
   ): Promise<T> => {
     try {
       if (setLoading) setStatus('loading');
@@ -78,7 +78,7 @@ const useSafeWallet = () => {
   }, []);
 
   // 部署多签钱包合约
-  const deploySafe = async (owners: string[] = [], threshold: number = 1) => {
+  const deploySafe = async (owners: string[] = [], threshold = 1) => {
     return withErrorHandling(async () => {
       validateWalletConnection();
       
@@ -191,8 +191,7 @@ const useSafeWallet = () => {
 
     //  交易存在，且自己已经签名，但是未执行，等待其他人签名
     if(
-      transactionInfo &&
-      transactionInfo.confirmations?.length && 
+      transactionInfo?.confirmations?.length && 
       !transactionInfo.isExecuted &&
       transactionInfo.confirmationsRequired > transactionInfo.confirmations?.length &&
       transactionInfo.confirmations.some(confirmation => confirmation.owner.toLocaleLowerCase() === address?.toLocaleLowerCase())
@@ -203,8 +202,7 @@ const useSafeWallet = () => {
 
      // 交易存在，且加上自己的签名可以直接执行，则直接执行
      if(
-      transactionInfo &&
-      transactionInfo.confirmations?.length && 
+      transactionInfo?.confirmations?.length && 
       transactionInfo.confirmations.length+1 >= transactionInfo.confirmationsRequired &&
       !transactionInfo.confirmations.some(confirmation => confirmation.owner.toLocaleLowerCase() === address?.toLocaleLowerCase())
      ) {
@@ -224,8 +222,7 @@ const useSafeWallet = () => {
 
     //  存在交易，签名准备完成，直接可以交易
     if(
-      transactionInfo &&
-      transactionInfo.confirmations?.length && 
+      transactionInfo?.confirmations?.length && 
       transactionInfo.confirmations.length+1 >= transactionInfo.confirmationsRequired
     ) {
       console.log('交易存在，签名准备完成，直接可以交易==>');
@@ -270,7 +267,7 @@ const useSafeWallet = () => {
         if (!tokenInfo) {
           throw new Error(`未配置代币: ${t.token}`);
         }
-        const tokenAddress = tokenInfo.address as Address;
+        const tokenAddress = tokenInfo.address;
 
         const value = BigInt(t.amount);
         const data = encodeFunctionData({

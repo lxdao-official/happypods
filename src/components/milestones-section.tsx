@@ -12,7 +12,7 @@ import ExpandableText from "./expandable-text";
 
 interface MilestonesSectionProps {
   milestones: Milestone[];
-  podDetail: Pod & {grantsPool: {treasuryWallet:string},podTreasuryBalances:BigInt};
+  podDetail: Pod & {grantsPool: {treasuryWallet:string},podTreasuryBalances:bigint};
 }
 
 export default function MilestonesSection({ milestones, podDetail }: MilestonesSectionProps) {

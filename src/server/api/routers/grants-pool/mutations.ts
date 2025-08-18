@@ -29,7 +29,7 @@ export const grantsPoolMutations = {
           tags: poolData.tags,
           links: poolData.links,
           modInfo: poolData.modInfo as Prisma.InputJsonValue,
-          ownerId: ctx.user.id as number,
+          ownerId: ctx.user.id!,
         },
       });
       // 批量插入RFPs
