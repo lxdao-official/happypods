@@ -3,7 +3,7 @@
 import { Tooltip } from '@heroui/react';
 import { QRCodeSVG } from 'qrcode.react';
 import { truncateString } from '../lib/utils';
-import Copy from './copy';
+import CopyIcon from './copy-icon';
 
 interface QRCodeTooltipProps {
   content: string; // 要生成二维码的内容
@@ -35,7 +35,7 @@ export const QRCodeTooltip = ({
           />
           <div className='flex items-center gap-2 mb-4'>
             <div>{truncateString(content, 6, 6)}</div>
-            <Copy text={content} />
+            <CopyIcon text={content} />
           </div>
         </div>
       }

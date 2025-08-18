@@ -3,7 +3,7 @@ import { useState } from 'react';
 import { toast } from 'sonner';
 import {CopyToClipboard} from 'react-copy-to-clipboard';
 
-const Copy = ({text, children}: {text: string, children?: React.ReactNode}) => {
+const CopyIcon = ({text, children}: {text: string, children?: React.ReactNode}) => {
     const [isCopied, setIsCopied] = useState(false);
 
     const handleCopy = (text: string, result: boolean) => {
@@ -25,4 +25,4 @@ const Copy = ({text, children}: {text: string, children?: React.ReactNode}) => {
     )
 }
 
-export default Copy;
+export default CopyIcon;
