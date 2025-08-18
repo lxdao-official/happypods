@@ -14,7 +14,7 @@ import {
 } from "@heroui/react";
 import { formatDate } from "~/lib/utils";
 import useNotifcation from "~/hooks/useNotifcation";
-import Empty from "~/components/empty";
+import EmptyReplace from "~/components/empty-replace";
 
 export function NotificationDrawer() {
   const {notifications, readAll, read} = useNotifcation();
@@ -60,7 +60,7 @@ export function NotificationDrawer() {
               </DrawerHeader>
               <DrawerBody className="px-0">
                 {notifications.length === 0 ? 
-                <Empty/>
+                <EmptyReplace/>
                 : (
                   <div>
                     {notifications.map((notification) => (

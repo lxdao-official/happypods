@@ -6,7 +6,7 @@ import EdgeLine from "~/components/edge-line";
 import { api } from "~/trpc/react";
 import { useAccount } from "wagmi";
 import LoadingSkeleton from "~/components/loading-skeleton";
-import Empty from "~/components/empty";
+import EmptyReplace from "~/components/empty-replace";
 
 const GrantsPoolDetailPage = () => {
   const params = useParams();
@@ -29,7 +29,7 @@ const GrantsPoolDetailPage = () => {
 
   // 数据不存在
   if (!grantsPool) {
-    return <div className="container py-8"><Empty/></div>;
+    return <div className="container py-8"><EmptyReplace/></div>;
   }
 
 

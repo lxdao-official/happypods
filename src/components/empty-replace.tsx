@@ -1,7 +1,7 @@
 'use client';
 import React from "react";
 
-const Empty = ({ imgClassName = '', textClassName = '', theme = 'light' }: { imgClassName?: string, textClassName?: string, theme?: 'light' | 'dark' }) => {
+const EmptyReplaceReplace = ({ imgClassName = '', textClassName = '', theme = 'light' }: { imgClassName?: string, textClassName?: string, theme?: 'light' | 'dark' }) => {
     return (
         <div className="flex flex-col items-center justify-center gap-4 py-8 fadeIn">
             <img src={theme === 'light' ? "/empty2.svg" : "/empty2-light.svg"} className={`h-60 grayscale opacity-40 ${imgClassName}`} /> 
@@ -11,4 +11,4 @@ const Empty = ({ imgClassName = '', textClassName = '', theme = 'light' }: { img
     )
 }
 
-export default Empty;
+export default EmptyReplaceReplace;

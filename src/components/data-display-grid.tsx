@@ -5,7 +5,7 @@ import { Input, Pagination, Select, SelectItem } from '@heroui/react';
 import PodsItem from './pods-item';
 import { api } from '~/trpc/react';
 import LoadingSkeleton from './loading-skeleton';
-import Empty from '~/components/empty';
+import EmptyReplace from '~/components/empty-replace';
 import { PodStatus } from '@prisma/client';
 import { STATUS_MAP } from '~/lib/config';
 
@@ -149,7 +149,7 @@ export const DataDisplayGrid = ({
 
       {
         isLoading ? <LoadingSkeleton theme={theme}/> : 
-        pods.length === 0 ? <Empty/> : null
+        pods.length === 0 ? <EmptyReplace/> : null
       }
 
       {/* 数据网格 */}

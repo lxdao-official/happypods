@@ -6,7 +6,7 @@ import AppBtn from "~/components/app-btn";
 import GrantspoolItem from "~/components/grantspool-item";
 import NextLink from 'next/link';
 import { api } from "~/trpc/react";
-import Empty from "~/components/empty";
+import EmptyReplace from "~/components/empty-replace";
 import LoadingSkeleton from "~/components/loading-skeleton";
 
 export default function GrantsPoolPage() {
@@ -35,7 +35,7 @@ export default function GrantsPoolPage() {
 
         {
           isLoading ? <LoadingSkeleton /> : 
-          grantsPools.length === 0 ? <Empty /> : null
+          grantsPools.length === 0 ? <EmptyReplace /> : null
         }
 
         {/* Grants Pool 列表 */}

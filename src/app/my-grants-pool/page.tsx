@@ -7,7 +7,7 @@ import GrantspoolItem from "~/components/grantspool-item";
 import NextLink from 'next/link';
 import { api } from "~/trpc/react";
 import LoadingSkeleton from "~/components/loading-skeleton";
-import Empty from "~/components/empty";
+import EmptyReplace from "~/components/empty-replace";
 
 export default function MyGrantsPoolPage() {
   // 获取当前用户创建的 grants pools 数据
@@ -36,7 +36,7 @@ export default function MyGrantsPoolPage() {
               />
             ))
           ) : (
-           <Empty/>
+           <EmptyReplace/>
           )}
         </div>
       </div>

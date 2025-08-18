@@ -2,7 +2,7 @@ import EdgeLine from "./edge-line";
 import { useParams } from "next/navigation";
 import Link from "next/link";
 import { PodStatus, type GrantsPool, type Pod } from "@prisma/client";
-import Empty from "~/components/empty";
+import EmptyReplace from "~/components/empty-replace";
 import { useMemo, useState } from "react";
 import useStore from "~/store";
 import { formatDate } from "~/lib/utils";
@@ -75,7 +75,7 @@ export default function PodHistorySection({ pod }: PodHistorySectionProps) {
       </div>
 
       {
-        pod.versions.length === 0 && <Empty imgClassName="w-auto h-[100px]" textClassName="text-xl" theme="dark"/>
+        pod.versions.length === 0 && <EmptyReplace imgClassName="w-auto h-[100px]" textClassName="text-xl" theme="dark"/>
       }
       
       {/* 版本审核弹窗 */}

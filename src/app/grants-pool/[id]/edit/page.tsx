@@ -17,7 +17,7 @@ import TagsSelect from "~/components/tags-select";
 import { api } from "~/trpc/react";
 import { toast } from "sonner";
 import LoadingSkeleton from "~/components/loading-skeleton";
-import Empty from "~/components/empty";
+import EmptyReplace from "~/components/empty-replace";
 
 interface RFP {
   id: string;
@@ -197,7 +197,7 @@ export default function EditGrantsPoolPage() {
 
   // 如果没有数据，显示错误
   if (!grantsPoolData) {
-    return <Empty/>;
+    return <EmptyReplace/>;
   }
 
   return (
