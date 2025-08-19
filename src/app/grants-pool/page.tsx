@@ -24,8 +24,8 @@ export default function GrantsPoolPage() {
       <div className="mx-auto max-w-7xl">
         {/* 顶部横幅 */}
         <CornerFrame className="mb-20"> 
-          <div className="flex flex-col items-center justify-center gap-6 md:py-8 text-2xl text-center">
-            <div className="mb-8">Discover and manage all available Grants Pools. Empower your project with community funding!</div>
+          <div className="flex flex-col items-center justify-center gap-6 text-2xl text-center md:py-8">
+            <div className="mb-8">Browse funding pools and RFPs from foundations, DAOs, and organizations</div>
             <NextLink href="/grants-pool/create" className="absolute bottom-[-25px]">
               <AppBtn btnProps={{color:"success"}}>Create Grant Pool</AppBtn>
             </NextLink>

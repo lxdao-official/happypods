@@ -15,7 +15,7 @@ export function Header() {
     { href: '/', label: 'Home' },
     { href: '/pods', label: 'Pods' },
     { href: '/grants-pool', label: 'Grants Pool' },
-    { href: '/how-it-works', label: 'How It Works' },
+    { href: '/how-it-works', label: 'FAQs' },
   ];
 
   return (

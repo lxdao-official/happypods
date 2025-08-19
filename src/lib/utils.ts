@@ -3,6 +3,8 @@ import { PLATFORM_CHAINS } from "./config";
 import { optimism } from "viem/chains";
 import type Decimal from "decimal.js";
 import { formatUnits } from "viem";
+import { clsx, type ClassValue } from "clsx"
+import { twMerge } from "tailwind-merge"
 
  /**
  * 字符串省略方法
@@ -117,4 +119,10 @@ export const formatToken = (amount: string|number|bigint|Decimal, decimals = 6) 
   } catch (error) {
     return '0';
   }
+}
+
+
+
+export function cn(...inputs: ClassValue[]) {
+  return twMerge(clsx(inputs))
 }

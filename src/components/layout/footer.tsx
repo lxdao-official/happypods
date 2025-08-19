@@ -19,6 +19,7 @@ export function Footer() {
             <div className="space-y-2">
               <p className="text-xl font-medium text-foreground">Links</p>
               <Link href="https://github.com/lxdao-official/happypods" target='_blank' className="block text-sm text-muted-foreground hover:underline">Github</Link>
+              <Link href="https://fairsharing.xyz" target='_blank' className="block text-sm text-muted-foreground hover:underline">Fairsharing</Link>
             </div>
 
             <div className="space-y-2">
