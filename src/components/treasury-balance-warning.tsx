@@ -154,7 +154,7 @@ export default function TreasuryBalanceWarning({pod}: TreasuryBalanceWarningProp
                     </small>
                     </Alert> :
                     <Alert
-                    color="success"
+                    color="default"
                     variant="bordered"
                     title="Pod Treasury Balance Exceeded!"
                     className="mb-4"

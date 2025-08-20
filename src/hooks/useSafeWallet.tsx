@@ -2,20 +2,11 @@ import { useAccount, useWalletClient, usePublicClient, useChainId, useSwitchChai
 import { useEffect, useMemo, useState, useCallback } from "react";
 import Safe, { type SafeAccountConfig, type PredictedSafeProps } from '@safe-global/protocol-kit';
 import SafeApiKit from '@safe-global/api-kit';
-import type { SafeTransaction, MetaTransactionData } from '@safe-global/types-kit';
-import { keccak256, encodeFunctionData, type Address, erc20Abi } from "viem";
+import { keccak256 } from "viem";
 import { toast } from "sonner";
-import { PLATFORM_CHAINS } from "~/lib/config";
-import type { GrantsPoolTokens } from "@prisma/client";
 import { delay_s } from "~/lib/utils";
+import { buildErc20TransfersSafeTransaction, type TransferInput } from "~/lib/safeUtils";
 
-  // 基于 {token, from, to, amount}[] 构建 ERC20 转账 SafeTransaction
-  type TransferInput = Readonly<{
-    token: GrantsPoolTokens;
-    from?: string; // 可选，若提供则校验与 safeAddress 一致
-    to: string;
-    amount: string; // 推荐字符串，便于按 decimals 精确转换
-  }>;
 
 const useSafeWallet = () => {
   const { address } = useAccount();
@@ -236,58 +227,6 @@ const useSafeWallet = () => {
   };
   
 
-
-
-  const buildErc20TransfersSafeTransaction = async (
-    safeAddress: string,
-    transfers: ReadonlyArray<TransferInput>
-  ): Promise<SafeTransaction> => {
-    return withErrorHandling(async () => {
-      validateWalletConnection();
-      
-      if (!chainId) {
-        throw new Error('请先连接钱包');
-      }
-
-      const chainConfig = PLATFORM_CHAINS[chainId];
-      if (!chainConfig) {
-        throw new Error(`当前网络(${chainId})未在 PLATFORM_CHAINS 中配置`);
-      }
-
-      // 校验 from 一致性（若提供）
-      for (const t of transfers) {
-        if (t.from && t.from.toLowerCase() !== safeAddress.toLowerCase()) {
-          throw new Error('转账项中的 from 必须为当前 Safe 地址');
-        }
-      }
-
-      const txs: MetaTransactionData[] = transfers.map((t) => {
-        const tokenKey = t.token.toUpperCase() as 'USDC' | 'USDT';
-        const tokenInfo = chainConfig.TOKENS[tokenKey];
-        if (!tokenInfo) {
-          throw new Error(`未配置代币: ${t.token}`);
-        }
-        const tokenAddress = tokenInfo.address;
-
-        const value = BigInt(t.amount);
-        const data = encodeFunctionData({
-          abi: erc20Abi,
-          functionName: 'transfer',
-          args: [t.to, value] as [Address, bigint],
-        });
-
-        return {
-          to: tokenAddress,
-          value: '0',
-          data,
-          operation: 0,
-        } satisfies MetaTransactionData;
-      });
-
-      const safeWallet = await initSafeInstance(safeAddress);
-      return await safeWallet.createTransaction({ transactions: txs });
-    }, '构建ERC20转账交易失败');
-  };
 
   // 获取交易详情
   const getTransactionDetail = async (safeTransactionHash: string) => {

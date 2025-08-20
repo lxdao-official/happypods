@@ -3,6 +3,7 @@ import type { Prisma } from "@prisma/client";
 import { TRPCError } from "@trpc/server";
 import { protectedProcedure } from "~/server/api/trpc";
 import { createGrantsPoolSchema, updateGrantsPoolSchema } from "./schemas";
+import { isUserInMultiSigWallet } from "~/lib/safeUtils";
 
 export const grantsPoolMutations = {
   // 创建GrantsPool
@@ -16,6 +17,19 @@ export const grantsPoolMutations = {
 
       if (existingGrantsPool) {
         throw new Error("You have already created a GrantsPool and cannot create another one.");
+      }
+
+      // 获取当前用户的钱包地址
+      const user = await ctx.db.user.findUnique({
+        where: { id: ctx.user.id }
+      });
+
+      if(!user) throw new Error("User not found");
+
+      // 判断国库钱包是否是多签钱包
+      const isMultiSigWallet = await isUserInMultiSigWallet(input.treasuryWallet, [user.walletAddress]);
+      if(!isMultiSigWallet){
+        throw new Error("You are not the owner of the treasury wallet.");
       }
 
       const { rfps, ...poolData } = input;

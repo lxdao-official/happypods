@@ -75,9 +75,6 @@ const Contributors = () => {
                                         alt={contributor.login}
                                         className="w-16 h-16 transition-transform rounded-full group-hover:scale-110"
                                     />
-                                    <div className="absolute p-1 bg-white rounded-full -bottom-1 -right-1">
-                                        <div className="w-3 h-3 bg-green-400 rounded-full"></div>
-                                    </div>
                                 </div>
                                 <h3 className="mb-2 text-sm font-semibold text-center transition-colors group-hover:text-purple-600">
                                     {contributor.login}

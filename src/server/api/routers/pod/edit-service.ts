@@ -55,15 +55,15 @@ export class PodEditService {
     });
 
     if (!pod) {
-      throw new Error("Pod不存在");
+      throw new Error("pod not found");
     }
 
     if (pod.applicantId !== ctx.user.id) {
-      throw new Error("没有权限编辑此Pod");
+      throw new Error("no permission to edit this pod");
     }
 
     if (pod.status !== PodStatus.IN_PROGRESS) {
-      throw new Error("只能编辑状态为进行中的Pod");
+      throw new Error("only in progress pod can be edited");
     }
 
     // 检查是否已有待审核的版本
@@ -72,7 +72,7 @@ export class PodEditService {
     );
     
     if (hasReviewingVersion) {
-      throw new Error("该Pod已有正在审核中的版本，请等待审核完成后再编辑");
+      throw new Error("this pod has a version being reviewed, please wait for the review to complete before editing");
     }
 
     return pod;
@@ -85,7 +85,7 @@ export class PodEditService {
   ) {
     // 校验milestone数量
     if (newMilestones.length > 3) {
-      throw new Error("Milestone总数不能超过3个（不包含已完成的）");
+      throw new Error("the number of milestones cannot exceed 3 (excluding completed)");
     }
 
     // 校验余额
@@ -97,7 +97,7 @@ export class PodEditService {
     });
     
     if (totalAmount > Number(rawBalance)) {
-      throw new Error(`可用余额不足！需要 ${totalAmount}，可用 ${rawBalance}`);
+      throw new Error(`grants pool insufficient balance`);
     }
   }
 
@@ -254,21 +254,21 @@ export class PodEditService {
     });
 
     if (!pod) {
-      throw new Error("Pod不存在");
+      throw new Error("pod not found");
     }
 
     if (pod.grantsPool.ownerId !== ctx.user.id) {
-      throw new Error("没有权限审核此Pod版本");
+      throw new Error("no permission to review this pod version");
     }
 
     return pod;
   }
 
   private static async sendReviewNotification(ctx: EditPodContext, existingPod: any, versionData: any, isApproved: boolean) {
-    const title = isApproved ? "Pod版本审核通过" : "Pod 版本变更被拒绝";
+    const title = isApproved ? "Pod version approved" : "Pod version rejected";
     const content = isApproved 
-      ? `您的Pod "${versionData.title}" 版本已审核通过`
-      : `您的 ${formatDate(versionData.createdAt)} 提交的 Pod "${versionData.title}" 版本变更被拒绝`;
+      ? `Your Pod "${versionData.title}" version has been approved`
+      : `Your ${formatDate(versionData.createdAt)} submitted Pod "${versionData.title}" version has been rejected`;
     const action = isApproved ? 'version_approved' : 'version_rejected';
 
     await NotificationService.createNotification({

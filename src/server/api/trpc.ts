@@ -127,7 +127,7 @@ const authMiddleware = t.middleware(({ next, ctx, path }) => {
   if (!ctx.user && !PUBLIC_ROUTES.includes(path)) {
     throw new TRPCError({
       code: 'UNAUTHORIZED',
-      message: '您需要登录才能访问此功能',
+      message: 'you need to login to access this feature',
     });
   }
 

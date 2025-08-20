@@ -1,10 +1,13 @@
 import { protectedProcedure } from "~/server/api/trpc";
 import { submitMilestoneDeliverySchema, reviewMilestoneDeliverySchema, initiatePodRefundSchema } from "./schemas";
 import { NotificationService } from "../notification/notification-service";
-import { MilestoneStatus, NotificationType, PodStatus } from "@prisma/client";
+import { GrantsPoolTokens, MilestoneStatus, NotificationType, PodStatus } from "@prisma/client";
 import { optimism } from "viem/chains";
-import { PLATFORM_CHAINS } from "~/lib/config";
+import { FEE_CONFIG, PLATFORM_CHAINS, PLATFORM_TREASURY_ADDRESS } from "~/lib/config";
 import { handlePodTermited } from "../pod/mutations";
+import { getBalance } from "../wallet/queries";
+import { buildErc20SafeTransactionAndHash } from "~/lib/safeUtils";
+import Decimal from "decimal.js";
 
 
 export const milestoneMutations = {
@@ -15,7 +18,7 @@ export const milestoneMutations = {
       // 检查milestone是否存在
       const milestone = await ctx.db.milestone.findUnique({
         where: { id: input.milestoneId },
-        include: { pod: true },
+        include: { pod: { include: { grantsPool: true } } },
       });
 
       if (!milestone) {
@@ -50,14 +53,54 @@ export const milestoneMutations = {
         throw new Error("Grants Pool does not exist");
       }
 
-      // !todo 校验提交之前需要检查国库余额是否充足
+      // 校验提交之前需要检查国库余额是否充足
+      const balance = await getBalance({
+        address: milestone.pod.grantsPool.treasuryWallet,
+        chainType: milestone.pod.grantsPool.chainType,
+        tokenType: "USDT",
+      });
+      if(Number(balance.rawBalance) < Number(milestone.amount)){
+        throw new Error("Grants Pool Insufficient balance");
+      }
 
-      //!todo 验证提交的transactionHash是否有效
-       const safeTransaction = await PLATFORM_CHAINS[optimism.id]?.safeApiKit.getTransaction(input.transactionHash);
-       console.log('safeTransaction', safeTransaction);
-       if(!safeTransaction){
-         throw new Error("Invalid TransactionHash");
-       }
+      //! 验证提交的transactionHash是否有效，必须是已提案，但是未执行的交易
+      const safeTransaction = await PLATFORM_CHAINS[optimism.id]?.safeApiKit.getTransaction(input.transactionHash);
+      console.log('safeTransaction', safeTransaction);
+      if(!safeTransaction || safeTransaction.isExecuted || safeTransaction.isSuccessful){
+        throw new Error("Invalid TransactionHash");
+      }
+
+      //! 验证输入的 hash 是否与预期一致，否则不允许修改状态
+      const user = await ctx.db.user.findUnique({
+        where: {
+          id: ctx.user.id,
+        },
+        select: {
+          walletAddress: true,
+        },
+      })
+
+      if(!user){throw new Error("User does not exist");}
+
+      const { hash: expectedHash } = await buildErc20SafeTransactionAndHash(milestone.pod.walletAddress, [
+        {
+          token: milestone.pod.currency as GrantsPoolTokens,
+          from: milestone.pod.walletAddress,
+          to: PLATFORM_TREASURY_ADDRESS,
+          amount: Decimal(milestone.amount).mul(FEE_CONFIG.MIN_TRANSACTION_FEE).toString(),
+        },
+        {
+          token: milestone.pod.currency as GrantsPoolTokens,
+          from: milestone.pod.walletAddress,
+          to: user.walletAddress,
+          amount: milestone.amount.toString(),
+        }
+      ]);
+
+      if(expectedHash.toLocaleLowerCase() !== input.transactionHash.toLocaleLowerCase()){
+        throw new Error("Invalid TransactionHash");
+      }
+      // !
 
       // 创建新的交付信息
       const newDelivery = {
@@ -150,13 +193,52 @@ export const milestoneMutations = {
       // 确定新的milestone状态
       let newStatus;
       if (input.approved) {
+
+        if(!input.safeTransactionHash){
+          throw new Error("safeTransactionHash is required");
+        }
+
         // 审核通过，milestone完成
         newStatus = MilestoneStatus.COMPLETED;
-         //!todo 检查是safeTransaction
-        const safeTransaction = await PLATFORM_CHAINS[optimism.id]?.safeApiKit.getTransaction(input.safeTransactionHash!);
-        if(!safeTransaction){
+
+        //! 验证提交的transactionHash是否有效，必须是已提案，已执行的交易
+        const safeTransaction = await PLATFORM_CHAINS[optimism.id]?.safeApiKit.getTransaction(input.safeTransactionHash);
+        if(!safeTransaction || !safeTransaction.isExecuted || !safeTransaction.isSuccessful){
           throw new Error("Invalid TransactionHash");
         }
+
+        //! 验证输入的 hash 是否与预期一致，否则不允许修改状态
+        const user = await ctx.db.user.findUnique({
+          where: {
+            id: ctx.user.id,
+          },
+          select: {
+            walletAddress: true,
+          },
+        })
+
+        if(!user){throw new Error("User does not exist");}
+
+        const { hash: expectedHash } = await buildErc20SafeTransactionAndHash(milestone.pod.walletAddress, [
+          {
+            token: milestone.pod.currency as GrantsPoolTokens,
+            from: milestone.pod.walletAddress,
+            to: PLATFORM_TREASURY_ADDRESS,
+            amount: Decimal(milestone.amount).mul(FEE_CONFIG.MIN_TRANSACTION_FEE).toString(),
+          },
+          {
+            token: milestone.pod.currency as GrantsPoolTokens,
+            from: milestone.pod.walletAddress,
+            to: user.walletAddress,
+            amount: milestone.amount.toString(),
+          }
+        ]);
+
+        if(expectedHash.toLocaleLowerCase() !== input.safeTransactionHash.toLocaleLowerCase()){
+          throw new Error("Invalid TransactionHash");
+        }
+
+        // !
 
         // 如果所有milestone都完成，则更新pod状态为COMPLETED
         const remainingActiveMilestones = await ctx.db.milestone.count({

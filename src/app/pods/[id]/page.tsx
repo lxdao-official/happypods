@@ -18,13 +18,14 @@ import StatusChip from "~/components/status-chip";
 import LoadingSkeleton from "~/components/loading-skeleton";
 import JsonInfoDisplay from "~/components/json-info-display";
 import { LinkDisplay } from "~/components/link-display";
-import { useMemo } from "react";
+import { useEffect, useMemo, useState } from "react";
 import useStore from "~/store";
 import Tag from "~/components/tag";
 import PodMilestoneTimeoutActions from "~/components/pod-milestone-timeout-actions";
 import ExpandableText from "~/components/expandable-text";
 import TooltipInfo from "~/components/TooltipInfo";
 import { FEE_CONFIG } from "~/lib/config";
+import { getSafeWalletOwners } from "~/lib/safeUtils";
 
 
 export default function PodDetailPage() {
@@ -60,17 +61,31 @@ export default function PodDetailPage() {
     },[podDetail?.milestones]);
 
     
+    // 获取当前钱包的多签 owners，用于显示余额差额的弹窗
+  const [isSafeWalletOwner,setIsSafeWalletOwner] = useState(false);
+  useEffect(()=>{
+    if(!userInfo?.walletAddress || !podDetail?.walletAddress) return;
+    const checkIsSafeWalletOwner = async()=>{
+      const owners = await getSafeWalletOwners(podDetail?.walletAddress);
+      console.log('owners==>',owners);
+      setIsSafeWalletOwner(owners.some((v:string)=>v.toLowerCase() === userInfo.walletAddress.toLowerCase()));
+    }
+    checkIsSafeWalletOwner();
+  },[podDetail?.walletAddress,userInfo?.walletAddress]);
+
+
   if (isPodLoading || isMilestonesLoading || !podDetail) {
     return <div className="container px-4 py-8 mx-auto">
       <LoadingSkeleton />
     </div>
   }
 
-  // 转换数据格式以匹配现有 UI
+  
 
   return (
     <div className="container px-4 py-8 mx-auto space-y-4 fadeIn">
 
+      {/* pod 交付超时 */}
       {
         (isGPOwner) && hasTimeoutMilestone && 
         <PodMilestoneTimeoutActions pod={podDetail} />
@@ -78,7 +93,8 @@ export default function PodDetailPage() {
 
       {/* 国库余额不足警告 */}
       {
-        (isGPOwner || isPodOwner) && ![PodStatus.REJECTED,PodStatus.REVIEWING].includes(podDetail.status as any) && 
+        (isGPOwner || isPodOwner || isSafeWalletOwner) && 
+        ![PodStatus.REJECTED,PodStatus.REVIEWING].includes(podDetail.status as any) && 
         <TreasuryBalanceWarning pod={podDetail as any}/>
       }
 
@@ -94,7 +110,7 @@ export default function PodDetailPage() {
        <div className="flex items-center justify-between">
          <div className="flex items-center">
             <img src={podDetail.avatar || ''} alt="" className="w-10 h-10 rounded-full" />
-            <span className="ml-2 text-xl md:text-2xl font-bold">{podDetail.title}</span>
+            <span className="ml-2 text-xl font-bold md:text-2xl">{podDetail.title}</span>
           </div>
 
           <ShareButton 

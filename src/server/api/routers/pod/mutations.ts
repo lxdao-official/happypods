@@ -5,6 +5,8 @@ import { MilestoneStatus, NotificationType, PodStatus } from "@prisma/client";
 import { getBalance } from "../wallet/queries";
 import { PodEditService } from "./edit-service";
 import { z } from "zod";
+import { PLATFORM_MOD_ADDRESS } from "~/lib/config";
+import { isUserInMultiSigWallet } from "~/lib/safeUtils";
 
 
 // 通用的退款逻辑函数
@@ -86,10 +88,25 @@ export const podMutations = {
   create: protectedProcedure
     .input(createPodSchema)
     .mutation(async ({ ctx, input }) => {
+      // 检查24小时内创建的pod数量限制，最多不超过 3 个
+      const twentyFourHoursAgo = new Date(Date.now() - 24 * 60 * 60 * 1000);
+      const recentPodsCount = await ctx.db.pod.count({
+        where: {
+          applicantId: ctx.user.id,
+          createdAt: {
+            gte: twentyFourHoursAgo
+          }
+        }
+      });
+
+      if (recentPodsCount >= 3) {
+        throw new Error("You can only create up to 3 pods within 24 hours");
+      }
+
       // 验证用户信息是否完善
       const user = await ctx.db.user.findUnique({
         where: { id: ctx.user.id },
-        select: { name: true, email: true, description: true },
+        select: { name: true, email: true, description: true, walletAddress: true },
       });
 
       if (!user?.name || !user?.email || !user?.description) {
@@ -106,17 +123,17 @@ export const podMutations = {
         throw new Error("Grants Pool does not exist");
       }
 
-      // 当前用户是否有其他正在审核中的pod
-      const existingReviewingPod = await ctx.db.pod.findFirst({
-        where: {
-          applicantId: ctx.user.id,
-          status: "REVIEWING"
-        }
-      });
-      if (existingReviewingPod) {
-        throw new Error("You already have a Pod under review. Please wait for the review to be completed before creating a new one.");
+      // 检查当前钱包地址是否是多签钱包的签名者
+      const isMultiSigWallet = await isUserInMultiSigWallet(
+        input.walletAddress, 
+        [user?.walletAddress, PLATFORM_MOD_ADDRESS, grantsPool.treasuryWallet],
+        2,
+        true
+      );
+      if(!isMultiSigWallet){
+        throw new Error("safe wallet is not a valid wallet");
       }
-
+      
       // 当前milestone的总额是否超过可用总额
       const totalMilestoneAmount = input.milestones.reduce((sum, milestone) => sum + Number(milestone.amount), 0);
       const { rawBalance } = await getBalance({
@@ -125,7 +142,7 @@ export const podMutations = {
         tokenType: input.currency,
       });
       if(totalMilestoneAmount > Number(rawBalance)) {
-        throw new Error(`Insufficient balance!`);
+        throw new Error(`grants pool insufficient balance`);
       }
       const { milestones, isCheck, ...podData } = input;
 

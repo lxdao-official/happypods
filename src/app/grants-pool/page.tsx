@@ -8,6 +8,7 @@ import NextLink from 'next/link';
 import { api } from "~/trpc/react";
 import EmptyReplace from "~/components/empty-replace";
 import LoadingSkeleton from "~/components/loading-skeleton";
+import RequireLogin from "~/components/require-login";
 
 export default function GrantsPoolPage() {
   // 获取所有 grants pools 数据（不使用分页，获取全部）
@@ -26,9 +27,11 @@ export default function GrantsPoolPage() {
         <CornerFrame className="mb-20"> 
           <div className="flex flex-col items-center justify-center gap-6 text-2xl text-center md:py-8">
             <div className="mb-8">Browse funding pools and RFPs from foundations, DAOs, and organizations</div>
-            <NextLink href="/grants-pool/create" className="absolute bottom-[-25px]">
-              <AppBtn btnProps={{color:"success"}}>Create Grant Pool</AppBtn>
-            </NextLink>
+            <RequireLogin>
+              <NextLink href="/grants-pool/create" className="absolute bottom-[-25px]">
+                <AppBtn btnProps={{color:"success"}}>Create Grant Pool</AppBtn>
+              </NextLink>
+            </RequireLogin>
           </div>
         </CornerFrame>
 
