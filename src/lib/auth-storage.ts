@@ -7,7 +7,6 @@ export interface StoredUser {
   id: number;
   name: string;
   email: string;
-  role: string;
   address: string;
 }
 

@@ -29,7 +29,6 @@ export function useUserInfo() {
           id: userData.data.id,
           name: userData.data.name ?? '',
           email: userData.data.email ?? '',
-          role: userData.data.role ?? "APPLICANT",
           address: address ?? '', // 使用当前连接的钱包地址
         };
         
@@ -64,7 +63,6 @@ export function useUserInfo() {
         id: currentUser.id,
         name: currentUser.name ?? '',
         email: currentUser.email ?? '',
-        role: currentUser.role ?? 'APPLICANT',
         address: address,
       };
       storeUser(storedUserInfo);
