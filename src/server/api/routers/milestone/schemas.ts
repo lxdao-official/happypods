@@ -2,7 +2,7 @@ import { z } from "zod";
 
 export const submitMilestoneDeliverySchema = z.object({
   milestoneId: z.number(),
-  content: z.string().min(1, "内容不能为空").max(1000),
+  content: z.string().min(1, "content is required").max(1000),
   links: z.record(z.string()).optional(),
   transactionHash: z.string()
 });

@@ -2,33 +2,33 @@ import { z } from "zod";
 
 export const milestoneSchema = z.object({
   id: z.number().optional(),
-  title: z.string().min(1, "里程碑标题不能为空").max(100),
-  description: z.string().min(1, "里程碑描述不能为空").max(1000),
-  amount: z.number().min(0, "金额必须大于等于0"),
-  deadline: z.string().min(1, "截止日期不能为空"),
+  title: z.string().min(1, "milestone title is required").max(100),
+  description: z.string().min(1, "milestone description is required").max(1000),
+  amount: z.number().min(0, "milestone amount is required"),
+  deadline: z.string().min(1, "milestone deadline is required"),
 });
 
 export const createPodSchema = z.object({
   grantsPoolId: z.number(),
   rfpId: z.number(),
-  walletAddress: z.string().min(1, "钱包地址不能为空"),
+  walletAddress: z.string().min(1, "wallet address is required"),
   avatar: z.string().url().max(255).optional(),
-  title: z.string().min(1, "项目标题不能为空").max(100),
-  description: z.string().min(1, "项目描述不能为空").max(1000),
+  title: z.string().min(1, "title is required").max(100),
+  description: z.string().min(1, "description is required").max(1000),
   links: z.any().optional(),
-  currency: z.string().min(1, "币种不能为空").max(10),
+  currency: z.string().min(1, "currency is required").max(10),
   tags: z.string().optional(),
-  milestones: z.array(milestoneSchema).min(1, "至少需要一个里程碑"),
+  milestones: z.array(milestoneSchema).min(1, "at least one milestone is required"),
   isCheck: z.boolean().optional(),
 });
 
 export const updatePodSchema = z.object({
   id: z.number(),
   avatar: z.string().url().max(255).optional(),
-  title: z.string().min(1, "项目标题不能为空").max(100).optional(),
-  description: z.string().min(1, "项目描述不能为空").max(1000).optional(),
+  title: z.string().min(1, "title is required").max(100).optional(),
+  description: z.string().min(1, "description is required").max(1000).optional(),
   links: z.any().optional(),
-  currency: z.string().min(1, "币种不能为空").max(10).optional(),
+  currency: z.string().min(1, "currency is required").max(10).optional(),
   tags: z.string().optional(),
   status: z.enum(["REVIEWING", "APPROVED", "REJECTED", "IN_PROGRESS", "COMPLETED", "TERMINATED"]).optional(),
 });
@@ -50,7 +50,7 @@ export const validateMilestonesSchema = z.object({
 
 export const rejectPodSchema = z.object({
   id: z.number(),
-  rejectReason: z.string().min(1, "拒绝理由不能为空").max(1000)
+  rejectReason: z.string().min(1, "reject reason is required").max(1000)
 });
 
 export const approvePodSchema = z.object({
@@ -61,11 +61,11 @@ export const approvePodSchema = z.object({
 export const editPodSchema = z.object({
   id: z.number(),
   avatar: z.string().url().max(255).optional(),
-  title: z.string().min(1, "项目标题不能为空").max(100),
-  description: z.string().min(1, "项目描述不能为空").max(1000),
+  title: z.string().min(1, "title is required ").max(100),
+  description: z.string().min(1, "description is required").max(1000),
   links: z.any().optional(),
   tags: z.string().optional(),
-  milestones: z.array(milestoneSchema).min(1, "至少需要一个里程碑"),
+  milestones: z.array(milestoneSchema),
 });
 
  

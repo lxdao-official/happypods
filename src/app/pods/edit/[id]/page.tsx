@@ -110,6 +110,7 @@ export default function EditPodPage() {
         }));
 
       // 确保至少有一个milestone
+      /*
       if (activeMilestones.length === 0) {
         activeMilestones.push({
           id: `${Date.now()}`,
@@ -119,6 +120,7 @@ export default function EditPodPage() {
           description: ""
         });
       }
+      */
 
       setMilestones(activeMilestones as Milestone[]);
     }

@@ -232,17 +232,17 @@ export class PodEditService {
       }
 
 
-      // 4. 发送通知
-      await this.sendReviewNotification(ctx, existingPod, versionData, isApproved);
-
-      // 如果已经不存在 active 的 milestone 则项目被终止失败
-      if(existingPod.milestones.every(v=>v.status !== MilestoneStatus.ACTIVE)){
+      // 如果已经不存在 active 或者 prview 的 milestone 则项目被终止失败
+      if(existingPod.milestones.filter(v=>([MilestoneStatus.ACTIVE,MilestoneStatus.REVIEWING] as MilestoneStatus[]).includes(v.status as MilestoneStatus)).length === 0){
         await handlePodTermited(
           ctx.db, 
           existingPod.id, 
           ctx
         );
       }
+
+      // 4. 发送通知
+      await this.sendReviewNotification(ctx, existingPod, versionData, isApproved);
       
       return isApproved ? { success: true } : { success: true };
   }
