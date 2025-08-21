@@ -6,6 +6,7 @@ import { MobileMenu } from '~/components/layout/mobile-menu';
 import NextLink from 'next/link';
 import { usePathname } from 'next/navigation';
 import useStore from '~/store';
+import { ConnectButton } from '@rainbow-me/rainbowkit';
 
 export function Header() {
   const pathname = usePathname();
@@ -43,6 +44,8 @@ export function Header() {
             </NextLink>
           ))}
         </nav>
+
+        {/* <ConnectButton/> */}
 
         {/* 登录按钮和移动端菜单 */}
         <div className="flex items-center justify-end gap-4 basis-1/5">

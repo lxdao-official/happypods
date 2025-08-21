@@ -20,7 +20,6 @@ interface FormData {
   avatar: string;
   name: string;
   email: string;
-  role: "ADMIN" | "GP_MOD" | "APPLICANT" | "VIEWER";
   description: string;
   links: Record<string, string>;
 }
@@ -33,7 +32,6 @@ export default function ProfilePage() {
     avatar: "",
     name: "",
     email: "",
-    role: "APPLICANT",
     description: "",
     links: {},
   });
@@ -81,7 +79,6 @@ export default function ProfilePage() {
         avatar: userData.avatar ?? "",
         name: userData.name ?? "",
         email: userData.email ?? "",
-        role: userData.role ?? "APPLICANT",
         description: userData.description ?? "",
         links: userData.links as any ?? {},
       });
@@ -114,7 +111,6 @@ export default function ProfilePage() {
       avatar: formData.avatar || undefined,
       name: formData.name.trim(),
       email: formData.email.trim(),
-      role: formData.role,
       description: formData.description.trim() || undefined,
       links:formData.links,
     };
@@ -160,6 +156,7 @@ export default function ProfilePage() {
                 onChange={(e) => handleInputChange("name", e.target.value)}
                 placeholder="Enter your username"
                 isRequired
+                errorMessage="Please enter your username"
               />
 
               {/* Email */}
@@ -171,6 +168,7 @@ export default function ProfilePage() {
                 onChange={(e) => handleInputChange("email", e.target.value)}
                 placeholder="Enter your email address"
                 isRequired
+                errorMessage="Please enter your email address"
               />
 
               {/* Bio */}
@@ -183,6 +181,7 @@ export default function ProfilePage() {
                 placeholder="Tell us about yourself"
                 minRows={4}
                 description="Introduce your background, interests, and professional expertise."
+                errorMessage="Please enter your introduction"
               />
             </div>
           </CornerFrame>

@@ -45,15 +45,29 @@ const PodsItem = ({ pod, onClick, className = "" }: PodsItemProps) => {
       }}
     >
       {/* 卡片头部 */}
-      <div className="flex items-center p-2 md:p-4 space-x-4 bg-white border-b border-black">
-        <img src={pod.avatar || ""} alt="" className="w-10 h-10 rounded-full" />
+      <div className="flex items-center p-2 space-x-4 bg-white border-b border-black md:p-4">
+        <img src={pod.avatar || ""} alt="" className="object-contain w-10 h-10 rounded-full" />
         <div className="text-xl font-bold text-gray-900"><ExpandableText text={pod.title} maxLines={1} /></div>
       </div>
 
       {/* 卡片内容 */}
       <div className="p-4">
-        {/* 标签 */}
-        <div className="flex flex-wrap gap-2 mb-3">
+       
+        {/* 描述 */}
+        <p className="mb-4 text-xs leading-relaxed md:text-sm">
+        <ExpandableText text={pod.description} maxLines={3} />
+        </p>
+
+        {/* 资金进度 */}
+        <ProgressMilestoneBar milestones={milestonesForProgress}>
+          <div className="flex justify-between text-sm">
+            <small className='text-xs'>Application: {formatToken(totalFunding)} {pod.currency}</small>
+            <small className='text-xs text-green-500'>Funded: {formatToken(unlocked)} {pod.currency}</small>
+          </div>
+        </ProgressMilestoneBar>
+
+         {/* 标签 */}
+         <div className="flex flex-wrap gap-2 mb-2">
           {tags.map((tag, index) => (
             <small 
               key={index}
@@ -64,23 +78,6 @@ const PodsItem = ({ pod, onClick, className = "" }: PodsItemProps) => {
           ))}
         </div>
 
-        {/* 描述 */}
-        <p className="mb-4 text-xs md:text-sm leading-relaxed">
-        <ExpandableText text={pod.description} maxLines={3} />
-        </p>
-
-        {/* 资金进度 */}
-        <div className="mb-4">
-         
-          
-          <ProgressMilestoneBar milestones={milestonesForProgress}>
-            <div className="flex justify-between text-sm">
-              <small className='text-xs'>Application: {formatToken(totalFunding)} {pod.currency}</small>
-              <small className='text-xs text-green-500'>Funded: {formatToken(unlocked)} {pod.currency}</small>
-            </div>
-          </ProgressMilestoneBar>
-
-        </div>
 
         {/* 最后更新 */}
         <div className="flex items-center justify-between">

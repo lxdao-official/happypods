@@ -26,13 +26,13 @@ export default function ApprovePodModal({
 }: ApprovePodModalProps) {
   const [isTransferring, setIsTransferring] = useState(false);
   const [isApproving, setIsApproving] = useState(false);
-  const {getTransactionHash, proposeOrExecuteTransaction} = useSafeWallet();
+  const {proposeOrExecuteTransaction} = useSafeWallet();
   const {mutateAsync:approvePod} = api.pod.approve.useMutation();
   const {id:podId, title:podTitle, appliedAmount, currency, walletAddress, grantsPool:{treasuryWallet} } = podDetail as any;
 
   // 计算总金额和手续费
   const financialInfo = useMemo(() => {
-    const fee = Math.max(Decimal(appliedAmount).mul(FEE_CONFIG.TRANSACTION_FEE_RATE).toNumber(), FEE_CONFIG.MIN_TRANSACTION_FEE);
+    const fee = Decimal(appliedAmount).mul(FEE_CONFIG.TRANSACTION_FEE_RATE).toNumber();
     const totalWithFee = Decimal(appliedAmount).plus(fee).toNumber(); 
     return {
       appliedAmount,
@@ -60,12 +60,13 @@ export default function ApprovePodModal({
         to: walletAddress,
         amount: financialInfo.totalWithFee.toString()
       }]
-      console.log('safeTransaction', safeTransaction);
 
       // const {safeTxHash} = await getTransactionHash(treasuryWallet, safeTransaction);
       // console.log('txHash', safeTxHash);
-      await proposeOrExecuteTransaction(treasuryWallet, safeTransaction);
+      // const safeTxHash = await proposeOrExecuteTransaction(treasuryWallet, safeTransaction);
+      // console.log('txHash', safeTxHash);
 
+      // if(!safeTxHash) return;
       await approvePod({id: podId});
       
       setIsTransferring(false);
@@ -84,25 +85,25 @@ export default function ApprovePodModal({
     <Modal 
       isOpen={isOpen} 
       onClose={handleClose}
-      size="2xl"
+      size="3xl"
       scrollBehavior="inside"
       isDismissable={false}
       hideCloseButton={isTransferring || isApproving}
     >
       <ModalContent>
-        <ModalHeader className="flex flex-col gap-1">You are about to approve the application for the 【${podTitle}】 Pod</ModalHeader>
+        <ModalHeader className="flex flex-col gap-1">You are about to approve the application for the [ {podTitle} ] Pod</ModalHeader>
         <ModalBody>
           <div className="space-y-6">
             <div>
               <p className="text-sm text-green-600">
-                After transferring the Pod's application funds + platform fees from the GP treasury to the Pod multi-sig treasury, the current Pod can be activated.
+                Please complete the transfer from the GP multi-signature wallet to the Pod multi-signature wallet after approval, and the current Pod can be activated.
               </p>
             </div>
             
             {/* 费用明细 */}
             <Card className="border border-gray-800">
               <CardBody className="space-y-3 overflow-hidden">
-                <h4 className="text-sm font-semibold">Fee Details</h4>
+                <h4 className="text-sm font-semibold">Transfer Details</h4>
                 <div className="space-y-4">
                   <div className="flex justify-between">
                     <span className="text-sm">Total Milestone Amount</span>
@@ -120,7 +121,7 @@ export default function ApprovePodModal({
                   </div>
                   <div className="flex justify-between">
                     <span className="text-sm">
-                      GP Multi-sig Treasury (Transfer out)
+                      GP Treasury (From)
                     </span>
                     <span className="font-mono text-sm break-all">
                       {treasuryWallet}
@@ -131,7 +132,7 @@ export default function ApprovePodModal({
 
                   <div className="flex justify-between">
                     <span className="text-sm">
-                      Pod Multi-sig Treasury (Receive)
+                      Pod Treasury (To)
                     </span>
                     <span className="font-mono text-sm break-all">
                       {walletAddress}
@@ -139,7 +140,7 @@ export default function ApprovePodModal({
                   </div>
                   <Divider />
                   <div className="flex justify-between font-semibold">
-                    <span className="text-base">Total Transfer Amount</span>
+                    <span className="text-base">Total Amount</span>
                     <span className="font-mono text-base text-green-600">
                       {formatToken(financialInfo.totalWithFee)} {currency}
                     </span>
@@ -165,7 +166,7 @@ export default function ApprovePodModal({
             isLoading={isTransferring || isApproving}
             isDisabled={isTransferring || isApproving || appliedAmount === 0}
           >
-            {isTransferring || isApproving ? "loading..." : "Confirm Approval and Initiate Multi-sig Transfer"}
+            {isTransferring || isApproving ? "loading..." : "Approval"}
           </Button>
         </ModalFooter>
       </ModalContent>

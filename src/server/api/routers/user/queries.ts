@@ -30,7 +30,6 @@ export const userQueries = {  // 检查用户信息是否完善
         id: true,
         email: true,
         name: true,
-        role: true,
         avatar: true,
       },
     });

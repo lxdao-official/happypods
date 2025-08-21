@@ -2,7 +2,7 @@ import { Modal, ModalContent, ModalHeader, ModalBody, ModalFooter, Button } from
 import { useMemo, useState } from "react";
 import { api } from "~/trpc/react";
 import { toast } from "sonner";
-import { delay_s, formatDate } from "~/lib/utils";
+import { delay_s, formatDate, formatToken } from "~/lib/utils";
 import CornerFrame from "./corner-frame";
 import Tag from "./tag";
 import { LinkDisplay } from "./link-display";
@@ -135,7 +135,7 @@ export default function PodVersionReviewModal({
                           <span className="font-medium">Content:</span> {milestone.description}    
                         </div>
                         <div>
-                          <span className="font-medium">Amount:</span> {milestone.amount} {pod.currency}
+                          <span className="font-medium">Amount:</span> {formatToken(milestone.amount)} {pod.currency}
                         </div>
                         <div>
                           <span className="font-medium">Deadline:</span> {formatDate(milestone.deadline)}

@@ -23,6 +23,14 @@ const useSafeWallet = () => {
     })
   }, [chainId]);
 
+   // 检查环境是否已经准备好
+   const isReady = useMemo(()=>{
+      return Boolean(walletClient && publicClient);
+    },[
+      walletClient,
+      publicClient
+    ])
+
   useEffect(() => {
     if (sendTransactionStatus === 'error') {
       toast.error('multisig wallet not created');
@@ -56,6 +64,10 @@ const useSafeWallet = () => {
     setLoading = true
   ): Promise<T> => {
     try {
+      if (!isReady) {
+        toast.error('SDK not ready!');
+        return undefined as any;
+      }
       if (setLoading) setStatus('loading');
       const result = await operation();
       if (setLoading) setStatus('success');
@@ -66,7 +78,7 @@ const useSafeWallet = () => {
       toast.error(errorMessage);
       throw error;
     }
-  }, []);
+  }, [isReady]);
 
   // 部署多签钱包合约
   const deploySafe = async (owners: string[] = [], threshold = 1) => {
@@ -110,17 +122,17 @@ const useSafeWallet = () => {
         return { safeAddress };
       } catch (error) {
         console.log('error===>', error);
-        toast.error('创建Safe多签钱包失败或已存在，请重试！');
+        toast.error('Create safe wallet failed or already exists, please try again!');
         throw error;
       }
       
-    }, '创建Safe多签钱包失败');
+    }, 'Create safe wallet failed');
   };
 
   // 创建并计算哈希多签交易：传入已构建的 SafeTransaction，返回 safeTxHash
   const getTransactionHash = async (safeAddress: string, transfers: TransferInput[]) => {
-    return withErrorHandling(async () => {
-    const safeTransaction = await buildErc20TransfersSafeTransaction(safeAddress, transfers);
+    try {
+      const safeTransaction = await buildErc20TransfersSafeTransaction(safeAddress, transfers);
       const safeWallet = await initSafeInstance(safeAddress);
       const safeTxHash = await safeWallet.getTransactionHash(safeTransaction);
       console.log('safeTxHash===>',safeTxHash);
@@ -128,16 +140,23 @@ const useSafeWallet = () => {
         safeTxHash,
         transfers
       };
-    }, '交易 hash 获取失败');
+    } catch (error) {
+      console.log('error===>',error);
+      return {
+        safeTxHash: undefined,
+        transfers
+      }
+    }
   };
 
   // 提案或者执行交易
   const proposeOrExecuteTransaction = async (safeAddress: string, transfers: TransferInput[]) => {
+    console.log('111===>',safeAddress,transfers);
     const {safeTxHash} = await getTransactionHash(safeAddress, transfers);
     console.log('safeTxHash11===>',safeTxHash);
     if(!safeTxHash) return;
-
-    const safeErc20Transaction = await buildErc20TransfersSafeTransaction(safeAddress, transfers);
+    const transfersSorted = transfers.sort((a,b)=>a.to.localeCompare(b.to));
+    const safeErc20Transaction = await buildErc20TransfersSafeTransaction(safeAddress, transfersSorted);
     console.log('safeErc20Transaction===>',safeErc20Transaction);
 
     const safeWallet = await initSafeInstance(safeAddress);
@@ -147,12 +166,16 @@ const useSafeWallet = () => {
      console.log('owners===>',owners);
 
      const osOwners = owners.some(owner => owner.toLocaleLowerCase() === address?.toLocaleLowerCase());
-     if(!osOwners) return toast.error('You are not the owner of the multi-sig wallet, cannot initiate transactions');
+     if(!osOwners){
+      toast.error('You are not the owner of the multi-sig wallet, cannot initiate transactions')
+      return;
+     };
 
      // 查询交易
      let transactionInfo;
      try {
       transactionInfo = await getTransactionDetail(safeTxHash);
+      console.log('获取到交易信息==?>',transactionInfo);
      } catch (error) {
       console.log('get transactionInfo error===>',error);
      }
@@ -161,7 +184,7 @@ const useSafeWallet = () => {
      if (!transactionInfo) {
       console.log('签名并发起提案==>');
        const senderSignature = await safeWallet.signHash(safeTxHash);
-       toast.info('Signed and proposed transaction');
+       toast.info('Please confirm and propose transaction');
        await apiKit.proposeTransaction({
          safeAddress,
          safeTransactionData: safeErc20Transaction.data,
@@ -174,7 +197,7 @@ const useSafeWallet = () => {
     //  交易不存在，且阈值为 1 则直接确认，发起
      if(threshold === 1) {
       console.log('直接执行==>');
-      toast.info('Execute transaction');
+      toast.info('Please execute the transaction');
       const safeTransaction = await apiKit.getTransaction(safeTxHash)
       await safeWallet.executeTransaction(safeTransaction);
       return safeTxHash;
@@ -199,11 +222,11 @@ const useSafeWallet = () => {
      ) {
         console.log('交易存在，且加上自己的签名可以直接执行，则直接执行==>');
 
-        toast.info('Confirm transaction');
+        toast.info('Please confirm transaction');
         const signature = await safeWallet.signHash(safeTxHash);
         await apiKit.confirmTransaction(safeTxHash, signature.data);
 
-        toast.info('Execute transaction');
+        toast.info('Please execute the transaction');
         await delay_s(300);
 
         const safeTransaction = await apiKit.getTransaction(safeTxHash)
@@ -237,7 +260,7 @@ const useSafeWallet = () => {
       } catch (error) {
         return null;
       }
-    }, '获取交易详情失败', false);
+    }, 'Get transaction detail failed', false);
   };
 
   // 获取钱包信息
@@ -245,16 +268,10 @@ const useSafeWallet = () => {
     return withErrorHandling(async () => {
       const wallet = await apiKit.getSafeInfo(safeAddress);
       return wallet;
-    }, '获取钱包信息失败', false);
+    }, 'Get wallet info failed', false);
   };
 
-  // 检查环境是否已经准备好
-  const isReady = useMemo(()=>{
-    return Boolean(walletClient && publicClient);
-  },[
-    walletClient,
-    publicClient
-  ])
+ 
 
   return {
     deploySafe,

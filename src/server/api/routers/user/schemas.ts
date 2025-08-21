@@ -2,11 +2,10 @@ import { z } from "zod";
 
 // 定义用户输入校验 schema
 export const createUserSchema = z.object({
-  walletAddress: z.string().min(1, "钱包地址不能为空"),
+  walletAddress: z.string().min(1, "wallet address is required"),
   avatar: z.string().url().max(255).optional(),
-  name: z.string().min(1, "用户名称不能为空").max(100).optional(),
-  email: z.string().email("请输入有效的邮箱地址").max(100).optional(),
-  role: z.enum(["ADMIN", "GP_MOD", "APPLICANT", "VIEWER"]).optional(),
+  name: z.string().min(1, "name is required").max(100).optional(),
+  email: z.string().email("invalid email address").max(100).optional(),
   description: z.string().max(1000).optional(),
   links: z.record(z.string()).optional(), // 存储多个链接
 });

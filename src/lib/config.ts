@@ -75,7 +75,10 @@ export const PLATFORM_CHAINS:Record<Chain['id'], {TOKENS: {USDC: Token, USDT: To
       },
     },
     START_BLOCK_NUMBER: 139468091n,
-    RPCS:['https://optimism-mainnet.infura.io/v3/839d5d4b452f4408a1f763fd5c42af1c'],
+    RPCS:[
+      'https://optimism-rpc.publicnode.com', 
+      'https://optimism-mainnet.infura.io/v3/839d5d4b452f4408a1f763fd5c42af1c'
+    ],
     safeApiKit: new SafeApiKit({
       chainId: BigInt(optimism.id),
       apiKey: process.env.NEXT_PUBLIC_SAFE_API_KEY

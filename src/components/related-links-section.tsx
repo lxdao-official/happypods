@@ -26,7 +26,6 @@ interface RelatedLinksSectionProps {
 }
 
 const RelatedLinksSection = ({ links, onLinksChange }: RelatedLinksSectionProps) => {
-  console.log('links==>',links);
   // 初始化链接项
   const [items, setItems] = useState<LinkItem[]>(() => {
     const presetItems = PRESET_LINKS
@@ -42,10 +41,11 @@ const RelatedLinksSection = ({ links, onLinksChange }: RelatedLinksSectionProps)
         isCustom: true,
         placeholder: "https://..."
       }));
-    
+
     const allItems = [...presetItems, ...customItems];
-    return allItems.length > 0 ? allItems : PRESET_LINKS.slice(0, 3).map(l => ({ ...l, url: "" }));
+    return allItems.length > 0 ? allItems : [];
   });
+
 
   // 计算可用选项
   const usedPresetKeys = items.filter(item => !item.isCustom).map(item => item.key);

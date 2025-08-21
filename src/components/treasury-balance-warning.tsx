@@ -10,7 +10,7 @@ import useSafeWallet from "~/hooks/useSafeWallet";
 import { toast } from "sonner";
 import { useEffect, useMemo, useState } from "react";
 import useStore from "~/store";
-import { formatToken } from "~/lib/utils";
+import { delay_s, formatToken } from "~/lib/utils";
 
 interface TreasuryBalanceWarningProps {
   pod: Pod & { milestones: Milestone[],podTreasuryBalances: number, grantsPool: GrantsPool, currency: string };
@@ -58,27 +58,27 @@ export default function TreasuryBalanceWarning({pod}: TreasuryBalanceWarningProp
 
     // 获取当前交易 hash
     const [needSign, setNeedSign] = useState<boolean>(false);
-    const [walletIsSigner, setWalletIsSigner] = useState<boolean>(false);
     const getHashInfo = async () => {
         if(!transactionParams || !safeWalletReady) return;
 
         // 获取当前钱包信息
         const wallet = await getWallet(transactionParams.safeAddress);
         const isSigner = wallet?.owners?.some(v => v.toLocaleLowerCase() === userInfo?.walletAddress?.toLocaleLowerCase());
-        setWalletIsSigner(isSigner);
         console.log(wallet,isSigner,userInfo?.walletAddress);
         if(!isSigner) return;
 
         // 交易 hash 生成获取
         const {safeTxHash, transfers} = await getTransactionHash(transactionParams.safeAddress, transactionParams.transfers);
         console.log({safeTxHash, transfers});
-        const res = await getTransactionDetail(safeTxHash);
-        console.log({safeTxHash, transfers, res});
-        setShortageSafeHash(res ? safeTxHash : undefined);
-        setTransfers(transfers as any);
+        if(!safeTxHash) return;
+        
+        const transactionInfo = await getTransactionDetail(safeTxHash);
+        console.log({safeTxHash, transfers, transactionInfo});
+        setShortageSafeHash(transactionInfo ? safeTxHash : undefined);
+        setTransfers(transfers);
 
         // 是否需要我签名
-        const isSigned = res?.confirmations?.some(v => v.owner.toLocaleLowerCase() === userInfo?.walletAddress?.toLocaleLowerCase()) && !res?.isExecuted;
+        const isSigned = transactionInfo?.confirmations?.some(v => v.owner.toLocaleLowerCase() === userInfo?.walletAddress?.toLocaleLowerCase()) && !transactionInfo?.isExecuted;
         setNeedSign(!isSigned);// 交易未完成，并且当前用户未签名需要显示操作
     }
     
@@ -98,21 +98,22 @@ export default function TreasuryBalanceWarning({pod}: TreasuryBalanceWarningProp
                 transfers as any
             );
             toast.success('Transaction initiated successfully');
+            await delay_s(1000, true);
        } catch (error) {
-        toast.error('Transaction initiation failed');
+        // toast.error('Transaction initiation failed');
+        console.error(error);
        } finally {
         setIsSending(false);
        }
     }
 
-    if (shortage === 0 || !walletIsSigner) return null;
+    if (shortage === 0) return null;
 
     const safeWalletUrl = 'https://app.safe.global/transactions/tx?safe=oeth:' + (shortage>0 ? 
     `${pod.grantsPool.treasuryWallet}&id=multisig_${pod.grantsPool.treasuryWallet}_${shortageSafeHash}` : 
     `${pod.walletAddress}&id=multisig_${pod.walletAddress}_${shortageSafeHash}`);
 
-    // todo 判断当前钱包是否在权限内
-    
+
     const endContent = (
         <div className="flex gap-2">     
             {
@@ -154,7 +155,7 @@ export default function TreasuryBalanceWarning({pod}: TreasuryBalanceWarningProp
                     </small>
                     </Alert> :
                     <Alert
-                    color="default"
+                    color="warning"
                     variant="bordered"
                     title="Pod Treasury Balance Exceeded!"
                     className="mb-4"
@@ -162,7 +163,7 @@ export default function TreasuryBalanceWarning({pod}: TreasuryBalanceWarningProp
                     endContent={endContent}
                 >
                     <small className="mt-1 text-secondary">
-                    Pod treasury balance exceeded by <b className="text-warning">{formatToken(Math.abs(shortage))} {pod.currency}</b>. You can initiate a refund to the GP treasury!
+                        Pod treasury balance exceeded by <b className="text-warning">{formatToken(Math.abs(shortage))} {pod.currency}</b>. You can initiate a refund to the GP treasury!
                     </small>
                 </Alert>
             }

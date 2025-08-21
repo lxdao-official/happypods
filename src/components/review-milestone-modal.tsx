@@ -2,7 +2,7 @@ import { useState } from "react";
 import { Button, Modal, ModalBody, ModalContent, ModalHeader, ModalFooter, Textarea, useDisclosure } from "@heroui/react";
 import { api } from "~/trpc/react";
 import { toast } from "sonner";
-import { delay_s } from "~/lib/utils";
+import { delay_s, withRetry } from "~/lib/utils";
 import useSafeWallet from "~/hooks/useSafeWallet";
 import type { GrantsPoolTokens, Milestone, Pod } from "@prisma/client";
 
@@ -29,7 +29,7 @@ export default function ReviewMilestoneModal({ milestone, podDetail, onReview }:
   const {deliveryInfo,id:milestoneId} = milestone;
   const {data: safeTransactionData} = api.milestone.getPaymentTransactionData.useQuery({milestoneId: Number(milestoneId)});
 
-  const {getTransactionHash, proposeOrExecuteTransaction} = useSafeWallet();
+  const {proposeOrExecuteTransaction} = useSafeWallet();
 
   const reviewMilestoneDeliveryMutation = api.milestone.reviewMilestoneDelivery.useMutation({
     onSuccess: async() => {
@@ -37,7 +37,6 @@ export default function ReviewMilestoneModal({ milestone, podDetail, onReview }:
       onClose();
       // 调用父组件的回调
       onReview?.({ action: reviewAction, comment: comment.trim() });
-      const actionText = reviewAction === 'approve' ? 'Approve' : 'Reject';
       toast.success(`Milestone review successfully!`);
       await delay_s(2000);
       window.location.reload();
@@ -71,20 +70,14 @@ export default function ReviewMilestoneModal({ milestone, podDetail, onReview }:
     })) as any;
 
     setIsSubmitting(true);
-
-    const safeTransactionHash = await getTransactionHash(podDetail.walletAddress, transactions);
     
     try {
-
-      let safeTxHash;
-      // 审核通过，转账给用户
-      if(isApproved && safeTransactionHash){
+      let safeTxHash: string | undefined;
+      
+      if(isApproved){// 审核通过，多签转账给用户
         const res = await proposeOrExecuteTransaction(podDetail.walletAddress, transactions);
         safeTxHash = res ? res.toString() : undefined;
-      }
-
-      // 最后一次审核失败，需要将资金退回给GP
-      if(!isApproved && isLastReject){
+      }else if(isLastReject){// 最后一次审核失败，发起多签，将所有余额退回 GP 国库，但是不用校验，余额提醒组件统一处理
         const res = await proposeOrExecuteTransaction(podDetail.walletAddress, [{
           token: podDetail.currency as GrantsPoolTokens,
           to: podDetail.grantsPool.treasuryWallet,
@@ -95,12 +88,15 @@ export default function ReviewMilestoneModal({ milestone, podDetail, onReview }:
 
       console.log('safeTxHash==>',safeTxHash);
 
+      await delay_s(3000);//延迟 3s 等待提案交易被确认，不然后端会拿不到正确状态
+
       await reviewMilestoneDeliveryMutation.mutateAsync({
         milestoneId: Number(milestoneId),
         approved: isApproved,
         comment: comment.trim(),
         safeTransactionHash: safeTxHash
       });
+      
     } catch (error) {
       // 错误处理在mutation的onError中
     } finally {

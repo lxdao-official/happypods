@@ -132,7 +132,7 @@ export default function ProgressMilestoneBar({ milestones = [], children }: Prog
   const currentPosition = getCurrentTimePosition();
 
   return (
-    <div className={`mb-6 space-y-2 ${isDetail ? '' : 'p-2 bg-white border border-black rounded-md'}`}>
+    <div className={`space-y-2 ${isDetail ? 'mb-6' : 'p-2 bg-white border border-black rounded-md mb-4'}`}>
 
       {children && children}
       
@@ -201,7 +201,7 @@ export default function ProgressMilestoneBar({ milestones = [], children }: Prog
 
       {/* 图例 - 只在 pod 详情页面显示 */}
       {isDetail && (
-        <div className="hidden md:flex items-center justify-center gap-4 text-xs">
+        <div className="items-center justify-center hidden gap-4 text-xs md:flex">
           {segments.map((segment, index) => (
             <div key={index} className="flex items-center gap-1">
               <div 

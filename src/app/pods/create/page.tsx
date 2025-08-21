@@ -20,7 +20,7 @@ import { api } from "~/trpc/react";
 import { toast } from "sonner";
 import { zeroAddress, type Address } from "viem";
 import useStore from "~/store";
-import { DEFAULT_MILESTONE_AMOUNTS, PLATFORM_CHAINS, PLATFORM_MOD_ADDRESS } from "~/lib/config";
+import { DEFAULT_MILESTONE_AMOUNTS, PLATFORM_MOD_ADDRESS } from "~/lib/config";
 
 interface RelatedLinks {
   website: string;
@@ -147,9 +147,8 @@ export default function CreatePodPage() {
       toast.error(`Total milestone amount ${totalMilestoneAmount.toFixed(6)} ${formData.currency} exceeds available funds ${availableBalance.toFixed(6)} ${formData.currency}`);
       return;
     }
-
     // 先检查是否可以模拟创建成功，避免钱包生成后无法创建
-    const isCheck = await handleSafeCreated(zeroAddress,true);
+    const isCheck = await handleSafeCreated(zeroAddress, true);
     if(!isCheck) return;
 
     // 显示Safe创建模态框
@@ -185,7 +184,7 @@ export default function CreatePodPage() {
         });
       } catch (error) {
         console.log('error===>',error);
-        toast.error("Creation failed, please check parameters!");
+        toast.error((error as any).message || "Creation failed, please check parameters!");
         return false;
       }
 
@@ -233,7 +232,6 @@ export default function CreatePodPage() {
     ].filter(Boolean);
   }, [userInfo?.walletAddress, grantsPoolDetails?.owner.walletAddress]);
 
-  console.log('predefinedOwners',predefinedOwners);
 
   return (
     <div className="container px-4 py-8 mx-auto fadeIn">

@@ -28,18 +28,19 @@ export default function PodHistorySection({ pod }: PodHistorySectionProps) {
 
 
   const canEdit = useMemo(()=>{
-      return pod.versions && pod.status === PodStatus.IN_PROGRESS && 
-      isPodOwner && 
-      !pod.versions.some((item: any) => item?.status === 'REVIEWING'); 
-    },[pod.status, isPodOwner,pod.versions]);
+    return pod.versions && pod.status === PodStatus.IN_PROGRESS && 
+    isPodOwner && 
+    !pod.versions.some((item: any) => item?.status === 'REVIEWING'); 
+  },[pod.status, isPodOwner,pod.versions]);
 
-  if(!pod.versions) return null;
 
   const handleVersionClick = (version: any) => {
     setSelectedVersion(version);
     setIsModalOpen(true);
   };
+  
 
+  if(!pod.versions) return null;
 
   return (
     <div className="mt-8">

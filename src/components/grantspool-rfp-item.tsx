@@ -3,6 +3,7 @@ import { Modal, ModalBody, ModalContent, ModalHeader, useDisclosure } from "@her
 import { useRef, useEffect, useState } from "react";
 import NextLink from "next/link";
 import ExpandableText from "./expandable-text";
+import { replaceNewLine } from "~/lib/utils";
 
 interface GrantspoolRFPItemProps {
   proposal: {
@@ -35,7 +36,7 @@ const GrantspoolRFPItem = ({ proposal, onClick, className = "", gpId }: Grantspo
           className="mb-4 text-xs text-gray-600 line-clamp-3 min-h-[3.6em]"
           style={{ WebkitLineClamp: 3 }}
         >
-          <ExpandableText text={proposal.description} maxLines={3} />
+          <ExpandableText text={replaceNewLine(proposal.description)} maxLines={3} />
         </p>
         <div className="flex items-center justify-between">
           
@@ -47,7 +48,7 @@ const GrantspoolRFPItem = ({ proposal, onClick, className = "", gpId }: Grantspo
           </div>
           
           <NextLink href={`/pods/create?rfpId=${proposal.id}&gpId=${gpId}`}>
-            <Button size="sm" className="bg-black"><span>Apply</span><i className="ri-arrow-right-line"></i></Button>
+            <button className="px-4 py-2 text-xs text-white bg-black rounded-md hover:opacity-80"><span>Apply</span><i className="ri-arrow-right-line"></i></button>
           </NextLink>
         </div>
       </div>

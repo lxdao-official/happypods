@@ -220,18 +220,18 @@ export default function HowItWorksPage() {
         {/* Content Sections */}
         <div className="space-y-10">
           {contentItems.map((item, index) => (
-            <CardBox key={index} title={item.title}>
-              <div className="p-4">{item.content}</div>
+            <CardBox key={index} title={item.title} titleBg="#dfdfdf" contentBg="#343434">
+              <div className="p-4 text-white">{item.content}</div>
             </CardBox>
           ))}
 
           {/* FAQ Section */}
-          <CardBox title={<div className="text-2xl">❓ FAQs</div>}>
+          <CardBox title={<div className="text-2xl">❓ FAQs</div>} titleBg="#dfdfdf" contentBg="#343434">
             <div className="py-4">
               <Accordion selectionMode="multiple" variant="bordered" itemClasses={{
-                base:"border border-black px-4 my-1 rounded-xl",
-                title: "text-sm md:text-lg text-black",
-                content: "text-xs md:text-base pb-4 text-black",
+                base:"px-4 my-1 rounded-xl",
+                title: "text-sm md:text-lg text-white",
+                content: "text-xs md:text-base pb-4 text-white",
               }}>
                 {faqs.map((item, index) => (
                   <AccordionItem key={index} aria-label={item.question} title={item.question}>

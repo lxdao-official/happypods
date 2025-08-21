@@ -11,7 +11,7 @@ const Banner = () => {
         makes micro-grants <Highlighter action="underline" color="#2d62cc">simple and efficient </Highlighter>, 
         enabling transparent and trackable funding distribution through multi-sig automation, accelerating community 
         &nbsp;
-        <Highlighter action="highlight" color="#6bff8b65">&nbsp;&nbsp;innovation and growth.</Highlighter>
+        <Highlighter action="highlight" color="#6bff8b4c">&nbsp;&nbsp;innovation and growth.</Highlighter>
         </div>
     </div>
   );

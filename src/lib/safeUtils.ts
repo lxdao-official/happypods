@@ -16,10 +16,46 @@ export const isUserInMultiSigWallet = async(
     threshold:number = 1, 
     strictMatch: boolean = false
   ) => {
-    const wallet = await PLATFORM_CHAINS[optimism.id]?.safeApiKit.getSafeInfo(address);
-    if(!wallet || !walletAddress) return false;
-    walletAddress = walletAddress.map(address => address.toLocaleLowerCase());
+    console.log('验证信息===>');
     
+    const maxRetries = 5;
+    const retryDelay = 3000;
+    
+    let wallet = null;
+    let lastError = null;
+    
+    for (let attempt = 0; attempt < maxRetries; attempt++) {
+      try {
+        wallet = await PLATFORM_CHAINS[optimism.id]?.safeApiKit.getSafeInfo(address);
+        break; // 成功则跳出循环
+      } catch (error) {
+        lastError = error;
+        console.warn(`获取Safe信息失败，第 ${attempt + 1} 次尝试:`, error);
+        
+        if (attempt < maxRetries - 1) {
+          console.log(`等待 ${retryDelay}ms 后重试...`);
+          await new Promise(resolve => setTimeout(resolve, retryDelay));
+        }
+      }
+    }
+    
+    if (!wallet) {
+      console.error(`获取Safe信息失败，已重试 ${maxRetries} 次:`, lastError);
+      return false;
+    }
+
+    console.log({
+      address, 
+      walletAddress, 
+      threshold, 
+      strictMatch,
+      wallet
+    });
+    
+
+    if(!walletAddress || !threshold) return false;
+    walletAddress = walletAddress.map(address => address.toLocaleLowerCase());
+
     if (strictMatch) {
       // 严格比对：地址和threshold必须完全一致
       const walletOwners = wallet.owners.map(owner => owner.toLocaleLowerCase());
@@ -33,34 +69,57 @@ export const isUserInMultiSigWallet = async(
   }
   
 
+// 带重试机制的 getTransaction 方法
+export const getSafeTransactionWithRetry = async (
+  safeTransactionHash: string,
+  maxRetries: number = 5,
+  retryDelay: number = 3000
+) => {
+  let lastError = null;
+  
+  for (let attempt = 0; attempt < maxRetries; attempt++) {
+    try {
+      const safeTransaction = await PLATFORM_CHAINS[optimism.id]?.safeApiKit.getTransaction(safeTransactionHash);
+      return safeTransaction;
+    } catch (error) {
+      lastError = error;
+      console.warn(`获取Safe交易失败，第 ${attempt + 1} 次尝试:`, error);
+      
+      if (attempt < maxRetries - 1) {
+        console.log(`等待 ${retryDelay}ms 后重试...`);
+        await new Promise(resolve => setTimeout(resolve, retryDelay));
+      }
+    }
+  }
+  
+  console.error(`获取Safe交易失败，已重试 ${maxRetries} 次:`, lastError);
+  throw lastError;
+};
+
   
   
 // 构建ERC20转账交易
 // 基于 {token, from, to, amount}[] 构建 ERC20 转账 SafeTransaction
 export type TransferInput = Readonly<{
     token: GrantsPoolTokens;
-    from?: string; // 可选，若提供则校验与 safeAddress 一致
     to: string;
     amount: string; // 推荐字符串，便于按 decimals 精确转换
   }>;
   
   export const buildErc20TransfersSafeTransaction = async (
     safeAddress: string,
-    transfers: ReadonlyArray<TransferInput>
+    transfers: TransferInput[]
   ): Promise<SafeTransaction> => {
     const chainConfig = PLATFORM_CHAINS[optimism.id];
     if (!chainConfig) {
       throw new Error(`current network is not in PLATFORM_CHAINS`);
     }
+
+    const transfersSorted = transfers.sort((a,b)=>a.to.localeCompare(b.to));
+
+    console.log('transfersSorted==>',transfersSorted);
   
-    // 校验 from 一致性（若提供）
-    for (const t of transfers) {
-      if (t.from && t.from.toLowerCase() !== safeAddress.toLowerCase()) {
-        throw new Error('from must be the current Safe address');
-      }
-    }
-  
-    const txs: MetaTransactionData[] = transfers.map((t) => {
+    const txs: MetaTransactionData[] = transfersSorted.map((t) => {
       const tokenKey = t.token.toUpperCase() as 'USDC' | 'USDT';
       const tokenInfo = chainConfig.TOKENS[tokenKey];
       if (!tokenInfo) {
@@ -96,8 +155,9 @@ export type TransferInput = Readonly<{
 //  构建并获取 hash
   export const buildErc20SafeTransactionAndHash = async (
     safeAddress: string,
-    transfers: ReadonlyArray<TransferInput>
+    transfers: TransferInput[]
   ) => {
+    console.log('safeAddress===>',safeAddress);
     const safeWallet = await Safe.init({
         provider: PLATFORM_CHAINS[optimism.id]?.RPCS[0] as any,
         safeAddress

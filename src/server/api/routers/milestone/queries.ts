@@ -83,21 +83,20 @@ export const milestoneQueries = {
       const milestoneAmount = new Decimal(milestone.amount.toString())//.mul(10**6);
       
       // 计算手续费
-      const fee = Decimal.max(
-        milestoneAmount.mul(FEE_CONFIG.TRANSACTION_FEE_RATE),
-        FEE_CONFIG.MIN_TRANSACTION_FEE
-      );
+      const fee = milestoneAmount.mul(FEE_CONFIG.TRANSACTION_FEE_RATE);
 
       // 构建两个交易的数据结构
       const transactions = [
         // 1. 给pod创建者转账里程碑金额
         {
+          // from: pod.walletAddress,
           token: pod.currency as GrantsPoolTokens,
           to: pod.applicant.walletAddress,
           amount: milestoneAmount.toString(),
         },
         // 2. 给平台转账手续费
         {
+          // from: pod.walletAddress,
           token: pod.currency as GrantsPoolTokens,
           to: PLATFORM_TREASURY_ADDRESS,
           amount: fee.toString(),

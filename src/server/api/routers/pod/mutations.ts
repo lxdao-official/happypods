@@ -1,12 +1,15 @@
 import { protectedProcedure } from "~/server/api/trpc";
 import { createPodSchema, rejectPodSchema, approvePodSchema, editPodSchema } from "./schemas";
 import { NotificationService } from "../notification/notification-service";
-import { MilestoneStatus, NotificationType, PodStatus } from "@prisma/client";
+import { GrantsPoolTokens, MilestoneStatus, NotificationType, PodStatus } from "@prisma/client";
 import { getBalance } from "../wallet/queries";
 import { PodEditService } from "./edit-service";
 import { z } from "zod";
-import { PLATFORM_MOD_ADDRESS } from "~/lib/config";
-import { isUserInMultiSigWallet } from "~/lib/safeUtils";
+import { PLATFORM_CHAINS, PLATFORM_MOD_ADDRESS } from "~/lib/config";
+import { buildErc20SafeTransactionAndHash, isUserInMultiSigWallet } from "~/lib/safeUtils";
+import { optimism } from "viem/chains";
+import Decimal from "decimal.js";
+import { delay_s } from "~/lib/utils";
 
 
 // 通用的退款逻辑函数
@@ -88,6 +91,7 @@ export const podMutations = {
   create: protectedProcedure
     .input(createPodSchema)
     .mutation(async ({ ctx, input }) => {
+      console.log('创建进入===》');
       // 检查24小时内创建的pod数量限制，最多不超过 3 个
       const twentyFourHoursAgo = new Date(Date.now() - 24 * 60 * 60 * 1000);
       const recentPodsCount = await ctx.db.pod.count({
@@ -116,22 +120,11 @@ export const podMutations = {
       // 验证Grants Pool和RFP
       const grantsPool = await ctx.db.grantsPool.findUnique({
         where: { id: input.grantsPoolId },
-        include: { rfps: true },
+        include: { rfps: true, owner: true },
       });
 
       if (!grantsPool) {
         throw new Error("Grants Pool does not exist");
-      }
-
-      // 检查当前钱包地址是否是多签钱包的签名者
-      const isMultiSigWallet = await isUserInMultiSigWallet(
-        input.walletAddress, 
-        [user?.walletAddress, PLATFORM_MOD_ADDRESS, grantsPool.treasuryWallet],
-        2,
-        true
-      );
-      if(!isMultiSigWallet){
-        throw new Error("safe wallet is not a valid wallet");
       }
       
       // 当前milestone的总额是否超过可用总额
@@ -148,6 +141,18 @@ export const podMutations = {
 
       // 创建前检查参数是否正确，正确才弹窗多签钱包创建
       if(isCheck) return true;
+
+      // 检查当前钱包地址是否是多签钱包的签名者
+      const isMultiSigWallet = await isUserInMultiSigWallet(
+        input.walletAddress, 
+        [user?.walletAddress, PLATFORM_MOD_ADDRESS, grantsPool.owner.walletAddress],
+        2,
+        true
+      );
+      if(!isMultiSigWallet){
+        throw new Error("safe wallet is not a valid wallet");
+      }
+
       if(!ctx.user.id) throw new Error("User does not exist");
       // 创建Pod
       const pod = await ctx.db.pod.create({
@@ -269,17 +274,34 @@ export const podMutations = {
         throw new Error("Only Pods in the reviewing state can be approved");
       }
 
-      // todo 检查建议id是否合法, 这部分删除，直接全部通过，金额处理统一在详情顶部组件处理
+      // 直接完成状态更改，在前端余额更新中处理金额的注入与退还
       /*
-      const {totalAmountWithFee} = await getPodAssets(pod.id);
-      const {from,to,amount} = await parseSafeTransactionHash(input.transactionHash, {
-        from: pod.grantsPool.treasuryWallet,
-        to: pod.walletAddress,
-        amount: totalAmountWithFee.toString(),
-      });
+      //! 验证提交的transactionHash是否有效，必须是已提案，已执行的交易
+      await delay_s(5000);// 立即提交可能有更新延迟，延迟2秒执行，确保找到交易
+      const safeTransaction = await PLATFORM_CHAINS[optimism.id]?.safeApiKit.getTransaction(input.transactionHash);
+      console.log('===>',safeTransaction,!safeTransaction , !safeTransaction?.isExecuted , !safeTransaction?.isSuccessful);
+      if(!safeTransaction || !safeTransaction.isExecuted || !safeTransaction.isSuccessful){
+        throw new Error("Invalid TransactionHash");
+      }
 
-      const safeTransactionHash = pod.safeTransactionHash as Record<string, string>;
-      safeTransactionHash[`${from}_${to}_${amount}`] = input.transactionHash;
+       //! 验证输入的 hash 是否与预期一致，否则不允许修改状态
+      const appliedAmount = pod.milestones.reduce((sum:Decimal, milestone:any) => sum.plus(milestone.amount), new Decimal(0));
+
+      const { hash: expectedHash } = await buildErc20SafeTransactionAndHash(pod.grantsPool.treasuryWallet, [
+        {
+          token: pod.currency as GrantsPoolTokens,
+          from: pod.grantsPool.treasuryWallet,
+          to: pod.walletAddress,
+          amount: appliedAmount.toString(),
+        }
+      ]);
+
+      console.log('expectedHash===>',expectedHash);
+
+      if(expectedHash.toLocaleLowerCase() !== input.transactionHash.toLocaleLowerCase()){
+        throw new Error("Invalid TransactionHash");
+      }
+      // !
       */
 
       // 更新Pod状态为IN_PROGRESS

@@ -4,22 +4,21 @@ interface CardBoxProps {
   className?: string;
   titleBg?: string;
   titleEnd?: React.ReactNode;
+  contentBg?: string;
 }
 
-const CardBox = ({ title = "", children, className = "", titleBg='#FF6B6B', titleEnd }: CardBoxProps) => {
-  const titleBgStyle = {
-    background: titleBg,
-  }
+const CardBox = ({ title = "", children, className = "", titleBg='#FF6B6B', titleEnd, contentBg='var(--color-pink)' }: CardBoxProps) => {
   return (
-    <div className={`w-full mx-auto text-black bg-pink  overflow-hidden rounded-lg ${className}`}
+    <div className={`w-full mx-auto text-black overflow-hidden rounded-lg ${className}`}
         style={{
-            boxShadow: '5px 5px 0px var(--color-pink)'
+            backgroundColor: contentBg,
+            boxShadow: `5px 5px 0px ${contentBg}`
         }}
     >
       {/* 卡片容器 */}
       <div className="overflow-hidden border border-black rounded-lg">
         {/* 标题栏 */}
-        <div className="py-2 px-4 md:p-4 border-b border-black x-6 " style={{backgroundColor: titleBg}}>
+        <div className="px-4 py-2 border-b border-black md:p-4 x-6 " style={{backgroundColor: titleBg}}>
           {title}
         </div>
         

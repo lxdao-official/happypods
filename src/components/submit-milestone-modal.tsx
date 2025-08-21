@@ -5,6 +5,7 @@ import { api } from "~/trpc/react";
 import { toast } from "sonner";
 import { delay_s } from "~/lib/utils";
 import useSafeWallet from "~/hooks/useSafeWallet";
+import { buildErc20TransfersSafeTransaction } from "~/lib/safeUtils";
 
 interface SubmitMilestoneModalProps {
   milestoneId: string | number;
@@ -16,9 +17,8 @@ export default function SubmitMilestoneModal({ milestoneId }: SubmitMilestoneMod
   const [description, setDescription] = useState("");
   const [links, setLinks] = useState<Record<string, string>>({});
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const {proposeOrExecuteTransaction,getTransactionHash} = useSafeWallet();
+  const {proposeOrExecuteTransaction,isReady} = useSafeWallet();
   const {data: safeTransactionData} = api.milestone.getPaymentTransactionData.useQuery({milestoneId: Number(milestoneId)});
-  console.log('safeTransactionData',safeTransactionData);
 
   const submitMilestoneDeliveryMutation = api.milestone.submitMilestoneDelivery.useMutation({
     onSuccess: async() => {
@@ -49,19 +49,9 @@ export default function SubmitMilestoneModal({ milestoneId }: SubmitMilestoneMod
 
     if(!safeTransactionData) return toast.error("safeTransactionData is null");
 
-    const transactions = safeTransactionData.transactions.map(transaction => ({
-      token: transaction.token,
-      to: transaction.to,
-      amount: transaction.amount
-    })) as any;
-
-    // 获取hash, 签名交易, 提案交易
-    const {safeTxHash} = await getTransactionHash(safeTransactionData.treasuryWallet, transactions);
-    console.log('safeTransactionHash', safeTxHash);
-    
-    await proposeOrExecuteTransaction(safeTransactionData.treasuryWallet, transactions);
-
     try {
+      const safeTxHash = await proposeOrExecuteTransaction(safeTransactionData.treasuryWallet, safeTransactionData.transactions);
+      if(!safeTxHash) return;
       await submitMilestoneDeliveryMutation.mutateAsync({
         milestoneId: Number(milestoneId),
         content: description.trim(),
@@ -78,6 +68,8 @@ export default function SubmitMilestoneModal({ milestoneId }: SubmitMilestoneMod
   };
 
   const handleClose = () => {
+    setDescription("");
+    setLinks({});
     if (!isSubmitting) {
       onClose();
     }
@@ -143,6 +135,7 @@ export default function SubmitMilestoneModal({ milestoneId }: SubmitMilestoneMod
               color="success" 
               onPress={handleSubmit}
               isLoading={isSubmitting}
+              isDisabled={!isReady}
             >
               {isSubmitting ? "loading..." : "Submit Delivery"}
             </Button>

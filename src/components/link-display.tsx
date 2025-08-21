@@ -82,7 +82,7 @@ export const LinkDisplay = ({
   if (type === 'tag') {
     return (
       <div className={`flex items-center flex-wrap gap-2 ${className}`}>
-        {Object.entries(links).map(([key, url]) => {
+        {Object.entries(links).filter(([key, url]) => url).map(([key, url]) => {
           const linkType = getLinkType(key, url);
           const iconClass = LINK_ICONS[linkType] || LINK_ICONS.default;
 

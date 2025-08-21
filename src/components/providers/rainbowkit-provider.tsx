@@ -11,10 +11,12 @@ const queryClient = new QueryClient();
 export function RainbowKitProviderWrapper({
   children,
 }: Readonly<{ children: React.ReactNode }>) {
+  const theme = darkTheme();
+  theme.colors.accentColor = 'var(--color-green2)';
   return (
     <WagmiProvider config={config}>
       <QueryClientProvider client={queryClient} >
-        <RainbowKitProvider theme={darkTheme()} locale='en-US'>
+        <RainbowKitProvider theme={theme} locale='en-US'>
           {children}
         </RainbowKitProvider>
       </QueryClientProvider>

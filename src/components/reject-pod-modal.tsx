@@ -64,7 +64,7 @@ export default function RejectPodModal({
     <Modal 
       isOpen={isOpen} 
       onClose={handleClose}
-      size="lg"
+      size="3xl"
       scrollBehavior="inside"
       isDismissable={false}
     >

@@ -109,7 +109,7 @@ export default function PodDetailPage() {
       title={
        <div className="flex items-center justify-between">
          <div className="flex items-center">
-            <img src={podDetail.avatar || ''} alt="" className="w-10 h-10 rounded-full" />
+            <img src={podDetail.avatar || ''} alt="" className="object-contain w-10 h-10 bg-white rounded-full" />
             <span className="ml-2 text-xl font-bold md:text-2xl">{podDetail.title}</span>
           </div>
 
@@ -143,7 +143,7 @@ export default function PodDetailPage() {
             <div className="space-y-6">
               <div>
                 <p className="leading-relaxed">
-                  <ExpandableText className="text-sm" text={podDetail.description} maxLines={3} showExpandButton={true} />
+                  <ExpandableText className="text-sm md:text-base" text={podDetail.description} maxLines={3} showExpandButton={true} />
                 </p>
               </div>
             </div>
@@ -184,7 +184,7 @@ export default function PodDetailPage() {
                 <div className="text-xl font-bold">{formatToken(podDetail.podTreasuryBalances)}</div>
                 <div className="flex items-center gap-1 text-xs text-secondary">
                     <span>Locked</span>
-                    <TooltipInfo width="60" content={`Includes platform fees ${FEE_CONFIG.TRANSACTION_FEE_RATE * 100}%, which will be deducted when each Milestone is delivered`}/>
+                    <TooltipInfo content={`Includes platform fees ${FEE_CONFIG.TRANSACTION_FEE_RATE * 100}%, which will be deducted when each Milestone is delivered`}/>
                 </div>
               </div>
 
@@ -232,13 +232,10 @@ export default function PodDetailPage() {
 
                 <div className="flex items-center justify-between space-x-2">
                   <div className="mb-1 text-sm text-secondary shrink-0">Grants Pool</div>
-                  <div className="flex items-center gap-2">
+                  <NextLink href={`/grants-pool/${podDetail.grantsPool.id}`} className="flex items-center gap-2 hover:underline">
                     <img src={podDetail.grantsPool.avatar || ''} alt="" className="w-6 h-6 rounded-full" />
                     <span className="text-sm">{podDetail.grantsPool.name}</span>
-                    <NextLink href={`/grants-pool/${podDetail.grantsPool.id}`} target="_blank">
-                      <i className="text-sm ri-external-link-line hover:opacity-70"></i>
-                    </NextLink>
-                  </div>
+                  </NextLink>
                 </div>
                 
                 <div className="flex items-center justify-between space-x-2">
@@ -255,7 +252,7 @@ export default function PodDetailPage() {
                   </span>
                 </div>
 
-                {
+                {/* {
                   Object.keys(podDetail.metadata as Record<string, any>).length > 0 &&
                   <div className="flex items-center justify-between space-x-2">
                     <div className="mb-1 text-sm shrink-0 text-secondary">Extra info</div>
@@ -263,22 +260,26 @@ export default function PodDetailPage() {
                       rejectReason: "Reject Reason"
                     }}/>
                   </div>
-                }
+                } */}
 
               </div>
             </div>
 
-            <EdgeLine color="var(--color-background)"/>
+            {
+              podDetail.links && Object.values(podDetail.links).filter((key:string)=>key).length > 0 && (
+                <>
+                  <EdgeLine color="var(--color-background)"/>
+                  <div>
+                  <h2 className="mb-4 text-xl font-bold">Links</h2>
+                  <LinkDisplay links={podDetail.links as Record<string, string>} theme="light" />
+                </div>
+                </>
+              )
+            }
 
-            {podDetail.links && (
-              <div>
-                <h2 className="mb-4 text-xl font-bold">Links</h2>
-                <LinkDisplay links={podDetail.links as Record<string, string>} theme="light" />
-                
-                {/* 历史版本组件 */}
-                <PodHistorySection pod={podDetail as any} />
-              </div>
-            )}
+            {/* 历史版本组件 */}
+            <PodHistorySection pod={podDetail as any} />
+            
           </div>
         </div>
         
