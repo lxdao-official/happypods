@@ -69,7 +69,6 @@ export const userQueries = {  // 检查用户信息是否完善
             { email: { contains: input.search, mode: "insensitive" as const } },
           ],
         }),
-        ...(input.role && { role: input.role }),
       };
 
       const [users, total] = await Promise.all([
