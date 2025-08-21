@@ -105,6 +105,7 @@ const RFPSection = ({ rfps, onRfpsChange, isEdit = false, grantsPoolId }: RFPSec
                 onChange={(e) => updateRFP(rfp.id, "title", e.target.value)}
                 placeholder="RFP Title"
                 isRequired
+                errorMessage="Please enter an RFP title"
               />
 
               <Textarea
@@ -115,6 +116,7 @@ const RFPSection = ({ rfps, onRfpsChange, isEdit = false, grantsPoolId }: RFPSec
                 placeholder="Describe the background and objectives of the RFP"
                 minRows={3}
                 isRequired
+                errorMessage="Please enter an RFP description"
               />
 
             </div>

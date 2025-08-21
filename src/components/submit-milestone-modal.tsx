@@ -110,6 +110,7 @@ export default function SubmitMilestoneModal({ milestoneId }: SubmitMilestoneMod
                   minRows={6}
                   maxRows={12}
                   isRequired
+                  errorMessage="Please enter a milestone description"
                 />
               </div>
 

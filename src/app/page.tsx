@@ -6,6 +6,7 @@ import Solve from "~/app/home/solve";
 import Partner from "./home/partner";
 import Contributors from "./home/contributors";
 
+
 export default function HomePage() {
   return (
     <main className="container min-h-screen">

@@ -230,6 +230,7 @@ export default function EditGrantsPoolPage() {
                 onChange={(e) => handleInputChange("name", e.target.value)}
                 placeholder="Enter the name of the Grants Pool"
                 isRequired
+                errorMessage="Please enter a name for the Grants Pool"
               />
 
               {/* Description */}
@@ -240,6 +241,7 @@ export default function EditGrantsPoolPage() {
                 onChange={(e) => handleInputChange("description", e.target.value)}
                 placeholder="Describe the goals, vision, and funding direction of your Grants Pool"
                 isRequired
+                errorMessage="Please enter a description"
                 minRows={4}
               />
 
@@ -273,6 +275,7 @@ export default function EditGrantsPoolPage() {
                 onChange={(e) => handleInputChange("modName", e.target.value)}
                 placeholder="Administrator Name"
                 isRequired
+                errorMessage="Please enter an administrator name"
               />
 
               <Input
@@ -283,6 +286,7 @@ export default function EditGrantsPoolPage() {
                 onChange={(e) => handleInputChange("modEmail", e.target.value)}
                 placeholder="admin@example.com"
                 isRequired
+                errorMessage="Please enter a valid email address"
               />
 
               <Input
@@ -293,6 +297,7 @@ export default function EditGrantsPoolPage() {
                 onChange={(e) => handleInputChange("modTelegram", e.target.value)}
                 placeholder="@username"
                 isRequired
+                errorMessage="Please enter a Telegram username"
               />
             </div>
           </CornerFrame>

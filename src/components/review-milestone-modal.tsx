@@ -168,6 +168,7 @@ export default function ReviewMilestoneModal({ milestone, podDetail, onReview }:
                 minRows={4}
                 maxRows={8}
                 isRequired
+                errorMessage="Please enter your review"
               />
 
               <div className="text-xs text-secondary">

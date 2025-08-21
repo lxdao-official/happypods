@@ -105,6 +105,7 @@ const GrantsPoolInfoSection = ({
             variant="bordered"
             label="Select Grants Pool"
             isRequired
+            errorMessage="Please select a Grants Pool"
             placeholder="Please select a Grants Pool"
             selectedKeys={grantsPoolId ? new Set([grantsPoolId]) : new Set()}
             onSelectionChange={(keys) => {
@@ -127,6 +128,7 @@ const GrantsPoolInfoSection = ({
             variant="bordered"
             label="Select RFP"
             isRequired
+            errorMessage="Please select an RFP"
             placeholder="Please select an RFP"
             selectedKeys={rfpId ? new Set([rfpId]) : new Set()}
             onSelectionChange={(keys) => {
@@ -149,6 +151,7 @@ const GrantsPoolInfoSection = ({
           variant="bordered"
           label="Currency"
           isRequired
+          errorMessage="Please select a currency"
           placeholder="Select currency"
           selectedKeys={currency ? new Set([currency]) : new Set()}
           onSelectionChange={(keys) => {

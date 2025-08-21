@@ -170,7 +170,7 @@ export function LoginModal() {
         // 已登录用户显示下拉菜单
         <Dropdown className="text-black bg-foreground" placement="bottom-end">
           <DropdownTrigger>
-            <Button variant="bordered" className="flex items-center space-x-1" size={isMobile ? "sm" : "md"}>
+            <Button variant="bordered" className="flex items-center md:space-x-1" size={isMobile ? "sm" : "md"}>
               {storeUserInfo?.avatar ? (
                 <img
                   src={storeUserInfo.avatar}

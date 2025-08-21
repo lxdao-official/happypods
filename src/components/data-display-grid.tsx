@@ -108,9 +108,9 @@ export const DataDisplayGrid = ({
       { 
         <div className="flex justify-between gap-4 my-8">
           <div className="flex items-center gap-4">
-            {title && <h2 className="text-2xl font-bold">{title}</h2>}
+            {title && <h2 className="text-xl font-bold md:text-2xl">{title}</h2>}
           </div>
-          <div className="flex items-center gap-4">
+          <div className="flex items-center gap-2 md:gap-4">
             <Input
               type="text"
               placeholder={searchPlaceholder}
@@ -120,7 +120,7 @@ export const DataDisplayGrid = ({
               isClearable
               variant={type === 'gp' ? 'bordered' : 'faded'}
               color='primary'
-              className="md:w-[300px]"
+              className="w-[120px] md:w-[300px]"
               onClear={() => setSearchInput('')}
             />
             <Select
@@ -137,7 +137,7 @@ export const DataDisplayGrid = ({
                 const s = Array.from(keys)[0] as string;
                 setStatus(s);
               }}
-              className="w-[150px]"
+              className="w-[120px] md:w-[150px]"
             >
               {statusOptions.map(opt => (
                 <SelectItem key={opt.value}>{opt.label}</SelectItem>

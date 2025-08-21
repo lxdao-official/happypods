@@ -1,9 +1,22 @@
-import {Tooltip} from "@heroui/react";
+"use client"
+import { Tooltip } from "@heroui/react";
+import { useState, type ReactNode } from "react";
 
-export default function TooltipInfo({content,className,width}: {content: string,className?: string,width?: string}) {
-  return (
-    <Tooltip content={content} className={`w-${width}`} showArrow={true}>
-      <i className={`ri-information-line ${className} cursor-pointer text-secondary hover:text-primary text-sm`}></i>   
-    </Tooltip>
-  );
+const TooltipWrap = ({content,className}: {content:ReactNode | string, className?: string}) => {
+    const [isOpen, setIsOpen] = useState(false);
+    return (
+        <Tooltip 
+          content={content} 
+          isOpen={isOpen} 
+          onOpenChange={setIsOpen}
+          showArrow={true}
+        >
+            <i 
+                className={`text-base cursor-pointer text-secondary ri-information-line hover:opacity-70 ${className}`} 
+                onClick={()=>setIsOpen(!isOpen)}
+            ></i>
+        </Tooltip>
+    )
 }
+
+export default TooltipWrap;

@@ -45,7 +45,7 @@ const GrantsPoolBalance = ({ gpId, treasuryWallet, chainType, token }: GrantsPoo
         </a>
       </div>
       <div className="flex items-center">
-        <div key={token} className="relative flex items-start gap-8 pr-8 border border-black rounded-lg">
+        <div key={token} className="relative flex items-start gap-1 border border-black rounded-lg md:pr-6 md:gap-6">
           <div className="flex flex-col items-center gap-1 p-2 px-4 border-r border-black">
             <img src={`/tokens/${token.toLowerCase()}.svg`} alt={token} className="w-6 h-6" />
             <b className="text-xs">{token}</b>

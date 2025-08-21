@@ -26,6 +26,7 @@ import ExpandableText from "~/components/expandable-text";
 import TooltipInfo from "~/components/TooltipInfo";
 import { FEE_CONFIG } from "~/lib/config";
 import { getSafeWalletOwners } from "~/lib/safeUtils";
+import TooltipWrap from "~/components/TooltipInfo";
 
 
 export default function PodDetailPage() {
@@ -124,7 +125,7 @@ export default function PodDetailPage() {
       }
       >
         
-      <div className="grid grid-cols-1 gap-8 lg:grid-cols-3">
+      <div className="grid grid-cols-1 gap-8 p-4 lg:grid-cols-3 md:p-0">
         <div className="space-y-8 lg:col-span-2">
           <div>
             <h2 className="mb-4 text-xl font-bold">Summary</h2>
@@ -180,11 +181,15 @@ export default function PodDetailPage() {
             </div>
             <div className="grid grid-cols-3 gap-1 text-left">
             
-              <div className="p-2 text-black rounded-md">
+              <div className="p-2 text-black rounded-md item">
                 <div className="text-xl font-bold">{formatToken(podDetail.podTreasuryBalances)}</div>
                 <div className="flex items-center gap-1 text-xs text-secondary">
                     <span>Locked</span>
-                    <TooltipInfo content={`Includes platform fees ${FEE_CONFIG.TRANSACTION_FEE_RATE * 100}%, which will be deducted when each Milestone is delivered`}/>
+                    <TooltipWrap content={
+                      <div className="w-[200px]">
+                        Includes platform fees {FEE_CONFIG.TRANSACTION_FEE_RATE * 100}%, which will be deducted when each Milestone is delivered
+                      </div>
+                    }/>
                 </div>
               </div>
 

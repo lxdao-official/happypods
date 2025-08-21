@@ -15,6 +15,7 @@ import {
 import { formatDate } from "~/lib/utils";
 import useNotifcation from "~/hooks/useNotifcation";
 import EmptyReplace from "~/components/empty-replace";
+import { useMobile } from "~/hooks/useMobile";
 
 export function NotificationDrawer() {
   const {notifications, readAll, read} = useNotifcation();
@@ -23,6 +24,8 @@ export function NotificationDrawer() {
   const noReadNotification = useMemo(()=>{
     return notifications?.filter((notification) => !notification.read).length ?? 0;
   },[notifications]);
+
+  const isMobile = useMobile();
 
   return (
     <>
@@ -43,7 +46,9 @@ export function NotificationDrawer() {
       <Drawer
         isOpen={isOpen}
         onClose={() => setIsOpen(false)}
-        className="outline-none"
+        placement="right"
+        size={isMobile ? "xs" : "md"}
+        isDismissable={true}
       >
         <DrawerContent>
           {(onClose) => (

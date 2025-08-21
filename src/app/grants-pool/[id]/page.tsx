@@ -7,6 +7,7 @@ import { api } from "~/trpc/react";
 import { useAccount } from "wagmi";
 import LoadingSkeleton from "~/components/loading-skeleton";
 import EmptyReplace from "~/components/empty-replace";
+import { useMobile } from "~/hooks/useMobile";
 
 const GrantsPoolDetailPage = () => {
   const params = useParams();
@@ -20,12 +21,16 @@ const GrantsPoolDetailPage = () => {
     }
   );
 
+
+  const isMobile = useMobile();
+
   // 加载状态
   if (isLoading || error) {
     return (
       <div className="container py-8"><LoadingSkeleton/></div>
     );
   }
+
 
   // 数据不存在
   if (!grantsPool) {
@@ -35,13 +40,22 @@ const GrantsPoolDetailPage = () => {
 
 
   return (
-    <div className="container py-8">
+    <div className="container p-4 py-8 md:p-0">
       <GrantspoolItem grantsPool={grantsPool} type="detail" className="fadeIn">
-        <div className="mt-20">
-          <EdgeLine color="black"/>
-          <DataDisplayGrid title="Pods" sortClassName="text-black" type="gp" grantsPoolId={grantsPoolId} theme="light"/>
-        </div>
+        { !isMobile &&
+          <div className="mt-20">
+            <EdgeLine color="black"/>
+            <DataDisplayGrid title="Pods" sortClassName="text-black" type="gp" grantsPoolId={grantsPoolId} theme="light"/>
+          </div>
+        }
       </GrantspoolItem> 
+
+      {isMobile &&
+        <div className="mt-10">
+          <DataDisplayGrid title="Pods" sortClassName="text-black" grantsPoolId={grantsPoolId}/>
+        </div>
+      }
+
     </div>
   );
 };

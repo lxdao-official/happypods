@@ -278,6 +278,7 @@ export default function CreatePodPage() {
                 onChange={(e) => handleInputChange("title", e.target.value)}
                 placeholder="Enter project title"
                 isRequired
+                errorMessage="Please enter a project title"
               />
 
               {/* 详细描述 */}
@@ -288,6 +289,7 @@ export default function CreatePodPage() {
                 onChange={(e) => handleInputChange("description", e.target.value)}
                 placeholder="Describe your project in detail, including goals, implementation plan, expected outcomes, etc."
                 isRequired
+                errorMessage="Please enter a project description"
                 minRows={8}
               />
 

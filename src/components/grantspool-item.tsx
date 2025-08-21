@@ -10,6 +10,7 @@ import type { ChainType, GrantsPool, GrantsPoolTokens, Rfps } from "@prisma/clie
 import useStore from "~/store";
 import { GpModInfo } from "./gp-mod-info";
 import ExpandableText from "./expandable-text";
+import { useMobile } from "~/hooks/useMobile";
 
 
 const GrantspoolItem = ({ grantsPool, className = "", children, type = "list" }: {
@@ -40,6 +41,7 @@ const GrantspoolItem = ({ grantsPool, className = "", children, type = "list" }:
   const avatarSrc = grantsPool.avatar || "/logo.svg";
 
   const isOwner = userInfo && userInfo?.id === grantsPool.ownerId;
+  const isMobile = useMobile();
 
   return (
     <CardBox 
@@ -53,18 +55,23 @@ const GrantspoolItem = ({ grantsPool, className = "", children, type = "list" }:
             className="w-10 h-10 bg-white border-black rounded-full border-1" 
           />
           
-          <b>{grantsPool.name}</b>
+          <b className="overflow-hidden text-xl md:text-2xl text-ellipsis text-nowrap">{grantsPool.name}</b>
 
         </div>
         <div className="flex items-center space-x-4">
-          {/* links 渲染 */}
-          {grantsPool.links && Object.entries(grantsPool.links).map(([key, url]) => (
-            <NextLink href={url} key={key} target="_blank" className="hover:scale-105">
-              <i className={`${iconMap[key] || "ri-link"} text-2xl`}></i>
-            </NextLink>
-          ))}
-          <GpModInfo mod={grantsPool.modInfo}/>
-          <ShareButton/>
+          {
+            !isMobile && <>
+              {/* links 渲染 */}
+              {grantsPool.links && Object.entries(grantsPool.links).map(([key, url]) => (
+                <NextLink href={url} key={key} target="_blank" className="hover:scale-105">
+                  <i className={`${iconMap[key] || "ri-link"} text-2xl`}></i>
+                </NextLink>
+              ))}
+              <GpModInfo mod={grantsPool.modInfo}/>
+              <ShareButton/>
+            </>
+          }
+          
           {
             type === "list" ?
             <NextLink href={`/grants-pool/${grantsPool.id}`}>
@@ -81,9 +88,9 @@ const GrantspoolItem = ({ grantsPool, className = "", children, type = "list" }:
     }
     >
       {/* 主内容区域 */}
-      <div className="p-4 space-y-6">
+      <div className="p-4 space-y-4 md:p-0">
         {/* 导航标签 */}
-        <div className="flex mb-6 space-x-2">
+        <div className="flex space-x-2">
           {categories.map((category) => (
             <button
               key={category}
@@ -99,7 +106,8 @@ const GrantspoolItem = ({ grantsPool, className = "", children, type = "list" }:
         </div>
         {/* 资金池余额 */}
         {type==='detail' && (
-          grantsPool.tokens.map(token => <GrantsPoolBalance 
+          grantsPool.tokens.map(token => 
+          <GrantsPoolBalance 
             gpId={grantsPool.id}
             treasuryWallet={grantsPool.treasuryWallet}
             chainType={grantsPool.chainType}
@@ -108,7 +116,7 @@ const GrantspoolItem = ({ grantsPool, className = "", children, type = "list" }:
         )}
         {/* Request-For-Proposal 部分 */}
         <div>
-          <h2 className="mb-4 text-xl md:text-2xl font-bold">Request-For-Proposal</h2>
+          <h2 className="mb-4 text-xl font-bold md:text-2xl">Request-For-Proposal</h2>
           <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-4">
             {grantsPool.rfps?.map((rfp) => (
               <GrantspoolRFPItem

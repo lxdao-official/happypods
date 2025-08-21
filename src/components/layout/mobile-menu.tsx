@@ -32,7 +32,7 @@ export function MobileMenu({ navs }: MobileMenuProps) {
     };
 
     return (
-        <div className="md:hidden">
+        <div className="relative md:hidden">
             {/* 汉堡菜单按钮 */}
             <Button
                 isIconOnly
@@ -60,37 +60,38 @@ export function MobileMenu({ navs }: MobileMenuProps) {
             <Drawer
                 isOpen={isOpen}
                 onClose={onClose}
-                placement="right"
-                size="xs"
+                placement="bottom"
+                isDismissable={true}
             >
                 <DrawerContent>
-                    <DrawerBody className='py-10'>
-                        <Listbox
-                            aria-label="Navigation"
-                            className="p-0"
-                            itemClasses={{
-                                base: "px-4 py-3 rounded-none data-[hover=true]:bg-primary/10 data-[selected=true]:bg-primary/20",
-                                title: "text-white data-[hover=true]:text-primary data-[selected=true]:text-primary"
-                            }}
+                {(onClose) => (
+                    <Listbox
+                    aria-label="Navigation"
+                    className="p-4"
+                    itemClasses={{
+                        base: "px-4 py-3 rounded-none data-[hover=true]:bg-primary/10 data-[selected=true]:bg-primary/20",
+                        title: "text-white data-[hover=true]:text-primary data-[selected=true]:text-primary"
+                    }}
+                >
+                    
+                    {navs.map((nav) => (
+                        <ListboxItem
+                            key={nav.href}
+                            textValue={nav.label}
+                            className={
+                                pathname === nav.href || (nav.href !== '/' && pathname.startsWith(nav.href))
+                                    ? 'bg-primary/20 text-primary'
+                                    : ''
+                            }
+                            onPress={handleNavClick}
                         >
-                            {navs.map((nav) => (
-                                <ListboxItem
-                                    key={nav.href}
-                                    textValue={nav.label}
-                                    className={
-                                        pathname === nav.href || (nav.href !== '/' && pathname.startsWith(nav.href))
-                                            ? 'bg-primary/20 text-primary'
-                                            : ''
-                                    }
-                                    onPress={handleNavClick}
-                                >
-                                    <NextLink href={nav.href} className="block w-full text-xl">
-                                        {nav.label}
-                                    </NextLink>
-                                </ListboxItem>
-                            ))}
-                        </Listbox>
-                    </DrawerBody>
+                            <NextLink href={nav.href} className="block w-full text-xl">
+                                {nav.label}
+                            </NextLink>
+                        </ListboxItem>
+                    ))}
+                </Listbox>
+                )}
                 </DrawerContent>
             </Drawer>
         </div>

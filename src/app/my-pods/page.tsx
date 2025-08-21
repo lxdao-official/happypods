@@ -3,7 +3,7 @@ import { DataDisplayGrid } from "~/components/data-display-grid";
 
 const page = () => {
   return (
-    <div className="container">
+    <div className="container p-4 md:p-0">
       <DataDisplayGrid title="My Pods" type="my"/>
     </div>
   );

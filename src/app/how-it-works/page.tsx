@@ -211,7 +211,7 @@ export default function HowItWorksPage() {
         <CornerFrame className="mb-10">
           <div className="flex flex-col items-center justify-center gap-6 py-8 text-xl text-center">
             <h1 className="text-3xl font-bold">How It Works</h1>
-            <p>
+            <p className="text-xl md:text-2xl">
               Happy Pods streamlines collaboration and funding for open-source and public goods projects, ensuring transparency and security every step of the way.
             </p>
           </div>
@@ -230,8 +230,8 @@ export default function HowItWorksPage() {
             <div className="py-4">
               <Accordion selectionMode="multiple" variant="bordered" itemClasses={{
                 base:"px-4 my-1 rounded-xl",
-                title: "text-sm md:text-lg text-white",
-                content: "text-xs md:text-base pb-4 text-white",
+                title: "text-base md:text-lg text-white",
+                content: "text-base md:text-base pb-4 text-white",
               }}>
                 {faqs.map((item, index) => (
                   <AccordionItem key={index} aria-label={item.question} title={item.question}>

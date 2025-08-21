@@ -195,6 +195,7 @@ export default function CreateGrantsPoolPage() {
                 onChange={(e) => handleInputChange("name", e.target.value)}
                 placeholder="Enter the name of the Grants Pool"
                 isRequired
+                errorMessage="Please enter a name for the Grants Pool"
               />
 
               {/* Description */}
@@ -205,6 +206,7 @@ export default function CreateGrantsPoolPage() {
                 onChange={(e) => handleInputChange("description", e.target.value)}
                 placeholder="Describe the goals, vision, and funding direction of your Grants Pool"
                 isRequired
+                errorMessage="Please enter a description"
                 minRows={4}
               />
 
@@ -216,6 +218,7 @@ export default function CreateGrantsPoolPage() {
                 defaultSelectedKeys={[formData.chainType]}
                 onChange={(e) => handleInputChange("chainType", e.target.value)}
                 isRequired
+                errorMessage="Please select a chain type"
               >
                 <SelectItem key="OPTIMISM">Optimism Network</SelectItem>
                 <SelectItem key="ETHEREUM" isDisabled>Ethereum Mainnet (Not Available)</SelectItem>
@@ -264,6 +267,7 @@ export default function CreateGrantsPoolPage() {
                 onChange={(e) => handleInputChange("modName", e.target.value)}
                 placeholder="Moderator Name"
                 isRequired
+                errorMessage="Please enter a moderator name"
               />
 
               <Input
@@ -274,6 +278,7 @@ export default function CreateGrantsPoolPage() {
                 onChange={(e) => handleInputChange("modEmail", e.target.value)}
                 placeholder="admin@example.com"
                 isRequired
+                errorMessage="Please enter a valid email address"
               />
 
               <Input
@@ -284,6 +289,7 @@ export default function CreateGrantsPoolPage() {
                 onChange={(e) => handleInputChange("modTelegram", e.target.value)}
                 placeholder="@username"
                 isRequired
+                errorMessage="Please enter a Telegram username"
               />
             </div>
           </CornerFrame>
