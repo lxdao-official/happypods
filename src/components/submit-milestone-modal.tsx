@@ -114,7 +114,7 @@ export default function SubmitMilestoneModal({ milestoneId }: SubmitMilestoneMod
                 />
               </div>
 
-              {/* Related Links */}
+              {/* Links */}
               <div>
                 <RelatedLinksSection
                   links={links}

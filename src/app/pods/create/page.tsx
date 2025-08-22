@@ -77,7 +77,7 @@ export default function CreatePodPage() {
   // Tags选择状态
   const [selectedTags, setSelectedTags] = useState<string[]>([]);
 
-  // Related Links 数据
+  // Links 数据
   const [relatedLinks, setRelatedLinks] = useState<RelatedLinks>({
     website: "",
     github: "",
@@ -227,10 +227,10 @@ export default function CreatePodPage() {
   const predefinedOwners = useMemo(() => {
     return [
       userInfo?.walletAddress || "",
-      grantsPoolDetails?.owner.walletAddress || "",
+      grantsPoolDetails?.treasuryWallet || "",
       PLATFORM_MOD_ADDRESS
     ].filter(Boolean);
-  }, [userInfo?.walletAddress, grantsPoolDetails?.owner.walletAddress]);
+  }, [userInfo?.walletAddress, grantsPoolDetails?.treasuryWallet]);
 
 
   return (
@@ -309,7 +309,7 @@ export default function CreatePodPage() {
             onMilestonesChange={setMilestones}
           />
 
-          {/* Related Links - Using Component */}
+          {/* Links - Using Component */}
           <RelatedLinksSection 
             links={{
               website: relatedLinks.website,

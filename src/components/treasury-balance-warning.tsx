@@ -11,13 +11,14 @@ import { toast } from "sonner";
 import { useEffect, useMemo, useState } from "react";
 import useStore from "~/store";
 import { delay_s, formatToken } from "~/lib/utils";
+import { PLATFORM_MOD_ADDRESS } from "~/lib/config";
 
 interface TreasuryBalanceWarningProps {
   pod: Pod & { milestones: Milestone[],podTreasuryBalances: number, grantsPool: GrantsPool, currency: string };
 }
 
 export default function TreasuryBalanceWarning({pod}: TreasuryBalanceWarningProps) {
-    const {getTransactionHash, isReady: safeWalletReady, getTransactionDetail, proposeOrExecuteTransaction, isReady, getWallet} = useSafeWallet();
+    const {getTransactionHash, isReady: safeWalletReady, getTransactionDetail, proposeOrExecuteTransaction, isReady, getWallet, confirmTransactionViaNestedMultisig} = useSafeWallet();
     const [shortageSafeHash, setShortageSafeHash] = useState<string>();//当前交易的 hash
     const [transfers, setTransfers] = useState<any[]>([]);
     const {userInfo} = useStore();
@@ -56,16 +57,44 @@ export default function TreasuryBalanceWarning({pod}: TreasuryBalanceWarningProp
         }
     },[shortage,pod.grantsPool.treasuryWallet,pod.walletAddress,pod.currency,safeWalletReady])
 
-    // 获取当前交易 hash
-    const [needSign, setNeedSign] = useState<boolean>(false);
+    // 权限和操作状态
+    const [userRole, setUserRole] = useState<'gpOwner' | 'podOwner' | 'platformMod' | 'none'>('none');
+    const [showAction, setShowAction] = useState<boolean>(false);
+    const [actionType, setActionType] = useState<'propose' | 'confirm'>('propose');
+    const [showWaitingMessage, setShowWaitingMessage] = useState<boolean>(false);
+    
     const getHashInfo = async () => {
-        if(!transactionParams || !safeWalletReady) return;
+        if(!transactionParams || !safeWalletReady || !userInfo?.walletAddress) return;
 
-        // 获取当前钱包信息
-        const wallet = await getWallet(transactionParams.safeAddress);
-        const isSigner = wallet?.owners?.some(v => v.toLocaleLowerCase() === userInfo?.walletAddress?.toLocaleLowerCase());
-        console.log(wallet,isSigner,userInfo?.walletAddress);
-        if(!isSigner) return;
+        const userAddress = userInfo.walletAddress.toLowerCase();
+        
+        // 检查用户是否为系统管理员
+        const isPlatformMod = userAddress === PLATFORM_MOD_ADDRESS.toLowerCase();
+        
+        // 获取相关钱包信息
+        const targetWallet = await getWallet(transactionParams.safeAddress);
+        const gpWallet = shortage > 0 ? targetWallet : await getWallet(pod.grantsPool.treasuryWallet);
+        const podWallet = shortage < 0 ? targetWallet : await getWallet(pod.walletAddress);
+
+        // 检查用户角色
+        const isGPOwner = gpWallet?.owners?.some(v => v.toLowerCase() === userAddress);
+        const isPodOwner = podWallet?.owners?.some(v => v.toLowerCase() === userAddress) && !isGPOwner; // Pod Owner但不是GP Owner
+        
+        console.log('用户角色检查:', { userAddress, isGPOwner, isPodOwner, isPlatformMod, shortage });
+
+        // 设置用户角色
+        if (isPlatformMod) {
+            setUserRole('platformMod');
+        } else if (isGPOwner) {
+            setUserRole('gpOwner');
+        } else if (isPodOwner) {
+            setUserRole('podOwner');
+        } else {
+            setUserRole('none');
+            setShowAction(false);
+            setShowWaitingMessage(false);
+            return;
+        }
 
         // 交易 hash 生成获取
         const {safeTxHash, transfers} = await getTransactionHash(transactionParams.safeAddress, transactionParams.transfers);
@@ -77,9 +106,56 @@ export default function TreasuryBalanceWarning({pod}: TreasuryBalanceWarningProp
         setShortageSafeHash(transactionInfo ? safeTxHash : undefined);
         setTransfers(transfers);
 
-        // 是否需要我签名
-        const isSigned = transactionInfo?.confirmations?.some(v => v.owner.toLocaleLowerCase() === userInfo?.walletAddress?.toLocaleLowerCase()) && !transactionInfo?.isExecuted;
-        setNeedSign(!isSigned);// 交易未完成，并且当前用户未签名需要显示操作
+        // 根据场景和用户角色决定显示什么操作
+        if (shortage > 0) {
+            // 场景1: GP向Pod注资，只有GP Owner可以操作
+            if (isGPOwner) {
+                // 检查当前用户是否已经签名
+                const hasUserSigned = transactionInfo?.confirmations?.some(v => 
+                    v.owner.toLowerCase() === userAddress
+                );
+                
+                // 只有在交易未执行且用户未签名时才显示按钮
+                setShowAction(!transactionInfo?.isExecuted && !hasUserSigned);
+                setActionType('propose');
+                setShowWaitingMessage(false);
+            } else {
+                setShowAction(false);
+                setShowWaitingMessage(false);
+            }
+        } else {
+            // 场景2: Pod向GP退款
+            if (isPodOwner || isPlatformMod) {
+                // Pod Owner或系统管理员可以发起退款
+                // 检查当前用户是否已经签名
+                const hasUserSigned = transactionInfo?.confirmations?.some(v => 
+                    v.owner.toLowerCase() === userAddress
+                );
+                
+                // 只有在交易未执行且用户未签名时才显示按钮
+                setShowAction(!transactionInfo?.isExecuted && !hasUserSigned);
+                setActionType('propose');
+                setShowWaitingMessage(false);
+            } else if (isGPOwner) {
+                if (transactionInfo) {
+                    // GP Owner只能确认已存在的交易
+                    const hasNestedConfirmed = transactionInfo.confirmations?.some(
+                        confirmation => confirmation.owner.toLowerCase() === pod.grantsPool.treasuryWallet.toLowerCase()
+                    );
+                    setShowAction(!hasNestedConfirmed && !transactionInfo.isExecuted);
+                    setActionType('confirm');
+                    setShowWaitingMessage(false);
+                } else {
+                    // 交易不存在，显示等待提示
+                    setShowAction(false);
+                    setActionType('confirm');
+                    setShowWaitingMessage(true);
+                }
+            } else {
+                setShowAction(false);
+                setShowWaitingMessage(false);
+            }
+        }
     }
     
     // 交易构建并获取交易 hash
@@ -87,20 +163,40 @@ export default function TreasuryBalanceWarning({pod}: TreasuryBalanceWarningProp
         getHashInfo();
     },[shortage,pod.grantsPool.treasuryWallet,pod.walletAddress,pod.currency,safeWalletReady,userInfo])
 
-    // 发起交易
+    // 发起交易或确认交易
     const [isSending, setIsSending] = useState<boolean>(false);
-    const sendTx = async()=>{
+    const handleAction = async()=>{
         if(shortage===0 || !transfers.length) return;
+        
+        // 对于确认操作，需要有交易hash
+        if(actionType === 'confirm' && !shortageSafeHash) {
+            toast.error('No transaction found to confirm');
+            return;
+        }
         setIsSending(true);
+        
         try {
-            await proposeOrExecuteTransaction(
-                shortage>0 ? pod.grantsPool.treasuryWallet : pod.walletAddress, 
-                transfers as any
-            );
-            toast.success('Transaction initiated successfully');
+            if (actionType === 'propose') {
+                // 发起提案或签名确认
+                await proposeOrExecuteTransaction(
+                    shortage>0 ? pod.grantsPool.treasuryWallet : pod.walletAddress, 
+                    transfers as any
+                );
+                toast.success(shortage > 0 ? 'GP funding transaction initiated successfully' : 'Refund transaction initiated successfully');
+            } else if (actionType === 'confirm' && shortageSafeHash) {
+                // GP多签钱包确认Pod的退款交易
+                await confirmTransactionViaNestedMultisig(
+                    pod.walletAddress, // Pod钱包地址
+                    shortageSafeHash, // Pod的退款交易hash
+                    pod.grantsPool.treasuryWallet // GP多签钱包地址
+                );
+                toast.success('Refund transaction confirmed successfully');
+            }
+            
             await delay_s(1000, true);
+            // 重新获取状态
+            await getHashInfo();
        } catch (error) {
-        // toast.error('Transaction initiation failed');
         console.error(error);
        } finally {
         setIsSending(false);
@@ -114,13 +210,42 @@ export default function TreasuryBalanceWarning({pod}: TreasuryBalanceWarningProp
     `${pod.walletAddress}&id=multisig_${pod.walletAddress}_${shortageSafeHash}`);
 
 
-    const endContent = (
-        <div className="flex gap-2">     
-            {
-                needSign && 
-                <AppBtn btnProps={{ color: shortage>0 ? "warning" : "success", onPress:sendTx, isLoading:isSending }}>Initiate Transaction</AppBtn>
+    // 获取按钮文本和颜色
+    const getButtonProps = () => {
+        if (shortage > 0) {
+            return {
+                text: userRole === 'gpOwner' ? 'Fund Pod Treasury' : 'Initiate Transaction',
+                color: 'warning' as const
+            };
+        } else {
+            if (actionType === 'propose') {
+                return {
+                    text: userRole === 'platformMod' ? 'Initiate Refund (Admin)' : 'Initiate Refund',
+                    color: 'success' as const
+                };
+            } else {
+                return {
+                    text: 'Confirm Refund (GP)',
+                    color: 'primary' as const
+                };
             }
+        }
+    };
 
+    const buttonProps = getButtonProps();
+
+    const endContent = (
+        <div className="flex items-center gap-2">     
+            {
+                showAction && 
+                <AppBtn btnProps={{ 
+                    color: buttonProps.color, 
+                    onPress: handleAction, 
+                    isLoading: isSending 
+                }}>
+                    {buttonProps.text}
+                </AppBtn>
+            }
             {
                 shortageSafeHash &&
                 <Link
@@ -150,9 +275,17 @@ export default function TreasuryBalanceWarning({pod}: TreasuryBalanceWarningProp
                     classNames={{ base: "bg-background" }}
                     endContent={endContent}
                     >
-                    <small className="mt-1 text-secondary">
-                        Please coordinate with the GP treasury multi-sig user to inject the missing funds <b className="text-warning">{formatToken(shortage)} {pod.currency}</b>, otherwise the Milestone cannot be delivered!
-                    </small>
+                    <div>
+                        <div className="mt-1 text-sm text-secondary">
+                            Please coordinate with the GP treasury multi-sig user to inject the missing funds <b className="text-warning">{formatToken(shortage)} {pod.currency}</b>, otherwise the Milestone cannot be delivered!
+                        </div>
+                        {
+                            showWaitingMessage && 
+                            <div className="mt-1 text-sm italic text-red-500">
+                                Waiting for Pod Owner to initiate refund...
+                            </div>
+                        }
+                    </div>
                     </Alert> :
                     <Alert
                     color="warning"
@@ -162,9 +295,9 @@ export default function TreasuryBalanceWarning({pod}: TreasuryBalanceWarningProp
                     classNames={{ base: "bg-background" }}
                     endContent={endContent}
                 >
-                    <small className="mt-1 text-secondary">
+                    <div className="mt-1 text-sm text-secondary">
                         Pod treasury balance exceeded by <b className="text-warning">{formatToken(Math.abs(shortage))} {pod.currency}</b>. You can initiate a refund to the GP treasury!
-                    </small>
+                    </div>
                 </Alert>
             }
         </div>

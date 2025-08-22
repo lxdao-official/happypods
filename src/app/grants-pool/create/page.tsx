@@ -61,7 +61,7 @@ export default function CreateGrantsPoolPage() {
     }
   ]);
 
-  // Related Links 数据
+  // Links 数据
   const [relatedLinks, setRelatedLinks] = useState<RelatedLinks>({
     website: "",
     github: "",
@@ -294,7 +294,7 @@ export default function CreateGrantsPoolPage() {
             </div>
           </CornerFrame>
 
-          {/* Related Links - Using New Component */}
+          {/* Links - Using New Component */}
           <RelatedLinksSection 
             links={{
               website: relatedLinks.website,

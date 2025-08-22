@@ -2,10 +2,11 @@ import { useAccount, useWalletClient, usePublicClient, useChainId, useSwitchChai
 import { useEffect, useMemo, useState, useCallback } from "react";
 import Safe, { type SafeAccountConfig, type PredictedSafeProps } from '@safe-global/protocol-kit';
 import SafeApiKit from '@safe-global/api-kit';
-import { keccak256 } from "viem";
+import { keccak256, encodeFunctionData } from "viem";
 import { toast } from "sonner";
 import { delay_s } from "~/lib/utils";
 import { buildErc20TransfersSafeTransaction, type TransferInput } from "~/lib/safeUtils";
+import { OperationType, type MetaTransactionData, type SafeTransactionData } from "@safe-global/types-kit";
 
 
 const useSafeWallet = () => {
@@ -271,7 +272,209 @@ const useSafeWallet = () => {
     }, 'Get wallet info failed', false);
   };
 
- 
+  // 检查并执行目标钱包的交易（当达到执行阈值时）
+  const checkAndExecuteTargetSafeTransaction = async (
+    targetSafeAddress: string,
+    targetSafeTxHash: string
+  ) => {
+    try {
+      toast.info('Checking if transaction can be executed...');
+      await delay_s(1000); // 等待网络同步
+      
+      // 重新获取A钱包的交易信息，确保获取最新状态
+      const updatedTargetTransactionInfo = await getTransactionDetail(targetSafeTxHash);
+      if (!updatedTargetTransactionInfo) {
+        toast.error('Unable to fetch transaction information');
+        return;
+      }
+
+      if (updatedTargetTransactionInfo.isExecuted) {
+        toast.success('Transaction has already been executed!');
+        return;
+      }
+
+      // 获取A钱包信息
+      const { threshold: targetThreshold } = await apiKit.getSafeInfo(targetSafeAddress);
+      const currentConfirmations = updatedTargetTransactionInfo.confirmations?.length || 0;
+
+      console.log(`Transaction confirmation status: ${currentConfirmations}/${targetThreshold}`);
+
+      // 检查是否达到执行阈值
+      if (currentConfirmations >= targetThreshold) {
+        toast.info('🎉 Transaction reached execution threshold, executing...');
+        await delay_s(500);
+        
+        // 初始化A钱包实例进行执行
+        const targetSafeWallet = await initSafeInstance(targetSafeAddress);
+        const targetSafeTransaction = await apiKit.getTransaction(targetSafeTxHash);
+        
+        await targetSafeWallet.executeTransaction(targetSafeTransaction);
+        toast.success('🚀 Transaction executed successfully! Nested multisig process completed!');
+      } else {
+        toast.info(`Transaction needs ${targetThreshold - currentConfirmations} more confirmation(s) to execute`);
+      }
+    } catch (error) {
+      console.error('Error checking or executing transaction:', error);
+      toast.error('Failed to check transaction execution status');
+    }
+  };
+
+  // A钱包（B+C） -> C钱包（D+E）
+  // 嵌套多签确认：C钱包通过D和E来确认A钱包的交易
+  const confirmTransactionViaNestedMultisig = async (
+    targetSafeAddress: string, // A钱包地址
+    targetSafeTxHash: string,  // A钱包的交易hash
+    nestedSafeAddress: string  // C钱包地址（嵌套多签）
+  ) => {
+    return withErrorHandling(async () => {
+      // 1. 检查当前用户是否为C钱包的Owner（D或E）
+      const { threshold: nestedThreshold, owners: nestedOwners } = await apiKit.getSafeInfo(nestedSafeAddress);
+      const isNestedOwner = nestedOwners.some(owner => owner.toLowerCase() === address?.toLowerCase());
+      
+      if (!isNestedOwner) {
+        toast.error('You are not authorized to confirm this transaction');
+        return;
+      }
+
+      // 2. 检查C钱包是否为A钱包的Owner
+      const { owners: targetOwners } = await apiKit.getSafeInfo(targetSafeAddress);
+      const isTargetOwner = targetOwners.some(owner => owner.toLowerCase() === nestedSafeAddress.toLowerCase());
+      
+      if (!isTargetOwner) {
+        toast.error('Multisig wallet is not authorized for this transaction');
+        return;
+      }
+
+      // 3. 获取A钱包的交易详情
+      const targetTransactionInfo = await getTransactionDetail(targetSafeTxHash);
+      if (!targetTransactionInfo) {
+        toast.error('Transaction not found');
+        return;
+      }
+
+      if (targetTransactionInfo.isExecuted) {
+        toast.info('Transaction has already been executed');
+        return targetSafeTxHash;
+      }
+
+      // 4. 检查C钱包是否已经确认过A的交易
+      const hasNestedConfirmed = targetTransactionInfo.confirmations?.some(
+        confirmation => confirmation.owner.toLowerCase() === nestedSafeAddress.toLowerCase()
+      );
+
+      if (hasNestedConfirmed) {
+        toast.info('Multisig wallet has already confirmed this transaction');
+        await checkAndExecuteTargetSafeTransaction(targetSafeAddress, targetSafeTxHash);
+        return targetSafeTxHash;
+      }
+
+      // 5. 构建C钱包的确认交易：调用A钱包的approveHash方法
+      const approveHashData = encodeFunctionData({
+        abi: [
+          {
+            "inputs": [{"name": "hashToApprove", "type": "bytes32"}],
+            "name": "approveHash",
+            "outputs": [],
+            "stateMutability": "nonpayable",
+            "type": "function"
+          }
+        ],
+        functionName: 'approveHash',
+        args: [targetSafeTxHash as `0x${string}`]
+      });
+
+      const approveTransaction: MetaTransactionData = {
+        to: targetSafeAddress,
+        value: '0',
+        data: approveHashData,
+        operation: OperationType.Call
+      };
+
+      // 6. 初始化C钱包
+      const nestedSafeWallet = await initSafeInstance(nestedSafeAddress);
+      
+      // 7. 创建C钱包的交易
+      const nestedSafeTransaction = await nestedSafeWallet.createTransaction({
+        transactions: [approveTransaction]
+      });
+
+      // 8. 获取C钱包交易的hash
+      const nestedSafeTxHash = await nestedSafeWallet.getTransactionHash(nestedSafeTransaction);
+      
+      // 9. 检查C钱包中是否已存在这个确认交易
+      let nestedTransactionInfo;
+      try {
+        nestedTransactionInfo = await getTransactionDetail(nestedSafeTxHash);
+      } catch (error) {
+        console.log('嵌套交易不存在，将创建新的');
+      }
+
+      // 10. 如果C钱包的确认交易不存在，创建提案
+      if (!nestedTransactionInfo) {
+        toast.info('Creating confirmation proposal in multisig wallet...');
+        const signature = await nestedSafeWallet.signHash(nestedSafeTxHash);
+        
+        await apiKit.proposeTransaction({
+          safeAddress: nestedSafeAddress,
+          safeTransactionData: nestedSafeTransaction.data,
+          safeTxHash: nestedSafeTxHash,
+          senderAddress: address!,
+          senderSignature: signature.data
+        });
+        
+        // 如果C钱包阈值为1，立即执行并检查A钱包
+        if (nestedThreshold === 1) {
+          toast.info('Single-signature wallet, executing immediately...');
+          await delay_s(300);
+          
+          const nestedSafeTransactionToExecute = await apiKit.getTransaction(nestedSafeTxHash);
+          await nestedSafeWallet.executeTransaction(nestedSafeTransactionToExecute);
+          toast.success('Transaction confirmed successfully!');
+          await delay_s(3000);
+          // 检查A钱包是否可以执行最终交易
+          await checkAndExecuteTargetSafeTransaction(targetSafeAddress, targetSafeTxHash);
+        } else {
+          toast.success('Confirmation proposal created successfully, waiting for other owners');
+        }
+        
+        return { nestedSafeTxHash, targetSafeTxHash };
+      }
+
+      // 11. 如果C钱包的确认交易存在但未执行，尝试确认或执行
+      if (!nestedTransactionInfo.isExecuted) {
+        const hasConfirmedNested = nestedTransactionInfo.confirmations?.some(
+          confirmation => confirmation.owner.toLowerCase() === address?.toLowerCase()
+        );
+
+        if (!hasConfirmedNested) {
+          toast.info('Confirming multisig transaction...');
+          const signature = await nestedSafeWallet.signHash(nestedSafeTxHash);
+          await apiKit.confirmTransaction(nestedSafeTxHash, signature.data);
+          toast.success('Multisig transaction confirmed successfully');
+        }
+
+        // 检查是否可以执行C钱包的交易
+        const currentNestedConfirmations = (nestedTransactionInfo.confirmations?.length || 0) + (hasConfirmedNested ? 0 : 1);
+        if (currentNestedConfirmations >= nestedThreshold) {
+          toast.info('Executing multisig confirmation transaction...');
+          await delay_s(300);
+          
+          const nestedSafeTransactionToExecute = await apiKit.getTransaction(nestedSafeTxHash);
+          await nestedSafeWallet.executeTransaction(nestedSafeTransactionToExecute);
+          toast.success('Transaction confirmation executed successfully!');
+          
+          // C钱包执行完成后，检查A钱包是否可以执行最终交易
+          await checkAndExecuteTargetSafeTransaction(targetSafeAddress, targetSafeTxHash);
+          
+          return { nestedSafeTxHash, targetSafeTxHash };
+        } else {
+          toast.info(`Multisig transaction needs ${nestedThreshold - currentNestedConfirmations} more confirmation(s)`);
+        }
+      }
+
+      return { nestedSafeTxHash, targetSafeTxHash };
+    }, 'Nested multisig confirmation failed');
+  };
 
   return {
     deploySafe,
@@ -279,6 +482,7 @@ const useSafeWallet = () => {
     buildErc20TransfersSafeTransaction,
     getTransactionDetail,
     proposeOrExecuteTransaction,
+    confirmTransactionViaNestedMultisig,
     getWallet,
     status,
     isReady

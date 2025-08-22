@@ -29,7 +29,7 @@ export default function ReviewMilestoneModal({ milestone, podDetail, onReview }:
   const {deliveryInfo,id:milestoneId} = milestone;
   const {data: safeTransactionData} = api.milestone.getPaymentTransactionData.useQuery({milestoneId: Number(milestoneId)});
 
-  const {proposeOrExecuteTransaction} = useSafeWallet();
+  const {proposeOrExecuteTransaction,confirmTransactionViaNestedMultisig,getTransactionDetail} = useSafeWallet();
 
   const reviewMilestoneDeliveryMutation = api.milestone.reviewMilestoneDelivery.useMutation({
     onSuccess: async() => {
@@ -75,9 +75,22 @@ export default function ReviewMilestoneModal({ milestone, podDetail, onReview }:
       let safeTxHash: string | undefined;
       
       if(isApproved){// 审核通过，多签转账给用户
-        const res = await proposeOrExecuteTransaction(podDetail.walletAddress, transactions);
+        if(!milestone.safeTransactionHash) return toast.error("safeTransactionHash is null");
+        const res = await confirmTransactionViaNestedMultisig(podDetail.walletAddress, milestone.safeTransactionHash, podDetail.grantsPool.treasuryWallet);
         safeTxHash = res ? res.toString() : undefined;
-      }else if(isLastReject){// 最后一次审核失败，发起多签，将所有余额退回 GP 国库，但是不用校验，余额提醒组件统一处理
+
+        await delay_s(3000);//延迟 3s 等待提案交易被确认，不然后端会拿不到正确状态
+        const txInfos = await getTransactionDetail(milestone.safeTransactionHash);
+        console.log('txInfos==>',txInfos);
+
+        if(!txInfos?.isExecuted) {
+          return toast.error("请等待交易完成多签执行！");
+        }
+      }
+      
+      // 移除掉，全部在余额提醒中处理
+      /*
+      else if(isLastReject){// 最后一次审核失败，发起多签，将所有余额退回 GP 国库，但是不用校验，余额提醒组件统一处理
         const res = await proposeOrExecuteTransaction(podDetail.walletAddress, [{
           token: podDetail.currency as GrantsPoolTokens,
           to: podDetail.grantsPool.treasuryWallet,
@@ -85,10 +98,7 @@ export default function ReviewMilestoneModal({ milestone, podDetail, onReview }:
         }]);
         safeTxHash = res ? res.toString() : undefined;
       }
-
-      console.log('safeTxHash==>',safeTxHash);
-
-      await delay_s(3000);//延迟 3s 等待提案交易被确认，不然后端会拿不到正确状态
+      */
 
       await reviewMilestoneDeliveryMutation.mutateAsync({
         milestoneId: Number(milestoneId),
@@ -98,7 +108,7 @@ export default function ReviewMilestoneModal({ milestone, podDetail, onReview }:
       });
       
     } catch (error) {
-      // 错误处理在mutation的onError中
+      console.error(error);
     } finally {
       setIsSubmitting(false);
     }

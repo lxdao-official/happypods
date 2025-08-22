@@ -51,7 +51,7 @@ export default function EditGrantsPoolPage() {
   // RFP 数据
   const [rfps, setRfps] = useState<RFP[]>([]);
 
-  // Related Links 数据
+  // Links 数据
   const [relatedLinks, setRelatedLinks] = useState<Record<string, string>>({});
 
   // 获取 GP 详情
@@ -302,7 +302,7 @@ export default function EditGrantsPoolPage() {
             </div>
           </CornerFrame>
 
-          {/* Related Links */}
+          {/* Links */}
           <RelatedLinksSection 
             links={relatedLinks as any}
             onLinksChange={(links: Record<string, string>) => {

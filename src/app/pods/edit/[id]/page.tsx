@@ -43,7 +43,7 @@ export default function EditPodPage() {
   // Tags选择状态
   const [selectedTags, setSelectedTags] = useState<string[]>([]);
 
-  // Related Links 数据
+  // Links 数据
   const [relatedLinks, setRelatedLinks] = useState<Record<string, string>>({});
 
   // Milestones 数据
@@ -247,7 +247,7 @@ export default function EditPodPage() {
             onMilestonesChange={setMilestones}
           />
 
-          {/* Related Links */}
+          {/* Links */}
           <RelatedLinksSection 
             links={relatedLinks as any}
             onLinksChange={(links: Record<string, string>) => {

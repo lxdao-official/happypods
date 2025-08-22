@@ -143,9 +143,10 @@ export const podMutations = {
       if(isCheck) return true;
 
       // 检查当前钱包地址是否是多签钱包的签名者
+      await delay_s(3000); //延迟 3s，等待确认
       const isMultiSigWallet = await isUserInMultiSigWallet(
         input.walletAddress, 
-        [user?.walletAddress, PLATFORM_MOD_ADDRESS, grantsPool.owner.walletAddress],
+        [user?.walletAddress, PLATFORM_MOD_ADDRESS, grantsPool.treasuryWallet],
         2,
         true
       );

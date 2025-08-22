@@ -133,6 +133,7 @@ const MilestoneSection = ({ milestones, onMilestonesChange, info }: MilestoneSec
                   min="0"
                   max="500"
                   step="0.0001"
+                  errorMessage="Please enter a valid amount"
                   endContent={
                     <div className="flex gap-2">
                       {DEFAULT_MILESTONE_AMOUNTS.OPTIONS.map(amount => (

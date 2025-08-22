@@ -134,7 +134,7 @@ const RelatedLinksSection = ({ links, onLinksChange }: RelatedLinksSectionProps)
 
   return (
     <CornerFrame backgroundColor="var(--color-background)" color="gray">
-      <h2 className="mb-6 text-xl">Related Links</h2>
+      <h2 className="mb-6 text-xl">Links</h2>
       {renderAddButtons()}
       <div className="flex flex-col gap-3">
         {items.map(renderLinkItem)}
