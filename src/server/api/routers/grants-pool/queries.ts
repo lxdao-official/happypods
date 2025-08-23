@@ -189,9 +189,9 @@ export const grantsPoolQueries = {
         where: {
           pod: {
             grantsPoolId: input.id,
-            status: {
-              in: ['APPROVED', 'COMPLETED','IN_PROGRESS'],
-            },
+          },
+          status: {
+            in: ['APPROVED', 'COMPLETED', 'ACTIVE','REVIEWING'],
           },
         },
         _sum: {
