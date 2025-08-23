@@ -5,13 +5,13 @@ import Guide from "~/app/home/guide";
 import Solve from "~/app/home/solve";
 import Partner from "./home/partner";
 import Contributors from "./home/contributors";
-import Test from "~/components/Test";
+// import Test from "~/components/Test";
 
 
 export default function HomePage() {
   return (
     <main className="container min-h-screen">
-      <Test/>
+      {/* <Test/> */}
       <Banner />
       <Guide />
       <Solve />

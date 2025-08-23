@@ -125,35 +125,41 @@ export default function TreasuryBalanceWarning({pod}: TreasuryBalanceWarningProp
             }
         } else {
             // 场景2: Pod向GP退款
-            if (isPodOwner || isPlatformMod) {
-                // Pod Owner或系统管理员可以发起退款
-                // 检查当前用户是否已经签名
-                const hasUserSigned = transactionInfo?.confirmations?.some(v => 
-                    v.owner.toLowerCase() === userAddress
-                );
-                
-                // 只有在交易未执行且用户未签名时才显示按钮
-                setShowAction(!transactionInfo?.isExecuted && !hasUserSigned);
-                setActionType('propose');
+            if (!transactionInfo) {
+                // 没有退款交易提案
+                if (isPodOwner || isPlatformMod) {
+                    // Pod Owner或系统管理员可以发起退款
+                    setShowAction(true);
+                    setActionType('propose');
+                    setShowWaitingMessage(false);
+                } else {
+                    // 其他用户（包括GP Owner）显示等待提示
+                    setShowAction(false);
+                    setShowWaitingMessage(true);
+                }
+            } else {
+                // 已有退款交易提案
                 setShowWaitingMessage(false);
-            } else if (isGPOwner) {
-                if (transactionInfo) {
+                
+                if (isPodOwner || isPlatformMod) {
+                    // Pod Owner或系统管理员检查是否已签名
+                    const hasUserSigned = transactionInfo.confirmations?.some(v => 
+                        v.owner.toLowerCase() === userAddress
+                    );
+                    
+                    // 只有在交易未执行且用户未签名时才显示按钮
+                    setShowAction(!transactionInfo.isExecuted && !hasUserSigned);
+                    setActionType('propose');
+                } else if (isGPOwner) {
                     // GP Owner只能确认已存在的交易
                     const hasNestedConfirmed = transactionInfo.confirmations?.some(
                         confirmation => confirmation.owner.toLowerCase() === pod.grantsPool.treasuryWallet.toLowerCase()
                     );
                     setShowAction(!hasNestedConfirmed && !transactionInfo.isExecuted);
                     setActionType('confirm');
-                    setShowWaitingMessage(false);
                 } else {
-                    // 交易不存在，显示等待提示
                     setShowAction(false);
-                    setActionType('confirm');
-                    setShowWaitingMessage(true);
                 }
-            } else {
-                setShowAction(false);
-                setShowWaitingMessage(false);
             }
         }
     }
@@ -279,12 +285,6 @@ export default function TreasuryBalanceWarning({pod}: TreasuryBalanceWarningProp
                         <div className="mt-1 text-sm text-secondary">
                             Please coordinate with the GP treasury multi-sig user to inject the missing funds <b className="text-warning">{formatToken(shortage)} {pod.currency}</b>, otherwise the Milestone cannot be delivered!
                         </div>
-                        {
-                            showWaitingMessage && 
-                            <div className="mt-1 text-sm italic text-red-500">
-                                Waiting for Pod Owner to initiate refund...
-                            </div>
-                        }
                     </div>
                     </Alert> :
                     <Alert
@@ -298,6 +298,13 @@ export default function TreasuryBalanceWarning({pod}: TreasuryBalanceWarningProp
                     <div className="mt-1 text-sm text-secondary">
                         Pod treasury balance exceeded by <b className="text-warning">{formatToken(Math.abs(shortage))} {pod.currency}</b>. You can initiate a refund to the GP treasury!
                     </div>
+
+                    {
+                        showWaitingMessage && 
+                        <div className="mt-1 text-sm text-red-500 fadeIn">
+                            Waiting for Pod Owner to initiate refund...
+                        </div>
+                    }
                 </Alert>
             }
         </div>
