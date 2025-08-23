@@ -218,7 +218,7 @@ export default function HowItWorksPage() {
         </CornerFrame>
 
         {/* Content Sections */}
-        <div className="space-y-10">
+        <div className="space-y-10 fadeIn">
           {contentItems.map((item, index) => (
             <CardBox key={index} title={item.title} titleBg="#dfdfdf" contentBg="#343434">
               <div className="p-4 text-white">{item.content}</div>

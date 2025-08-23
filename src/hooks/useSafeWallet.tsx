@@ -279,7 +279,7 @@ const useSafeWallet = () => {
   ) => {
     try {
       toast.info('Checking if transaction can be executed...');
-      await delay_s(1000); // 等待网络同步
+      // await delay_s(1000); // 等待网络同步
       
       // 重新获取A钱包的交易信息，确保获取最新状态
       const updatedTargetTransactionInfo = await getTransactionDetail(targetSafeTxHash);
@@ -362,7 +362,7 @@ const useSafeWallet = () => {
         confirmation => confirmation.owner.toLowerCase() === nestedSafeAddress.toLowerCase()
       );
 
-      if (hasNestedConfirmed) {
+      if (hasNestedConfirmed) {//已经完成确认，直接执行 C 钱包交易，发起 A 的目标交易确认
         toast.info('Multisig wallet has already confirmed this transaction');
         await checkAndExecuteTargetSafeTransaction(targetSafeAddress, targetSafeTxHash);
         return targetSafeTxHash;
@@ -425,12 +425,10 @@ const useSafeWallet = () => {
         // 如果C钱包阈值为1，立即执行并检查A钱包
         if (nestedThreshold === 1) {
           toast.info('Single-signature wallet, executing immediately...');
-          await delay_s(300);
-          
           const nestedSafeTransactionToExecute = await apiKit.getTransaction(nestedSafeTxHash);
           await nestedSafeWallet.executeTransaction(nestedSafeTransactionToExecute);
           toast.success('Transaction confirmed successfully!');
-          await delay_s(3000);
+          await delay_s(5000); //保证交易完成
           // 检查A钱包是否可以执行最终交易
           await checkAndExecuteTargetSafeTransaction(targetSafeAddress, targetSafeTxHash);
         } else {

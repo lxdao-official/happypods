@@ -27,11 +27,11 @@ export default function GrantsPoolPage() {
         <CornerFrame className="mb-20"> 
           <div className="flex flex-col items-center justify-center gap-6 text-2xl text-center md:py-8">
             <div className="mb-8 text-xl md:text-2xl">Browse funding pools and RFPs from foundations, DAOs, and organizations</div>
-            <RequireLogin>
+            {/* <RequireLogin> */}
               <NextLink href="/grants-pool/create" className="absolute bottom-[-25px]">
                 <AppBtn btnProps={{color:"success"}}>Create Grant Pool</AppBtn>
               </NextLink>
-            </RequireLogin>
+            {/* </RequireLogin> */}
           </div>
         </CornerFrame>
 
