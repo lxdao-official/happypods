@@ -12,6 +12,7 @@ import { AuthProvider } from "~/components/providers/auth-provider";
 import { AppLayout } from "~/components/layout/app-layout";
 import { GridBackground } from "~/components/layout/grid-background";
 import { Toaster } from "sonner";
+import { SafeTransactionModal } from "~/components/safe-transaction-steps/safe-transaction-modal";
 
 const geist = Geist({
   subsets: ["latin"],
@@ -88,6 +89,7 @@ export default function RootLayout({
                   <AuthProvider>{children}</AuthProvider>
                 </AppLayout>
                 <Toaster position="top-center" richColors theme="dark" />
+                <SafeTransactionModal />
               </ConfirmProvider>
             </TRPCReactProvider>
           </RainbowKitProviderWrapper>

@@ -35,7 +35,7 @@ const PodsItem = ({ pod, onClick, className = "" }: PodsItemProps) => {
     <NextLink 
       href={`/pods/${pod.id}`}
       className={`
-        text-black bg-pink rounded-xl overflow-hidden 3px 3px 0px 0px var( --color-primary cursor-pointer fadeIn
+        text-black bg-pink rounded-md overflow-hidden 3px 3px 0px 0px var( --color-primary cursor-pointer fadeIn
         ${className}
       `}
       onClick={onClick}

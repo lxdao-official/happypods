@@ -6,7 +6,6 @@ import { MobileMenu } from '~/components/layout/mobile-menu';
 import NextLink from 'next/link';
 import { usePathname } from 'next/navigation';
 import useStore from '~/store';
-import Test from '~/components/Test';
 
 export function Header() {
   const pathname = usePathname();

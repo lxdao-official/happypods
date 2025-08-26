@@ -26,7 +26,6 @@ export default function ApprovePodModal({
 }: ApprovePodModalProps) {
   const [isTransferring, setIsTransferring] = useState(false);
   const [isApproving, setIsApproving] = useState(false);
-  const {proposeOrExecuteTransaction} = useSafeWallet();
   const {mutateAsync:approvePod} = api.pod.approve.useMutation();
   const {id:podId, title:podTitle, appliedAmount, currency, walletAddress, grantsPool:{treasuryWallet} } = podDetail as any;
 
@@ -60,11 +59,6 @@ export default function ApprovePodModal({
         to: walletAddress,
         amount: financialInfo.totalWithFee.toString()
       }]
-
-      // const {safeTxHash} = await getTransactionHash(treasuryWallet, safeTransaction);
-      // console.log('txHash', safeTxHash);
-      // const safeTxHash = await proposeOrExecuteTransaction(treasuryWallet, safeTransaction);
-      // console.log('txHash', safeTxHash);
 
       // if(!safeTxHash) return;
       await approvePod({id: podId});

@@ -1,11 +1,51 @@
 import { encodeFunctionData, erc20Abi, formatUnits, type Address } from "viem";
-import { clsx, type ClassValue } from "clsx"
-import { twMerge } from "tailwind-merge"
 import type { GrantsPoolTokens } from "@prisma/client";
 import type { MetaTransactionData, SafeTransaction } from "@safe-global/types-kit";
 import Safe from "@safe-global/protocol-kit";
 import { PLATFORM_CHAINS } from "./config";
 import { optimism } from "viem/chains";
+import { OperationType } from "@safe-global/types-kit";
+import SafeApiKit from "@safe-global/api-kit";
+
+/**
+ * 构建 ERC20 转账的 MetaTransactionData
+ * @param token 代币类型 (USDC/USDT)
+ * @param to 接收地址
+ * @param amount 转账数量（字符串格式）
+ * @returns MetaTransactionData 对象
+ */
+export const buildMetaTransactionData = (
+  token: GrantsPoolTokens,
+  to: string,
+  amount: string
+): MetaTransactionData => {
+  const chainConfig = PLATFORM_CHAINS[optimism.id];
+  if (!chainConfig) {
+    throw new Error(`current network is not in PLATFORM_CHAINS`);
+  }
+
+  const tokenKey = token.toUpperCase() as 'USDC' | 'USDT';
+  const tokenInfo = chainConfig.TOKENS[tokenKey];
+  if (!tokenInfo) {
+    throw new Error(`not found token: ${token}`);
+  }
+
+  const tokenAddress = tokenInfo.address;
+  const value = BigInt(amount);
+  
+  const data = encodeFunctionData({
+    abi: erc20Abi,
+    functionName: 'transfer',
+    args: [to as `0x${string}`, value],
+  });
+
+  return {
+    to: tokenAddress,
+    value: '0',
+    data,
+    operation: 0,
+  };
+};
 
 
 
@@ -108,7 +148,8 @@ export type TransferInput = Readonly<{
   
   export const buildErc20TransfersSafeTransaction = async (
     safeAddress: string,
-    transfers: TransferInput[]
+    transfers: TransferInput[],
+    safeWallet?: Safe
   ): Promise<SafeTransaction> => {
     const chainConfig = PLATFORM_CHAINS[optimism.id];
     if (!chainConfig) {
@@ -142,14 +183,18 @@ export type TransferInput = Readonly<{
       } satisfies MetaTransactionData;
     });
   
-    const safeWallet = await Safe.init({
-      provider: PLATFORM_CHAINS[optimism.id]?.RPCS[0] as any,
-      safeAddress
-    });
-    const res = await safeWallet.createTransaction({ transactions: txs });
-    const hash = await safeWallet.getTransactionHash(res);
-    console.log(hash);
-    return res as SafeTransaction;
+    if(!safeWallet) {
+      safeWallet = await Safe.init({
+        provider: PLATFORM_CHAINS[optimism.id]?.RPCS[0] as any,
+        safeAddress
+      });
+    }
+    
+    const transactions = await safeWallet.createTransaction({ transactions: txs });
+    // console.log('transactions===>',transactions);
+    // const hash = await safeWallet.getTransactionHash(transactions);
+    // console.log(hash);
+    return transactions as SafeTransaction;
   };
 
 //  构建并获取 hash
@@ -162,17 +207,61 @@ export type TransferInput = Readonly<{
         provider: PLATFORM_CHAINS[optimism.id]?.RPCS[0] as any,
         safeAddress
     });
-    const transactions = await buildErc20TransfersSafeTransaction(safeAddress, transfers);
+    const transactions = await buildErc20TransfersSafeTransaction(safeAddress, transfers, safeWallet);
     const hash = await safeWallet.getTransactionHash(transactions);
     return { transactions, hash };
   }
 
   // 获取当前safe钱包有哪些 owners
   export const getSafeWalletOwners = async (safeAddress: string) => {
-    const safeWallet = await Safe.init({
-      provider: PLATFORM_CHAINS[optimism.id]?.RPCS[0] as any,
-      safeAddress
-    });
-    const owners = await safeWallet.getOwners();
-    return owners;
+    try {
+      const safeApiKit = PLATFORM_CHAINS[optimism.id]?.safeApiKit as SafeApiKit;
+      const res = await safeApiKit.getSafeInfo(safeAddress);
+      return res.owners;
+    } catch (error) {
+      return []
+    }
   }
+
+/**
+ * 第一步：构建嵌套多签的 approveHash 交易
+ * @param targetSafeAddress Pod 钱包地址
+ * @param targetSafeTxHash Pod 钱包的交易 hash  
+ * @param nestedSafeAddress GP 钱包地址（嵌套多签）
+ * @returns MetaTransactionData 数组，用于创建 GP 钱包的确认交易
+ */
+export const buildNestedMultisigApprovalTransaction = (
+  targetSafeAddress: string,
+  targetSafeTxHash: string,
+  nestedSafeAddress: string
+): MetaTransactionData[] => {
+  // 构建 approveHash 交易数据
+  const approveHashData = encodeFunctionData({
+    abi: [
+      {
+        "inputs": [{"name": "hashToApprove", "type": "bytes32"}],
+        "name": "approveHash", 
+        "outputs": [],
+        "stateMutability": "nonpayable",
+        "type": "function"
+      }
+    ],
+    functionName: 'approveHash',
+    args: [targetSafeTxHash as `0x${string}`]
+  });
+
+  const approveTransaction: MetaTransactionData = {
+    to: targetSafeAddress,
+    value: '0', 
+    data: approveHashData,
+    operation: OperationType.Call
+  };
+
+  return [approveTransaction];
+};
+
+/**
+ * 第二步：构建目标钱包的执行交易 (这个可以复用现有的交易数据)
+ * 当 GP 钱包完成 approveHash 后，Pod 钱包就可以执行原始交易了
+ * 这一步使用原有的交易数据即可，不需要特殊处理
+ */

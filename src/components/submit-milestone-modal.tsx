@@ -3,9 +3,11 @@ import { Button, Modal, ModalBody, ModalContent, ModalHeader, ModalFooter, Texta
 import RelatedLinksSection from "./related-links-section";
 import { api } from "~/trpc/react";
 import { toast } from "sonner";
-import { delay_s } from "~/lib/utils";
+import { delay_s, formatToken } from "~/lib/utils";
 import useSafeWallet from "~/hooks/useSafeWallet";
-import { buildErc20TransfersSafeTransaction } from "~/lib/safeUtils";
+import { buildMetaTransactionData } from "~/lib/safeUtils";
+import useStore, { SafeTransactionStep, SafeStepStatus } from "~/store";
+import type { GrantsPoolTokens } from "@prisma/client";
 
 interface SubmitMilestoneModalProps {
   milestoneId: string | number;
@@ -17,8 +19,22 @@ export default function SubmitMilestoneModal({ milestoneId }: SubmitMilestoneMod
   const [description, setDescription] = useState("");
   const [links, setLinks] = useState<Record<string, string>>({});
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const {proposeOrExecuteTransaction,isReady} = useSafeWallet();
+  const { isReady: safeWalletReady } = useSafeWallet();
+  const { setSafeTransactionHandler,clearSafeTransactionHandler } = useStore();
   const {data: safeTransactionData} = api.milestone.getPaymentTransactionData.useQuery({milestoneId: Number(milestoneId)});
+
+  // 构建 MetaTransactionData
+  const buildTransfersData = () => {
+    if (!safeTransactionData?.transactions) return [];
+    
+    return safeTransactionData.transactions.sort((a,b)=>a.to.localeCompare(b.to)).map(transaction => 
+      buildMetaTransactionData(
+        transaction.token as GrantsPoolTokens,
+        transaction.to,
+        transaction.amount
+      )
+    );
+  };
 
   const submitMilestoneDeliveryMutation = api.milestone.submitMilestoneDelivery.useMutation({
     onSuccess: async() => {
@@ -45,24 +61,97 @@ export default function SubmitMilestoneModal({ milestoneId }: SubmitMilestoneMod
       return;
     }
 
-    setIsSubmitting(true);
+    if (!safeTransactionData) {
+      toast.error("Transaction data not available");
+      return;
+    }
 
-    if(!safeTransactionData) return toast.error("safeTransactionData is null");
+    // setIsSubmitting(true);
 
     try {
-      const safeTxHash = await proposeOrExecuteTransaction(safeTransactionData.treasuryWallet, safeTransactionData.transactions);
-      if(!safeTxHash) return;
-      await submitMilestoneDeliveryMutation.mutateAsync({
-        milestoneId: Number(milestoneId),
-        content: description.trim(),
-        links: links,
-        transactionHash: safeTxHash
+      const transfersData = buildTransfersData();
+      if (transfersData.length === 0) {
+        toast.error("No transaction data to process");
+        return;
+      }
+
+      // 构建交易描述
+      const getTransactionDescription = () => (
+        <div className="space-y-3">
+          <div className="p-3 border rounded-lg bg-success/5 border-success/10">
+            <h4 className="mb-2 font-medium text-success">里程碑付款详情</h4>
+            <div className="space-y-1 text-small">
+              <div className="flex justify-between">
+                <span>里程碑金额:</span>
+                <span className="font-mono text-success">{formatToken(safeTransactionData.milestoneAmount)} {safeTransactionData.currency}</span>
+              </div>
+              <div className="flex justify-between">
+                <span>平台手续费:</span>
+                <span className="font-mono text-tiny">{formatToken(safeTransactionData.fee)} {safeTransactionData.currency}</span>
+              </div>
+              <div className="flex justify-between">
+                <span>总金额:</span>
+                <span className="font-mono font-semibold text-success">{formatToken(safeTransactionData.totalAmount)} {safeTransactionData.currency}</span>
+              </div>
+            </div>
+          </div>
+          <div className="flex items-center gap-2 text-tiny text-success">
+            <i className="ri-send-plane-line"></i>
+            <span>此操作需要 Pod 多签钱包成员确认</span>
+          </div>
+        </div>
+      );
+
+      // 触发 SafeWallet 交易处理
+      setSafeTransactionHandler({
+        safeAddress: safeTransactionData.treasuryWallet,
+        transfers: transfersData,
+        title: '里程碑交付申请',
+        description: getTransactionDescription(),
+        
+        onStepChange: async (step, status, data, error) => {
+          console.log('Milestone payment step change:', { step, status, data, error });
+          
+          // 只有当提案步骤成功完成时才调用提交接口
+          if (step === SafeTransactionStep.PROPOSAL && status === SafeStepStatus.SUCCESS) {
+            try {
+              const transactionHash = data?.transactionHash;
+              if (!transactionHash) {
+                throw new Error('Transaction hash not found');
+              }
+
+              toast.info('提案创建成功，正在提交里程碑...');
+
+              setIsSubmitting(true);
+              clearSafeTransactionHandler();
+              
+              // 调用里程碑提交接口
+              await submitMilestoneDeliveryMutation.mutateAsync({
+                milestoneId: Number(milestoneId),
+                content: description.trim(),
+                links: links,
+                transactionHash: transactionHash
+              });
+              
+            } catch (submitError) {
+              console.error('Milestone submission failed:', submitError);
+              toast.error('里程碑提交失败，请重试');
+              setIsSubmitting(false);
+            }
+          }
+          
+          // 处理错误状态
+          if (status === SafeStepStatus.ERROR && error) {
+            console.error('Transaction failed:', error, 'at step:', step);
+            toast.error(`❌ 交易在 ${step} 步骤失败: ${error.message}`);
+            setIsSubmitting(false);
+          }
+        }
       });
+
     } catch (error) {
-      // 错误处理在mutation的onError中
       console.error("Submission failed:", error);  
       toast.error(`Submission failed, please check and try again!`);
-    } finally {
       setIsSubmitting(false);
     }
   };
@@ -136,7 +225,7 @@ export default function SubmitMilestoneModal({ milestoneId }: SubmitMilestoneMod
               color="success" 
               onPress={handleSubmit}
               isLoading={isSubmitting}
-              isDisabled={!isReady}
+              isDisabled={!safeWalletReady || !safeTransactionData}
             >
               {isSubmitting ? "loading..." : "Submit Delivery"}
             </Button>

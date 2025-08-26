@@ -2,9 +2,11 @@ import { useState } from "react";
 import { Button, Modal, ModalBody, ModalContent, ModalHeader, ModalFooter, Textarea, useDisclosure } from "@heroui/react";
 import { api } from "~/trpc/react";
 import { toast } from "sonner";
-import { delay_s, withRetry } from "~/lib/utils";
+import { delay_s, withRetry, formatToken } from "~/lib/utils";
 import useSafeWallet from "~/hooks/useSafeWallet";
 import type { GrantsPoolTokens, Milestone, Pod } from "@prisma/client";
+import useStore, { SafeTransactionStep, SafeStepStatus } from "~/store";
+import { buildMetaTransactionData, buildNestedMultisigApprovalTransaction } from "~/lib/safeUtils";
 
 interface DeliveryInfo {
   content: string;
@@ -29,7 +31,21 @@ export default function ReviewMilestoneModal({ milestone, podDetail, onReview }:
   const {deliveryInfo,id:milestoneId} = milestone;
   const {data: safeTransactionData} = api.milestone.getPaymentTransactionData.useQuery({milestoneId: Number(milestoneId)});
 
-  const {proposeOrExecuteTransaction,confirmTransactionViaNestedMultisig,getTransactionDetail} = useSafeWallet();
+  const { isReady: safeWalletReady, getTransactionDetail } = useSafeWallet();
+  const { setSafeTransactionHandler, clearSafeTransactionHandler } = useStore();
+
+  // 构建里程碑付款的 MetaTransactionData
+  const buildMilestonePaymentTransfers = () => {
+    if (!safeTransactionData?.transactions) return [];
+    
+    return safeTransactionData.transactions.sort((a,b)=>a.to.localeCompare(b.to)).map(transaction => 
+      buildMetaTransactionData(
+        transaction.token as GrantsPoolTokens,
+        transaction.to,
+        transaction.amount
+      )
+    );
+  };
 
   const reviewMilestoneDeliveryMutation = api.milestone.reviewMilestoneDelivery.useMutation({
     onSuccess: async() => {
@@ -62,56 +78,218 @@ export default function ReviewMilestoneModal({ milestone, podDetail, onReview }:
       return;
     }
 
-    if(!safeTransactionData) return toast.error("safeTransactionData is null");
-    const transactions = safeTransactionData.transactions.map(transaction => ({
-      token: transaction.token,
-      to: transaction.to,
-      amount: transaction.amount
-    })) as any;
+    if (!safeTransactionData) {
+      toast.error("Transaction data not available");
+      return;
+    }
 
+    // 如果是拒绝，直接调用API，不需要处理SafeWallet交易
     setIsSubmitting(true);
-    
+    if (!isApproved) {
+      try {
+        await reviewMilestoneDeliveryMutation.mutateAsync({
+          milestoneId: Number(milestoneId),
+          approved: false,
+          comment: comment.trim(),
+          safeTransactionHash: undefined
+        });
+      } catch (error) {
+        console.error(error);
+        setIsSubmitting(false);
+      }
+      return;
+    }
+
+    // 审核通过的情况 - 需要执行两步嵌套多签
+    if (!milestone.safeTransactionHash) {
+      toast.error("Original transaction hash not found");
+      return;
+    }
+
+    // 如果交易阈值已经达到，则直接到第二步
+    const transactionInfo = await getTransactionDetail(milestone.safeTransactionHash)
+    if (
+        transactionInfo &&  
+        transactionInfo.confirmations && 
+        transactionInfo.confirmations.length >= transactionInfo.confirmationsRequired &&
+        !transactionInfo.isExecuted
+    ) {
+      await triggerPodPaymentExecution();
+      return;
+    }
+
     try {
-      let safeTxHash: string | undefined;
-      
-      if(isApproved){// 审核通过，多签转账给用户
-        if(!milestone.safeTransactionHash) return toast.error("safeTransactionHash is null");
-        const res = await confirmTransactionViaNestedMultisig(podDetail.walletAddress, milestone.safeTransactionHash, podDetail.grantsPool.treasuryWallet);
-        safeTxHash = res ? res.toString() : undefined;
+      // 构建第一步：GP钱包确认Pod钱包交易的approveHash交易
+      const approvalTransfers = buildNestedMultisigApprovalTransaction(
+        podDetail.walletAddress,           // Pod 钱包地址
+        milestone.safeTransactionHash,    // Pod 钱包的交易 hash
+        podDetail.grantsPool.treasuryWallet  // GP 钱包地址
+      );
 
-        await delay_s(3000);//延迟 3s 等待提案交易被确认，不然后端会拿不到正确状态
-        const txInfos = await getTransactionDetail(milestone.safeTransactionHash);
-        console.log('txInfos==>',txInfos);
+      // 构建交易描述
+      const getApprovalDescription = () => (
+        <div className="space-y-3">
+          <div className="p-3 border rounded-lg bg-primary/5 border-primary/10">
+            <h4 className="mb-2 font-medium text-primary">GP 钱包确认详情</h4>
+            <div className="space-y-1 text-small">
+              <div className="flex justify-between">
+                <span>里程碑金额:</span>
+                <span className="font-mono text-primary">{formatToken(safeTransactionData.milestoneAmount)} {safeTransactionData.currency}</span>
+              </div>
+              <div className="flex justify-between">
+                <span>平台手续费:</span>
+                <span className="font-mono text-tiny">{formatToken(safeTransactionData.fee)} {safeTransactionData.currency}</span>
+              </div>
+              <div className="flex justify-between">
+                <span>总金额:</span>
+                <span className="font-mono font-semibold text-primary">{formatToken(safeTransactionData.totalAmount)} {safeTransactionData.currency}</span>
+              </div>
+              <div className="flex justify-between">
+                <span>Pod 钱包:</span>
+                <span className="font-mono text-tiny">{podDetail.walletAddress.slice(0, 6)}...{podDetail.walletAddress.slice(-4)}</span>
+              </div>
+            </div>
+          </div>
+          <div className="flex items-center gap-2 text-tiny text-primary">
+            <i className="ri-shield-check-line"></i>
+            <span>第一步：GP 多签钱包确认 Pod 钱包的付款交易</span>
+          </div>
+        </div>
+      );
 
-        if(!txInfos?.isExecuted) {
-          return toast.error("请等待交易完成多签执行！");
+      // 触发第一步：GP钱包的确认交易
+      setSafeTransactionHandler({
+        safeAddress: podDetail.grantsPool.treasuryWallet,
+        transfers: approvalTransfers,
+        title: '里程碑审核 - GP 确认',
+        description: getApprovalDescription(),
+
+        onClose: () => {
+          setIsSubmitting(false);
+        },
+        
+        onStepChange: async (step, status, data, error) => {
+          console.log('Approval step change:', { step, status, data, error });
+          
+          // 当 GP 钱包的确认交易执行完成后，触发第二步
+          if (step === SafeTransactionStep.EXECUTION && status === SafeStepStatus.SUCCESS) {
+            try {
+              toast.info('GP 确认完成，正在执行里程碑付款...');
+              clearSafeTransactionHandler();
+              
+              // 等待一段时间确保交易状态同步
+              await delay_s(3000);
+              
+              // 触发第二步：执行Pod钱包的原始付款交易
+              await triggerPodPaymentExecution();
+              
+            } catch (error) {
+              console.error('Failed to trigger payment execution:', error);
+              toast.error('执行付款失败，请重试');
+              setIsSubmitting(false);
+            }
+          }
+          
+          // 处理错误状态
+          if (status === SafeStepStatus.ERROR && error) {
+            console.error('Approval transaction failed:', error, 'at step:', step);
+            toast.error(`❌ GP 确认在 ${step} 步骤失败: ${error.message}`);
+            setIsSubmitting(false);
+          }
         }
-      }
-      
-      // 移除掉，全部在余额提醒中处理
-      /*
-      else if(isLastReject){// 最后一次审核失败，发起多签，将所有余额退回 GP 国库，但是不用校验，余额提醒组件统一处理
-        const res = await proposeOrExecuteTransaction(podDetail.walletAddress, [{
-          token: podDetail.currency as GrantsPoolTokens,
-          to: podDetail.grantsPool.treasuryWallet,
-          amount: Number(podDetail.podTreasuryBalances).toString()
-        }]);
-        safeTxHash = res ? res.toString() : undefined;
-      }
-      */
-
-      await reviewMilestoneDeliveryMutation.mutateAsync({
-        milestoneId: Number(milestoneId),
-        approved: isApproved,
-        comment: comment.trim(),
-        safeTransactionHash: safeTxHash
       });
-      
+
     } catch (error) {
-      console.error(error);
-    } finally {
+      console.error("Review submission failed:", error);  
+      toast.error("Review submission failed, please try again!");
       setIsSubmitting(false);
     }
+  };
+
+  // 第二步：执行Pod钱包的付款交易
+  const triggerPodPaymentExecution = async () => {
+    if (!safeTransactionData) {
+      throw new Error("Transaction data not available");
+    }
+
+    const paymentTransfers = buildMilestonePaymentTransfers();
+    if (paymentTransfers.length === 0) {
+      throw new Error("No payment data to process");
+    }
+
+    // 构建付款交易描述
+    const getPaymentDescription = () => (
+      <div className="space-y-3">
+        <div className="p-3 border rounded-lg bg-success/5 border-success/10">
+          <h4 className="mb-2 font-medium text-success">里程碑付款执行</h4>
+          <div className="space-y-1 text-small">
+            <div className="flex justify-between">
+              <span>里程碑金额:</span>
+              <span className="font-mono text-success">{formatToken(safeTransactionData.milestoneAmount)} {safeTransactionData.currency}</span>
+            </div>
+            <div className="flex justify-between">
+              <span>平台手续费:</span>
+              <span className="font-mono text-tiny">{formatToken(safeTransactionData.fee)} {safeTransactionData.currency}</span>
+            </div>
+            <div className="flex justify-between">
+              <span>总金额:</span>
+              <span className="font-mono font-semibold text-success">{formatToken(safeTransactionData.totalAmount)} {safeTransactionData.currency}</span>
+            </div>
+          </div>
+        </div>
+        <div className="flex items-center gap-2 text-tiny text-success">
+          <i className="ri-money-dollar-circle-line"></i>
+          <span>第二步：Pod 钱包执行付款交易</span>
+        </div>
+      </div>
+    );
+
+    setSafeTransactionHandler({
+      safeAddress: podDetail.walletAddress,
+      transfers: paymentTransfers,
+      title: '里程碑审核 - 付款执行',
+      description: getPaymentDescription(),
+
+      onClose: () => {
+        setIsSubmitting(false);
+      },
+      
+      onStepChange: async (step, status, data, error) => {
+        console.log('Payment step change:', { step, status, data, error });
+        
+        // 当付款交易执行完成后，调用审核API
+        if (step === SafeTransactionStep.EXECUTION && status === SafeStepStatus.SUCCESS) {
+          try {
+            toast.info('付款执行成功，正在提交审核结果...');
+            
+            setIsSubmitting(true);
+            clearSafeTransactionHandler();
+            
+            const transactionHash = data?.transactionHash || milestone.safeTransactionHash;
+            
+            // 调用审核API
+            await reviewMilestoneDeliveryMutation.mutateAsync({
+              milestoneId: Number(milestoneId),
+              approved: true,
+              comment: comment.trim(),
+              safeTransactionHash: transactionHash
+            });
+            
+          } catch (submitError) {
+            console.error('Review submission failed:', submitError);
+            toast.error('审核提交失败，请重试');
+            setIsSubmitting(false);
+          }
+        }
+        
+        // 处理错误状态
+        if (status === SafeStepStatus.ERROR && error) {
+          console.error('Payment transaction failed:', error, 'at step:', step);
+          toast.error(`❌ 付款在 ${step} 步骤失败: ${error.message}`);
+          setIsSubmitting(false);
+        }
+      }
+    });
   };
 
   const handleClose = () => {
@@ -201,6 +379,7 @@ export default function ReviewMilestoneModal({ milestone, podDetail, onReview }:
               color={isApproved ? 'success' : 'danger'}
               onPress={handleSubmit}
               isLoading={isSubmitting}
+              isDisabled={!safeWalletReady || !safeTransactionData}
             >
               {isSubmitting 
                 ? 'Submitting...' 

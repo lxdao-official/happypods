@@ -11,22 +11,22 @@ import { ShareButton } from "~/components/share-button";
 import PodHistorySection from "~/components/pod-history-section";
 import ApplicantInfoModal from "~/components/applicant-info-modal";
 import GpReviewActions from "~/components/gp-review-actions";
-import TreasuryBalanceWarning from "~/components/treasury-balance-warning";
+import FundInjectionWarning from "~/components/fund-injection-warning";
+import RefundWarning from "~/components/refund-warning";
 import { api } from "~/trpc/react";
 import { MilestoneStatus, PodStatus } from "@prisma/client";
 import StatusChip from "~/components/status-chip";
 import LoadingSkeleton from "~/components/loading-skeleton";
-import JsonInfoDisplay from "~/components/json-info-display";
 import { LinkDisplay } from "~/components/link-display";
 import { useEffect, useMemo, useState } from "react";
 import useStore from "~/store";
 import Tag from "~/components/tag";
 import PodMilestoneTimeoutActions from "~/components/pod-milestone-timeout-actions";
 import ExpandableText from "~/components/expandable-text";
-import TooltipInfo from "~/components/TooltipInfo";
 import { FEE_CONFIG } from "~/lib/config";
 import { getSafeWalletOwners } from "~/lib/safeUtils";
 import TooltipWrap from "~/components/TooltipInfo";
+import Decimal from "decimal.js";
 
 
 export default function PodDetailPage() {
@@ -61,18 +61,32 @@ export default function PodDetailPage() {
       return podDetail?.milestones?.some(milestone => milestone.status === MilestoneStatus.ACTIVE && new Date(milestone.deadline) < new Date());
     },[podDetail?.milestones]);
 
-    
+
     // 获取当前钱包的多签 owners，用于显示余额差额的弹窗
   const [isSafeWalletOwner,setIsSafeWalletOwner] = useState(false);
   useEffect(()=>{
     if(!userInfo?.walletAddress || !podDetail?.walletAddress) return;
-    const checkIsSafeWalletOwner = async()=>{
+      const checkIsSafeWalletOwner = async()=>{
       const owners = await getSafeWalletOwners(podDetail?.walletAddress);
       console.log('owners==>',owners);
       setIsSafeWalletOwner(owners.some((v:string)=>v.toLowerCase() === userInfo.walletAddress.toLowerCase()));
     }
     checkIsSafeWalletOwner();
-  },[podDetail?.walletAddress,userInfo?.walletAddress]);
+  },[podDetail,userInfo]);
+
+  // 计算资金缺口
+  const shortage = useMemo(()=>{
+    // 计算需要的资金总额（包含手续费）
+    const requiredAmount = podDetail?.milestones
+    .filter(milestone => [MilestoneStatus.ACTIVE, MilestoneStatus.REVIEWING].includes(milestone.status as any))
+    .reduce((acc, milestone) => Decimal(acc).plus(milestone.amount).toNumber(), 0);
+    
+    return Decimal(requiredAmount || 0)
+    .mul(FEE_CONFIG.TRANSACTION_FEE_RATE + 1)
+    .minus(podDetail?.podTreasuryBalances || 0)
+    .toNumber();
+  },[podDetail?.milestones,podDetail?.podTreasuryBalances]);
+
 
 
   if (isPodLoading || isMilestonesLoading || !podDetail) {
@@ -82,7 +96,6 @@ export default function PodDetailPage() {
   }
 
   
-
   return (
     <div className="container px-4 py-8 mx-auto space-y-4 fadeIn">
 
@@ -92,11 +105,20 @@ export default function PodDetailPage() {
         <PodMilestoneTimeoutActions pod={podDetail} />
       }
 
-      {/* 国库余额不足警告 */}
+      {/* 资金注入警告 */}
+      {
+        (isGPOwner || isSafeWalletOwner) && 
+        ![PodStatus.REJECTED,PodStatus.REVIEWING].includes(podDetail.status as any) && 
+        shortage > 0 &&
+        <FundInjectionWarning pod={podDetail as any} shortage={Math.abs(shortage)}/>
+      }
+
+      {/* 退款警告 */}
       {
         (isGPOwner || isPodOwner || isSafeWalletOwner) && 
         ![PodStatus.REJECTED,PodStatus.REVIEWING].includes(podDetail.status as any) && 
-        <TreasuryBalanceWarning pod={podDetail as any}/>
+        shortage < 0 &&
+        <RefundWarning pod={podDetail as any} shortage={Math.abs(shortage)}/>
       }
 
       {/* GP 审核操作 */}

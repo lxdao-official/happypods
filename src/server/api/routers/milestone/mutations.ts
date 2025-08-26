@@ -68,7 +68,7 @@ export const milestoneMutations = {
       const safeTransaction = await getSafeTransactionWithRetry(input.transactionHash);
       console.log(!safeTransaction , safeTransaction?.isExecuted , safeTransaction?.isSuccessful);
       if(!safeTransaction || safeTransaction.isExecuted || safeTransaction.isSuccessful){
-        throw new Error("Invalid TransactionHash");
+        throw new Error("Invalid TransactionHash1");
       }
 
       //! 验证输入的 hash 是否与预期一致，否则不允许修改状态
@@ -97,7 +97,7 @@ export const milestoneMutations = {
       ]);
 
       if(expectedHash.toLocaleLowerCase() !== input.transactionHash.toLocaleLowerCase()){
-        throw new Error("Invalid TransactionHash");
+        throw new Error("Invalid TransactionHash2");
       }
       // !
 
