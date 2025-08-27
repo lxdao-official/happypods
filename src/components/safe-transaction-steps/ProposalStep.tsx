@@ -65,7 +65,7 @@ export function ProposalStep({
     onStepChange?.(SafeTransactionStep.PROPOSAL, SafeStepStatus.PROCESSING);
     
     try {
-      toast.info('正在创建交易提案...');
+      toast.info('Creating transaction proposal...');
       
       // 只负责创建提案，不做其他操作
       const safeInstance = await initSafeInstance(safeAddress);
@@ -91,13 +91,13 @@ export function ProposalStep({
         senderSignature: senderSignature.data
       })
       
-      toast.success('提案创建成功！');
+      toast.success('Proposal created successfully!');
       onStepChange?.(SafeTransactionStep.PROPOSAL, SafeStepStatus.SUCCESS, { transactionHash });
       onComplete(); // 触发父组件刷新
       
     } catch (error) {
       console.error('创建提案失败:', error);
-      const errorObj = error instanceof Error ? error : new Error('创建提案失败');
+      const errorObj = error instanceof Error ? error : new Error('Proposal creation failed');
       toast.error(errorObj.message);
       onStepChange?.(SafeTransactionStep.PROPOSAL, SafeStepStatus.ERROR, null, errorObj);
     } finally {
@@ -125,32 +125,32 @@ export function ProposalStep({
       </div>
       
       {/* 步骤信息 */}
-      <div className="flex-1 min-w-0">
+      <div className="flex-1 min-w-0 space-y-1">
         <div className={`font-medium ${
           isCompleted || shouldShow ? 'text-success' : 'text-default-400'
         }`}>
-          创建提案
+          Create Proposal
         </div>
-        <div className="text-tiny text-default-500">在 Safe 钱包中创建交易提案</div>
+        <div className="text-tiny text-default-500">Create a transaction proposal in the Safe wallet</div>
       </div>
       
       {/* 操作按钮区域 */}
       <div className="flex items-center flex-shrink-0 gap-2">
         {isCompleted && (
           <Chip size="sm" color="success" variant="flat">
-            已完成
+            Completed
           </Chip>
         )}
         
         {!isOwner && !isCompleted && (
           <Chip size="sm" color="default" variant="flat">
-            无权限
+            No Permission
           </Chip>
         )}
         
         {isOwner && !shouldShow && !isCompleted && (
           <Chip size="sm" color="default" variant="flat">
-            等待中
+            Pending
           </Chip>
         )}
         
@@ -163,7 +163,7 @@ export function ProposalStep({
             onPress={handleCreateProposal}
             className="font-medium"
           >
-            {loading ? '创建中...' : '创建提案'}
+            {loading ? 'Creating...' : 'Create Proposal'}
           </Button>
         )}
       </div>

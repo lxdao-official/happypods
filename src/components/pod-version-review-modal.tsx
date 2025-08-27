@@ -27,10 +27,10 @@ export default function PodVersionReviewModal({
   pod
 }: PodVersionReviewModalProps) {
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const userInfo = useStore((state) => state.userInfo);
+  const {userInfo,setPodDetailRefreshKey} = useStore();
   const onReviewComplete = async()=>{
     await delay_s(2000);
-    window.location.reload();
+    setPodDetailRefreshKey();
   }
 
   const approveMutation = api.pod.approveVersion.useMutation({

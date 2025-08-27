@@ -1,9 +1,9 @@
 import { useMemo, useState } from "react";
 import { Input, Textarea, Button, DatePicker } from "@heroui/react";
-import { parseDate, type CalendarDate, getLocalTimeZone, today } from "@internationalized/date";
+import { parseDate, type DateValue, getLocalTimeZone, today } from "@internationalized/date";
 import CornerFrame from "~/components/corner-frame";
 import EdgeLine from "./edge-line";
-import { DEFAULT_MILESTONE_AMOUNTS, MAX_MILESTONE_COUNT } from "~/lib/config";
+import { DEFAULT_MILESTONE_AMOUNTS } from "~/lib/config";
 
 interface Milestone {
   id: string;
@@ -17,11 +17,13 @@ interface MilestoneSectionProps {
   milestones: Milestone[];
   onMilestonesChange: (milestones: Milestone[]) => void;
   info?: React.ReactNode;
+  minMilestoneCount?: number;
+  maxMilestoneCount?: number;
 }
 
-const MilestoneSection = ({ milestones, onMilestonesChange, info }: MilestoneSectionProps) => {
+const MilestoneSection = ({ milestones, onMilestonesChange, info, minMilestoneCount = 1, maxMilestoneCount = 3 }: MilestoneSectionProps) => {
   const addMilestone = () => {
-    if (milestones.length >= MAX_MILESTONE_COUNT) return;
+    if (milestones.length >= maxMilestoneCount) return;
     const newMilestone: Milestone = {
       id: `${Date.now()}`,
       title: "",
@@ -33,7 +35,7 @@ const MilestoneSection = ({ milestones, onMilestonesChange, info }: MilestoneSec
   };
 
   const removeMilestone = (id: string) => {
-    if (milestones.length > 1) {
+    if (milestones.length > minMilestoneCount) {
       onMilestonesChange(milestones.filter(milestone => milestone.id !== id));
     }
   };
@@ -59,7 +61,7 @@ const MilestoneSection = ({ milestones, onMilestonesChange, info }: MilestoneSec
   };
 
   // DatePicker 相关
-  const handleDateChange = (id: string, date: CalendarDate | null) => {
+  const handleDateChange = (id: string, date: DateValue | null) => {
     if (date) {
       updateMilestone(id, "deadline", date.toString());
     } else {
@@ -67,12 +69,12 @@ const MilestoneSection = ({ milestones, onMilestonesChange, info }: MilestoneSec
     }
   };
 
-  const minDate = (index: number) => {
+  const minDate = (index: number): DateValue => {
     if (index === 0) {
       return today(getLocalTimeZone()).add({ days: 1 });
     }
     const currentMilestone = milestones[index-1];
-    const currentDeadline = currentMilestone?.deadline ? parseDate(currentMilestone.deadline) : null;
+    const currentDeadline = currentMilestone?.deadline ? parseDate(currentMilestone.deadline.split("T")[0] ?? "") : null;
     return currentDeadline?.add({ days: 1 }) ?? today(getLocalTimeZone()).add({ days: 1 });
   };
 
@@ -89,7 +91,7 @@ const MilestoneSection = ({ milestones, onMilestonesChange, info }: MilestoneSec
           <div key={milestone.id} className="relative">
             <div className="flex items-center justify-between mb-4">
               <h3 className="text-lg font-medium">Milestone #{index + 1}</h3>
-              {milestones.length > 1 && (
+              {milestones.length > minMilestoneCount && (
                 <Button
                   color="danger"
                   variant="bordered"
@@ -165,7 +167,7 @@ const MilestoneSection = ({ milestones, onMilestonesChange, info }: MilestoneSec
         ))}
 
         <div className="flex justify-end">
-          {milestones.length < 3 && (
+          {milestones.length < maxMilestoneCount && (
             <Button
               color="success"
               size="sm"

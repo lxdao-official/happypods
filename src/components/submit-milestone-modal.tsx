@@ -15,12 +15,13 @@ interface SubmitMilestoneModalProps {
 }
 
 export default function SubmitMilestoneModal({ milestoneId }: SubmitMilestoneModalProps) {
+  
   const { isOpen, onOpen, onClose } = useDisclosure();
   const [description, setDescription] = useState("");
   const [links, setLinks] = useState<Record<string, string>>({});
   const [isSubmitting, setIsSubmitting] = useState(false);
   const { isReady: safeWalletReady } = useSafeWallet();
-  const { setSafeTransactionHandler,clearSafeTransactionHandler } = useStore();
+  const { setSafeTransactionHandler,clearSafeTransactionHandler,setPodDetailRefreshKey } = useStore();
   const {data: safeTransactionData} = api.milestone.getPaymentTransactionData.useQuery({milestoneId: Number(milestoneId)});
 
   // 构建 MetaTransactionData
@@ -44,7 +45,7 @@ export default function SubmitMilestoneModal({ milestoneId }: SubmitMilestoneMod
       onClose();
       await delay_s(2000);
       toast.success("Milestone delivery submitted successfully!");
-      window.location.reload();
+      setPodDetailRefreshKey();
     },
     onError: (error) => {
       console.error("Submission failed:", error);  
@@ -79,25 +80,25 @@ export default function SubmitMilestoneModal({ milestoneId }: SubmitMilestoneMod
       const getTransactionDescription = () => (
         <div className="space-y-3">
           <div className="p-3 border rounded-lg bg-success/5 border-success/10">
-            <h4 className="mb-2 font-medium text-success">里程碑付款详情</h4>
+            <h4 className="mb-2 font-medium text-success">Milestone Payment Details</h4>
             <div className="space-y-1 text-small">
               <div className="flex justify-between">
-                <span>里程碑金额:</span>
+                <span>Milestone Amount:</span>
                 <span className="font-mono text-success">{formatToken(safeTransactionData.milestoneAmount)} {safeTransactionData.currency}</span>
               </div>
               <div className="flex justify-between">
-                <span>平台手续费:</span>
+                <span>Platform Fee:</span>
                 <span className="font-mono text-tiny">{formatToken(safeTransactionData.fee)} {safeTransactionData.currency}</span>
               </div>
               <div className="flex justify-between">
-                <span>总金额:</span>
+                <span>Total Amount:</span>
                 <span className="font-mono font-semibold text-success">{formatToken(safeTransactionData.totalAmount)} {safeTransactionData.currency}</span>
               </div>
             </div>
           </div>
           <div className="flex items-center gap-2 text-tiny text-success">
             <i className="ri-send-plane-line"></i>
-            <span>此操作需要 Pod 多签钱包成员确认</span>
+            <span>Requires Pod multi-sig wallet confirmation</span>
           </div>
         </div>
       );
@@ -106,7 +107,7 @@ export default function SubmitMilestoneModal({ milestoneId }: SubmitMilestoneMod
       setSafeTransactionHandler({
         safeAddress: safeTransactionData.treasuryWallet,
         transfers: transfersData,
-        title: '里程碑交付申请',
+        title: 'Milestone Delivery Request',
         description: getTransactionDescription(),
         
         onStepChange: async (step, status, data, error) => {
@@ -120,7 +121,7 @@ export default function SubmitMilestoneModal({ milestoneId }: SubmitMilestoneMod
                 throw new Error('Transaction hash not found');
               }
 
-              toast.info('提案创建成功，正在提交里程碑...');
+              toast.info('Proposal created successfully, submitting milestone...');
 
               setIsSubmitting(true);
               clearSafeTransactionHandler();
@@ -135,7 +136,7 @@ export default function SubmitMilestoneModal({ milestoneId }: SubmitMilestoneMod
               
             } catch (submitError) {
               console.error('Milestone submission failed:', submitError);
-              toast.error('里程碑提交失败，请重试');
+              toast.error('Milestone submission failed, please retry');
               setIsSubmitting(false);
             }
           }
@@ -143,7 +144,7 @@ export default function SubmitMilestoneModal({ milestoneId }: SubmitMilestoneMod
           // 处理错误状态
           if (status === SafeStepStatus.ERROR && error) {
             console.error('Transaction failed:', error, 'at step:', step);
-            toast.error(`❌ 交易在 ${step} 步骤失败: ${error.message}`);
+            toast.error(`❌ Transaction failed at ${step}: ${error.message}`);
             setIsSubmitting(false);
           }
         }

@@ -53,22 +53,22 @@ export function CompletedStep({
       {/* 步骤信息 */}
       <div className="flex-1 min-w-0">
         <div className={`font-medium ${shouldShow ? 'text-success' : 'text-default-400'}`}>
-          交易完成
+          Transaction Completed
         </div>
-        <div className="text-tiny text-default-500">交易已成功在区块链上确认</div>
+        <div className="text-tiny text-default-500">Transaction has been successfully confirmed on the blockchain</div>
       </div>
       
       {/* 操作按钮区域 */}
       <div className="flex items-center flex-shrink-0 gap-2">
         {shouldShow && (
           <Chip size="sm" color="success" variant="flat">
-            已完成
+            Completed
           </Chip>
         )}
         
         {!shouldShow && (
           <Chip size="sm" color="default" variant="flat">
-            等待中
+            Pending
           </Chip>
         )}
       </div>

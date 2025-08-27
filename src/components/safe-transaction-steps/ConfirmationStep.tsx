@@ -85,13 +85,13 @@ export function ConfirmationStep({
     onStepChange?.(SafeTransactionStep.CONFIRMATION, SafeStepStatus.PROCESSING);
     
     try {
-      toast.info('正在签名确认...');
+      toast.info('Signing confirmation...');
       
       // 这里需要调用具体的签名方法
       // 暂时模拟
       await new Promise(resolve => setTimeout(resolve, 2000));
       
-      toast.success('签名确认成功！');
+      toast.success('Signature confirmed successfully!');
       
       // 获取更新后的确认状态
       const currentConfirmations = (transactionDetail?.confirmations?.length || 0) + 1;
@@ -107,7 +107,7 @@ export function ConfirmationStep({
       
     } catch (error) {
       console.error('签名确认失败:', error);
-      const errorObj = error instanceof Error ? error : new Error('签名确认失败');
+      const errorObj = error instanceof Error ? error : new Error('Signature confirmation failed');
       toast.error(errorObj.message);
       onStepChange?.(SafeTransactionStep.CONFIRMATION, SafeStepStatus.ERROR, null, errorObj);
     } finally {
@@ -139,14 +139,14 @@ export function ConfirmationStep({
       </div>
       
       {/* 步骤信息 */}
-      <div className="flex-1 min-w-0">
+      <div className="flex-1 min-w-0 space-y-1">
         <div className={`font-medium ${
           isCompleted ? 'text-success' : shouldShow ? 'text-warning' : 'text-default-400'
         }`}>
-          多签确认
+          Multi-sig Confirmation
         </div>
         <div className="text-tiny text-default-500">
-          等待多签钱包成员确认交易
+          Waiting for multi-sig wallet members to confirm transaction
           {transactionDetail && ` (${currentConfirmations}/${requiredConfirmations})`}
         </div>
       </div>
@@ -155,19 +155,19 @@ export function ConfirmationStep({
       <div className="flex items-center flex-shrink-0 gap-2">
         {isCompleted && (
           <Chip size="sm" color="success" variant="flat">
-            已签名
+            Signed
           </Chip>
         )}
         
         {!isOwner && !isCompleted && (
           <Chip size="sm" color="default" variant="flat">
-            无权限
+            No Permission
           </Chip>
         )}
         
         {isOwner && !shouldShow && !isCompleted && (
           <Chip size="sm" color="default" variant="flat">
-            等待中
+            Pending
           </Chip>
         )}
         
@@ -180,7 +180,7 @@ export function ConfirmationStep({
             onPress={handleConfirmTransaction}
             className="font-medium"
           >
-            {loading ? '签名中...' : '确认交易'}
+            {loading ? 'Signing...' : 'Confirm Transaction'}
           </Button>
         )}
       </div>

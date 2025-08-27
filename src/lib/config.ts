@@ -124,6 +124,3 @@ export const DEFAULT_MILESTONE_AMOUNTS = {
   OPTIONS: [100,300,500],
   DEFAULT: '0.0001'
 }
-
-// 最大的milestone 数量
-export const MAX_MILESTONE_COUNT = 3;

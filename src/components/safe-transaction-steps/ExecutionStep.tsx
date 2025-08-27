@@ -59,19 +59,19 @@ export function ExecutionStep({
     onStepChange?.(SafeTransactionStep.EXECUTION, SafeStepStatus.PROCESSING);
     
     try {
-      toast.info('正在执行交易...');
+      toast.info('Executing transaction...');
       
       // 这里需要调用具体的执行方法
       const safeInstance = await initSafeInstance(safeAddress);
       const safeTransaction = await apiKit.getTransaction(transactionHash)
       await safeInstance.executeTransaction(safeTransaction);
       await delay_s(8000);
-      toast.success('交易执行成功！');
+      toast.success('Transaction executed successfully!');
       onStepChange?.(SafeTransactionStep.EXECUTION, SafeStepStatus.SUCCESS, { transactionHash });
       onComplete(); // 触发父组件刷新
     } catch (error) {
       console.error('执行交易失败:', error);
-      const errorObj = error instanceof Error ? error : new Error('执行交易失败');
+      const errorObj = error instanceof Error ? error : new Error('Transaction execution failed');
       toast.error(errorObj.message);
       onStepChange?.(SafeTransactionStep.EXECUTION, SafeStepStatus.ERROR, null, errorObj);
     } finally {
@@ -99,26 +99,26 @@ export function ExecutionStep({
       </div>
       
       {/* 步骤信息 */}
-      <div className="flex-1 min-w-0">
+      <div className="flex-1 min-w-0 space-y-1">
         <div className={`font-medium ${
           isCompleted || shouldShow ? 'text-success' : 'text-default-400'
         }`}>
-          执行交易
+          Execute Transaction
         </div>
-        <div className="text-tiny text-default-500">所有签名完成，准备执行交易</div>
+        <div className="text-tiny text-default-500">All signatures are complete, ready to execute the transaction</div>
       </div>
       
       {/* 操作按钮区域 */}
       <div className="flex items-center flex-shrink-0 gap-2">
         {isCompleted && (
           <Chip size="sm" color="success" variant="flat">
-            已执行
+            Executed
           </Chip>
         )}
         
         {!shouldShow && !isCompleted && (
           <Chip size="sm" color="default" variant="flat">
-            等待中
+            Pending
           </Chip>
         )}
         
@@ -131,7 +131,7 @@ export function ExecutionStep({
             onPress={handleExecuteTransaction}
             className="font-medium"
           >
-            {loading ? '执行中...' : '执行交易'}
+            {loading ? 'Executing...' : 'Execute Transaction'}
           </Button>
         )}
       </div>

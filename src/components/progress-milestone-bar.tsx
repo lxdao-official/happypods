@@ -1,5 +1,5 @@
 import { Tooltip } from "@heroui/react";
-import { formatDate } from "~/lib/utils";
+import { formatDate,formatToken } from "~/lib/utils";
 import { usePathname } from "next/navigation";
 
 interface ProgressMilestoneBarProps {
@@ -150,7 +150,7 @@ export default function ProgressMilestoneBar({ milestones = [], children }: Prog
                 <small>Start: {formatDate(new Date(segment.startTime))}</small>
                 <small>End: {formatDate(new Date(segment.endTime))}</small>
                 {segment.milestone && (
-                  <small>Amount: {segment.milestone.amount} USDT</small>
+                  <small>Amount: {formatToken(segment.milestone.amount)} USDT</small>
                 )}
               </div>
             }
@@ -183,7 +183,7 @@ export default function ProgressMilestoneBar({ milestones = [], children }: Prog
           >
             <div 
               className="absolute top-0 z-10 w-4 h-4 transition-all duration-300 scale-125 bg-white border-2 rounded-full shadow-lg cursor-pointer border-primary hover:scale-150 hover:shadow-xl"
-              style={{ left: `${currentPosition}%` }}
+              style={{ left: `max(calc(${currentPosition}% - 18px), 0%)` }}
             >
               <div className="w-full h-full rounded-full bg-primary opacity-20"></div>
             </div>

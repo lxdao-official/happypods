@@ -20,7 +20,7 @@ interface DeliveryInfo {
 interface ReviewMilestoneModalProps {
   milestone: Milestone;
   onReview?: (data: { action: 'approve' | 'reject'; comment: string }) => void;
-  podDetail: Pod & {grantsPool: {treasuryWallet:string}, podTreasuryBalances:bigint};
+  podDetail: Pod & { grantsPool: { treasuryWallet: string }, podTreasuryBalances: bigint };
 }
 
 export default function ReviewMilestoneModal({ milestone, podDetail, onReview }: ReviewMilestoneModalProps) {
@@ -28,17 +28,17 @@ export default function ReviewMilestoneModal({ milestone, podDetail, onReview }:
   const [reviewAction, setReviewAction] = useState<'approve' | 'reject'>('approve');
   const [comment, setComment] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const {deliveryInfo,id:milestoneId} = milestone;
-  const {data: safeTransactionData} = api.milestone.getPaymentTransactionData.useQuery({milestoneId: Number(milestoneId)});
+  const { deliveryInfo, id: milestoneId } = milestone;
+  const { data: safeTransactionData } = api.milestone.getPaymentTransactionData.useQuery({ milestoneId: Number(milestoneId) });
 
   const { isReady: safeWalletReady, getTransactionDetail } = useSafeWallet();
-  const { setSafeTransactionHandler, clearSafeTransactionHandler } = useStore();
+  const { setSafeTransactionHandler, clearSafeTransactionHandler, setPodDetailRefreshKey } = useStore();
 
   // 构建里程碑付款的 MetaTransactionData
   const buildMilestonePaymentTransfers = () => {
     if (!safeTransactionData?.transactions) return [];
-    
-    return safeTransactionData.transactions.sort((a,b)=>a.to.localeCompare(b.to)).map(transaction => 
+
+    return safeTransactionData.transactions.sort((a, b) => a.to.localeCompare(b.to)).map(transaction =>
       buildMetaTransactionData(
         transaction.token as GrantsPoolTokens,
         transaction.to,
@@ -48,18 +48,18 @@ export default function ReviewMilestoneModal({ milestone, podDetail, onReview }:
   };
 
   const reviewMilestoneDeliveryMutation = api.milestone.reviewMilestoneDelivery.useMutation({
-    onSuccess: async() => {
+    onSuccess: async () => {
       setComment("");
       onClose();
       // 调用父组件的回调
       onReview?.({ action: reviewAction, comment: comment.trim() });
       toast.success(`Milestone review successfully!`);
       await delay_s(2000);
-      window.location.reload();
+      setPodDetailRefreshKey();
     },
     onError: (error) => {
       console.error("Review failed:", error);
-      toast.error(`Review failed: ${error.message}`);  
+      toast.error(`Review failed: ${error.message}`);
     },
     onSettled: () => {
       setIsSubmitting(false);
@@ -109,10 +109,10 @@ export default function ReviewMilestoneModal({ milestone, podDetail, onReview }:
     // 如果交易阈值已经达到，则直接到第二步
     const transactionInfo = await getTransactionDetail(milestone.safeTransactionHash)
     if (
-        transactionInfo &&  
-        transactionInfo.confirmations && 
-        transactionInfo.confirmations.length >= transactionInfo.confirmationsRequired &&
-        !transactionInfo.isExecuted
+      transactionInfo &&
+      transactionInfo.confirmations &&
+      transactionInfo.confirmations.length >= transactionInfo.confirmationsRequired &&
+      !transactionInfo.isExecuted
     ) {
       await triggerPodPaymentExecution();
       return;
@@ -130,29 +130,29 @@ export default function ReviewMilestoneModal({ milestone, podDetail, onReview }:
       const getApprovalDescription = () => (
         <div className="space-y-3">
           <div className="p-3 border rounded-lg bg-primary/5 border-primary/10">
-            <h4 className="mb-2 font-medium text-primary">GP 钱包确认详情</h4>
+            <h4 className="mb-2 font-medium text-primary">GP Wallet Approval Details</h4>
             <div className="space-y-1 text-small">
               <div className="flex justify-between">
-                <span>里程碑金额:</span>
+                <span>Milestone Amount:</span>
                 <span className="font-mono text-primary">{formatToken(safeTransactionData.milestoneAmount)} {safeTransactionData.currency}</span>
               </div>
               <div className="flex justify-between">
-                <span>平台手续费:</span>
+                <span>Platform Fee:</span>
                 <span className="font-mono text-tiny">{formatToken(safeTransactionData.fee)} {safeTransactionData.currency}</span>
               </div>
               <div className="flex justify-between">
-                <span>总金额:</span>
+                <span>Total Amount:</span>
                 <span className="font-mono font-semibold text-primary">{formatToken(safeTransactionData.totalAmount)} {safeTransactionData.currency}</span>
               </div>
               <div className="flex justify-between">
-                <span>Pod 钱包:</span>
+                <span>Pod Wallet:</span>
                 <span className="font-mono text-tiny">{podDetail.walletAddress.slice(0, 6)}...{podDetail.walletAddress.slice(-4)}</span>
               </div>
             </div>
           </div>
           <div className="flex items-center gap-2 text-tiny text-primary">
             <i className="ri-shield-check-line"></i>
-            <span>第一步：GP 多签钱包确认 Pod 钱包的付款交易</span>
+            <span>Step 1: GP multi-sig approves Pod payment transaction</span>
           </div>
         </div>
       );
@@ -161,46 +161,46 @@ export default function ReviewMilestoneModal({ milestone, podDetail, onReview }:
       setSafeTransactionHandler({
         safeAddress: podDetail.grantsPool.treasuryWallet,
         transfers: approvalTransfers,
-        title: '里程碑审核 - GP 确认',
+        title: 'Milestone Review - GP Approval',
         description: getApprovalDescription(),
 
         onClose: () => {
           setIsSubmitting(false);
         },
-        
+
         onStepChange: async (step, status, data, error) => {
           console.log('Approval step change:', { step, status, data, error });
-          
+
           // 当 GP 钱包的确认交易执行完成后，触发第二步
           if (step === SafeTransactionStep.EXECUTION && status === SafeStepStatus.SUCCESS) {
             try {
-              toast.info('GP 确认完成，正在执行里程碑付款...');
+              toast.info('GP approval completed, executing milestone payment...');
               clearSafeTransactionHandler();
-              
+
               // 等待一段时间确保交易状态同步
               await delay_s(3000);
-              
+
               // 触发第二步：执行Pod钱包的原始付款交易
               await triggerPodPaymentExecution();
-              
+
             } catch (error) {
               console.error('Failed to trigger payment execution:', error);
-              toast.error('执行付款失败，请重试');
+              toast.error('Payment execution failed, please retry');
               setIsSubmitting(false);
             }
           }
-          
+
           // 处理错误状态
           if (status === SafeStepStatus.ERROR && error) {
             console.error('Approval transaction failed:', error, 'at step:', step);
-            toast.error(`❌ GP 确认在 ${step} 步骤失败: ${error.message}`);
+            toast.error(`❌ GP approval failed at ${step}: ${error.message}`);
             setIsSubmitting(false);
           }
         }
       });
 
     } catch (error) {
-      console.error("Review submission failed:", error);  
+      console.error("Review submission failed:", error);
       toast.error("Review submission failed, please try again!");
       setIsSubmitting(false);
     }
@@ -221,25 +221,25 @@ export default function ReviewMilestoneModal({ milestone, podDetail, onReview }:
     const getPaymentDescription = () => (
       <div className="space-y-3">
         <div className="p-3 border rounded-lg bg-success/5 border-success/10">
-          <h4 className="mb-2 font-medium text-success">里程碑付款执行</h4>
+          <h4 className="mb-2 font-medium text-success">Milestone Payment Execution</h4>
           <div className="space-y-1 text-small">
             <div className="flex justify-between">
-              <span>里程碑金额:</span>
+              <span>Milestone Amount:</span>
               <span className="font-mono text-success">{formatToken(safeTransactionData.milestoneAmount)} {safeTransactionData.currency}</span>
             </div>
             <div className="flex justify-between">
-              <span>平台手续费:</span>
+              <span>Platform Fee:</span>
               <span className="font-mono text-tiny">{formatToken(safeTransactionData.fee)} {safeTransactionData.currency}</span>
             </div>
             <div className="flex justify-between">
-              <span>总金额:</span>
+              <span>Total Amount:</span>
               <span className="font-mono font-semibold text-success">{formatToken(safeTransactionData.totalAmount)} {safeTransactionData.currency}</span>
             </div>
           </div>
         </div>
         <div className="flex items-center gap-2 text-tiny text-success">
           <i className="ri-money-dollar-circle-line"></i>
-          <span>第二步：Pod 钱包执行付款交易</span>
+          <span>Step 2: Pod wallet executes payment transaction</span>
         </div>
       </div>
     );
@@ -247,26 +247,26 @@ export default function ReviewMilestoneModal({ milestone, podDetail, onReview }:
     setSafeTransactionHandler({
       safeAddress: podDetail.walletAddress,
       transfers: paymentTransfers,
-      title: '里程碑审核 - 付款执行',
+      title: 'Milestone Review - Payment Execution',
       description: getPaymentDescription(),
 
       onClose: () => {
         setIsSubmitting(false);
       },
-      
+
       onStepChange: async (step, status, data, error) => {
         console.log('Payment step change:', { step, status, data, error });
-        
+
         // 当付款交易执行完成后，调用审核API
         if (step === SafeTransactionStep.EXECUTION && status === SafeStepStatus.SUCCESS) {
           try {
-            toast.info('付款执行成功，正在提交审核结果...');
-            
+            toast.info('Payment executed successfully, submitting review result...');
+
             setIsSubmitting(true);
             clearSafeTransactionHandler();
-            
+
             const transactionHash = data?.transactionHash || milestone.safeTransactionHash;
-            
+
             // 调用审核API
             await reviewMilestoneDeliveryMutation.mutateAsync({
               milestoneId: Number(milestoneId),
@@ -274,18 +274,18 @@ export default function ReviewMilestoneModal({ milestone, podDetail, onReview }:
               comment: comment.trim(),
               safeTransactionHash: transactionHash
             });
-            
+
           } catch (submitError) {
             console.error('Review submission failed:', submitError);
-            toast.error('审核提交失败，请重试');
+            toast.error('Review submission failed, please retry');
             setIsSubmitting(false);
           }
         }
-        
+
         // 处理错误状态
         if (status === SafeStepStatus.ERROR && error) {
           console.error('Payment transaction failed:', error, 'at step:', step);
-          toast.error(`❌ 付款在 ${step} 步骤失败: ${error.message}`);
+          toast.error(`❌ Payment failed at ${step}: ${error.message}`);
           setIsSubmitting(false);
         }
       }
@@ -304,24 +304,24 @@ export default function ReviewMilestoneModal({ milestone, podDetail, onReview }:
 
   // 最后一次的拒绝操作
   const isLastReject = deliveryInfo && deliveryInfo.length >= 3;
-  
+
 
   return (
     <>
       {/* 只有当有待审核的提交时才显示审核按钮 */}
       {latestPendingDeliveryIndex >= 0 && (
         <div className="flex items-center gap-2">
-          <Button 
-            size="sm" 
-            color="danger" 
+          <Button
+            size="sm"
+            color="danger"
             variant="flat"
             onPress={() => handleOpenModal('reject')}
           >
             Reject
           </Button>
-          <Button 
-            size="sm" 
-            color="success" 
+          <Button
+            size="sm"
+            color="success"
             variant="flat"
             onPress={() => handleOpenModal('approve')}
           >
@@ -329,9 +329,9 @@ export default function ReviewMilestoneModal({ milestone, podDetail, onReview }:
           </Button>
         </div>
       )}
-      
-      <Modal 
-        isOpen={isOpen} 
+
+      <Modal
+        isOpen={isOpen}
         onOpenChange={handleClose}
         placement="center"
         size="2xl"
@@ -347,7 +347,7 @@ export default function ReviewMilestoneModal({ milestone, podDetail, onReview }:
                 variant="bordered"
                 label={isApproved ? 'Approve Review' : 'Reason for Rejection'}
                 placeholder={
-                  isApproved 
+                  isApproved
                     ? 'Please provide positive feedback on the completed work...'
                     : 'Please explain the reason for rejection and areas for improvement...'
                 }
@@ -367,24 +367,24 @@ export default function ReviewMilestoneModal({ milestone, podDetail, onReview }:
             </div>
           </ModalBody>
           <ModalFooter>
-            <Button 
-              color="default" 
-              variant="bordered" 
+            <Button
+              color="default"
+              variant="bordered"
               onPress={handleClose}
               isDisabled={isSubmitting}
             >
               Cancel
             </Button>
-            <Button 
+            <Button
               color={isApproved ? 'success' : 'danger'}
               onPress={handleSubmit}
               isLoading={isSubmitting}
               isDisabled={!safeWalletReady || !safeTransactionData}
             >
-              {isSubmitting 
-                ? 'Submitting...' 
-                : isApproved 
-                  ? 'Confirm Approve' 
+              {isSubmitting
+                ? 'Submitting...'
+                : isApproved
+                  ? 'Confirm Approve'
                   : 'Confirm Reject'
               }
             </Button>

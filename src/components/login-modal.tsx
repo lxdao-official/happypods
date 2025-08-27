@@ -8,7 +8,7 @@ import {
   DropdownSection,
 } from "@heroui/react";
 import { useState, useEffect, useCallback, useMemo } from "react";
-import { useAccount, useSignTypedData } from "wagmi";
+import { createConfig, http, useAccount, useEnsName, useSignTypedData } from "wagmi";
 import Link from "next/link";
 import { api } from "~/trpc/react";
 import { storeToken, logout } from "~/lib/auth-storage";
@@ -18,6 +18,7 @@ import { delay_s, truncateString } from "~/lib/utils";
 import { useUserInfo } from "~/hooks/useUserInfo";
 import useStore from "~/store";
 import { useMobile } from "~/hooks/useMobile";
+import { mainnet } from "viem/chains";
 
 // 定义TypedData结构 - 需要与后端保持一致
 const domain = {
@@ -32,6 +33,13 @@ const types = {
     { name: "timestamp", type: "uint256" },
   ],
 } as const;
+
+const ENSConfig = createConfig({
+  chains: [mainnet,],
+  transports: {
+    [mainnet.id]: http(),
+  },
+})
 
 export function LoginModal() {
   const [isLoading, setIsLoading] = useState(false);
@@ -117,6 +125,10 @@ export function LoginModal() {
     }
   }, [address, signTypedDataAsync, verifySignature]);
 
+
+
+  const ENSName = useEnsName({address:userInfo?.address as `0x${string}`,config:ENSConfig})
+
   // 钱包连接成功后自动触发签名流程
   useEffect(() => {
     if (isConnected && address && !isLoading && !userInfo) {
@@ -128,10 +140,10 @@ export function LoginModal() {
   const username = useMemo(() => {
     if (userInfo) {
       const wallet = truncateString(userInfo.address);
-      return userInfo.name ? `${userInfo.name} (${wallet})` : wallet;
+      return userInfo.name ? `${userInfo.name} (${ENSName.data || wallet})` : (ENSName.data || wallet);
     }
     return "";
-  }, [userInfo]);
+  }, [userInfo, ENSName]);
 
   // 下拉菜单项配置
   const dropdownItems = [
@@ -175,7 +187,7 @@ export function LoginModal() {
                 <img
                   src={storeUserInfo.avatar}
                   alt="User Avatar"
-                  className="w-5 h-5 rounded-full"
+                  className="object-contain w-5 h-5 bg-white rounded-full"
                 />
               ) : (
                 <i className="text-xl ri-wallet-line"></i>

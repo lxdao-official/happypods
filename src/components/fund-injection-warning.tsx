@@ -24,7 +24,7 @@ interface FundInjectionWarningProps {
 
 export default function FundInjectionWarning({ pod, shortage }: FundInjectionWarningProps) {
   const { isReady: safeWalletReady } = useSafeWallet();
-  const { userInfo, setSafeTransactionHandler } = useStore();
+  const { userInfo, setSafeTransactionHandler,setPodDetailRefreshKey } = useStore();
   const [isProcessing, setIsProcessing] = useState<boolean>(false);
 
   // 构建注资交易参数
@@ -62,25 +62,24 @@ export default function FundInjectionWarning({ pod, shortage }: FundInjectionWar
       const getTransactionDescription = () => (
         <div className="space-y-3">
           <div className="p-3 border rounded-lg bg-warning/5 border-warning/10">
-            <h4 className="mb-2 font-medium text-warning">资金注入详情</h4>
             <div className="space-y-1 text-small">
               <div className="flex justify-between">
-                <span>注入金额:</span>
+                <span>Amount:</span>
                 <span className="font-mono text-warning">{formatToken(shortage)} {pod.currency}</span>
               </div>
               <div className="flex justify-between">
-                <span>来源钱包:</span>
+                <span>From:</span>
                 <span className="font-mono text-tiny">{pod.grantsPool.treasuryWallet.slice(0, 6)}...{pod.grantsPool.treasuryWallet.slice(-4)}</span>
               </div>
               <div className="flex justify-between">
-                <span>目标钱包:</span>
+                <span>To:</span>
                 <span className="font-mono text-tiny">{pod.walletAddress.slice(0, 6)}...{pod.walletAddress.slice(-4)}</span>
               </div>
             </div>
           </div>
           <div className="flex items-center gap-2 text-tiny text-warning">
             <i className="ri-alert-line"></i>
-            <span>此操作需要 GP 多签钱包成员确认</span>
+            <span>Requires GP multi-sig wallet confirmation</span>
           </div>
         </div>
       );
@@ -89,7 +88,7 @@ export default function FundInjectionWarning({ pod, shortage }: FundInjectionWar
       setSafeTransactionHandler({
         safeAddress,
         transfers: transfersData,
-        title: 'GP 资金注入',
+        title: 'GP Fund Injection',
         description: getTransactionDescription(),
 
         onClose: () => {
@@ -102,13 +101,13 @@ export default function FundInjectionWarning({ pod, shortage }: FundInjectionWar
           // 当注资交易完成后
           if (step === SafeTransactionStep.COMPLETED && status === SafeStepStatus.SUCCESS) {
             try {
-              toast.success('资金注入成功！');
+              toast.success('Fund injection successful!');
               setIsProcessing(false);
-              await delay_s(3000, true);
-              window.location.reload();
+              await delay_s(3000);
+              setPodDetailRefreshKey();
             } catch (error) {
               console.error('Fund injection completion failed:', error);
-              toast.error('资金注入完成处理失败');
+              toast.error('Fund injection completion failed');
               setIsProcessing(false);
             }
           }
@@ -116,7 +115,7 @@ export default function FundInjectionWarning({ pod, shortage }: FundInjectionWar
           // 处理错误状态
           if (status === SafeStepStatus.ERROR && error) {
             console.error('Fund injection failed:', error, 'at step:', step);
-            toast.error(`❌ 资金注入在 ${step} 步骤失败: ${error.message}`);
+            toast.error(`❌ Fund injection failed at ${step}: ${error.message}`);
             setIsProcessing(false);
           }
         }
@@ -124,7 +123,7 @@ export default function FundInjectionWarning({ pod, shortage }: FundInjectionWar
 
     } catch (error) {
       console.error('资金注入操作失败:', error);
-      toast.error('资金注入操作失败，请重试');
+      toast.error('Fund injection failed, please retry');
       setIsProcessing(false);
     }
   };

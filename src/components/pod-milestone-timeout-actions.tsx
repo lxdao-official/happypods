@@ -8,6 +8,7 @@ import { toast } from "sonner";
 import { api } from "~/trpc/react";
 import { delay_s } from "~/lib/utils";
 import { useConfirmModal } from "~/components/providers/confirm-provider";
+import useStore from "~/store";
 
 interface PodMilestoneTimeoutActionsProps {
   pod: Pod & {
@@ -18,13 +19,13 @@ interface PodMilestoneTimeoutActionsProps {
 
 export default function PodMilestoneTimeoutActions({pod}: PodMilestoneTimeoutActionsProps) {
   const { confirm } = useConfirmModal();
-
+  const { setPodDetailRefreshKey } = useStore();
   // terminatePod mutation
   const terminatePodMutation = api.milestone.terminatePod.useMutation({
     onSuccess: async () => {
       toast.success('Pod terminated successfully!');
       await delay_s(2000);
-      window.location.reload();
+      setPodDetailRefreshKey();
     },
     onError: (error) => {
       console.error("Terminate Pod failed:", error);

@@ -9,6 +9,7 @@ import { toast } from "sonner";
 import useSafeWallet from "~/hooks/useSafeWallet";
 import type { GrantsPoolTokens, Milestone, Pod } from "@prisma/client";
 import { delay_s, formatToken } from "~/lib/utils";
+import useStore from "~/store";
 
 
 
@@ -24,6 +25,8 @@ export default function ApprovePodModal({
   onClose,
   podDetail
 }: ApprovePodModalProps) {
+  const {setPodDetailRefreshKey} = useStore();
+  
   const [isTransferring, setIsTransferring] = useState(false);
   const [isApproving, setIsApproving] = useState(false);
   const {mutateAsync:approvePod} = api.pod.approve.useMutation();
@@ -67,7 +70,7 @@ export default function ApprovePodModal({
       onClose();
       
       await delay_s(2000);
-      window.location.reload();
+      setPodDetailRefreshKey();
 
     } catch (error) {
       setIsApproving(false);

@@ -1,8 +1,7 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
-@import url('https://fonts.googleapis.com/css2?family=M+PLUS+Rounded+1c&display=swap');
-
+@import url('https://fonts.googleapis.com/css2?family=Quicksand:wght@300..700&display=swap');
 :root {
     /* 主题色 */
     --color-background: #1F1F1D;
@@ -36,9 +35,15 @@
 body,
 html {
     background: var(--color-background);
-    font-family: "M PLUS Rounded 1c", sans-serif;
-    font-weight: 400;
+    font-family: "Quicksand", sans-serif;
+    font-weight: 500;
     font-style: normal;
+}
+
+b,
+strong,
+.font-bold {
+    font-weight: 600;
 }
 
 input,
@@ -53,7 +58,6 @@ button,
         width: 1228px;
         margin: 0 auto;
     }
-
     width: 100%;
 }
 
@@ -65,7 +69,6 @@ button,
     from {
         opacity: 0;
     }
-
     to {
         opacity: 1;
     }
@@ -76,7 +79,6 @@ button,
         position: relative;
         padding-top: 10px;
         margin-top: -8px;
-
         &::after {
             content: '';
             position: absolute;
@@ -88,7 +90,6 @@ button,
             transform: translateX(-50%);
         }
     }
-
     >div:first-child {
         .progress-milestone {
             &::after {
@@ -96,7 +97,6 @@ button,
             }
         }
     }
-
     >div:last-child {
         .progress-milestone {
             &::after {
@@ -109,7 +109,6 @@ button,
 
 div[role="alert"] {
     @apply flex flex-col gap-2;
-
     @screen md {
         @apply flex border flex-row;
     }

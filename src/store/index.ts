@@ -56,6 +56,10 @@ interface State {
   safeTransactionHandler: SafeTransactionHandler | null;
   setSafeTransactionHandler: (handler: SafeTransactionHandler | null) => void;
   clearSafeTransactionHandler: () => void;
+
+  // pod 详情刷新
+  podDetailRefreshKey: number;
+  setPodDetailRefreshKey: () => void;
 }
 
 const useStore = create<State>()(
@@ -71,6 +75,10 @@ const useStore = create<State>()(
         safeTransactionHandler: null,
         setSafeTransactionHandler: (handler: SafeTransactionHandler | null) => set({ safeTransactionHandler: handler }),
         clearSafeTransactionHandler: () => set({ safeTransactionHandler: null }),
+
+        // pod 详情刷新
+        podDetailRefreshKey: 0,
+        setPodDetailRefreshKey: () => set((state) => ({ podDetailRefreshKey: state.podDetailRefreshKey + 1 })),
       }),
       {
         name: 'store-storage',

@@ -245,6 +245,7 @@ export default function EditPodPage() {
           <MilestoneSection 
             milestones={milestones}
             onMilestonesChange={setMilestones}
+            minMilestoneCount={0}
           />
 
           {/* Links */}
