@@ -60,7 +60,7 @@ const MilestoneSection = ({ milestones, onMilestonesChange, info, minMilestoneCo
   };
 
   // DatePicker 相关
-  const handleDateChange = (id: string, date: DateValue | null) => {
+  const handleDateChange = (id: string, date: any) => {
     if (date) {
       updateMilestone(id, "deadline", date.toString());
     } else {
