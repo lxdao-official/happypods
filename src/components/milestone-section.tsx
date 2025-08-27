@@ -68,7 +68,7 @@ const MilestoneSection = ({ milestones, onMilestonesChange, info, minMilestoneCo
     }
   };
 
-  const minDate = (index: number): CalendarDate => {
+  const minDate = (index: number): any => {
     if (index === 0) {
       return today(getLocalTimeZone()).add({ days: 1 });
     }
@@ -84,7 +84,7 @@ const MilestoneSection = ({ milestones, onMilestonesChange, info, minMilestoneCo
     return today(getLocalTimeZone()).add({ days: 1 });
   };
 
-  const getDateValue = (deadline: string): CalendarDate | null => {
+  const getDateValue = (deadline: string): any => {
     if (!deadline) return null;
     try {
       return parseDate(deadline.split("T")[0] ?? "");
