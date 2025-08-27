@@ -1,6 +1,5 @@
-import { useMemo, useState } from "react";
 import { Input, Textarea, Button, DatePicker } from "@heroui/react";
-import { parseDate, type DateValue, getLocalTimeZone, today } from "@internationalized/date";
+import { parseDate, type DateValue, getLocalTimeZone, today, type CalendarDate } from "@internationalized/date";
 import CornerFrame from "~/components/corner-frame";
 import EdgeLine from "./edge-line";
 import { DEFAULT_MILESTONE_AMOUNTS } from "~/lib/config";
@@ -69,13 +68,29 @@ const MilestoneSection = ({ milestones, onMilestonesChange, info, minMilestoneCo
     }
   };
 
-  const minDate = (index: number): DateValue => {
+  const minDate = (index: number): CalendarDate => {
     if (index === 0) {
       return today(getLocalTimeZone()).add({ days: 1 });
     }
     const currentMilestone = milestones[index-1];
-    const currentDeadline = currentMilestone?.deadline ? parseDate(currentMilestone.deadline.split("T")[0] ?? "") : null;
-    return currentDeadline?.add({ days: 1 }) ?? today(getLocalTimeZone()).add({ days: 1 });
+    if (currentMilestone?.deadline) {
+      try {
+        const currentDeadline = parseDate(currentMilestone.deadline.split("T")[0] ?? "");
+        return currentDeadline.add({ days: 1 });
+      } catch {
+        return today(getLocalTimeZone()).add({ days: 1 });
+      }
+    }
+    return today(getLocalTimeZone()).add({ days: 1 });
+  };
+
+  const getDateValue = (deadline: string): CalendarDate | null => {
+    if (!deadline) return null;
+    try {
+      return parseDate(deadline.split("T")[0] ?? "");
+    } catch {
+      return null;
+    }
   };
 
   return (
@@ -120,7 +135,7 @@ const MilestoneSection = ({ milestones, onMilestonesChange, info, minMilestoneCo
                 <DatePicker
                   label="Deadline"
                   minValue={minDate(index)}
-                  value={milestone.deadline ? parseDate(milestone.deadline.split("T")[0] ?? "") : null}
+                  value={getDateValue(milestone.deadline)}
                   onChange={date => handleDateChange(milestone.id, date)}
                   showMonthAndYearPickers
                 />
