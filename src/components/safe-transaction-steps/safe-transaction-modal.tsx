@@ -17,6 +17,7 @@ import { ProposalStep } from './ProposalStep';
 import { ConfirmationStep } from './ConfirmationStep';
 import { ExecutionStep } from './ExecutionStep';
 import Link from 'next/link';
+import { truncateString } from '~/lib/utils';
 
 // 简化的状态接口
 interface TransactionState {
@@ -182,7 +183,7 @@ export function SafeTransactionModal() {
           </div>
         </ModalHeader>
 
-        <ModalBody className="py-6 fadeIn">
+        <ModalBody className="py-6 fadeIn max-h-[80vh] overflow-y-auto">
           {/* 互斥状态显示 */}
           {transactionState.isGeneratingHash ? (
             <Card className="border-warning/20 bg-warning/5">
@@ -203,7 +204,7 @@ export function SafeTransactionModal() {
               </CardBody>
             </Card>
           ) : (
-            <Card className="bg-default-50/50 fadeIn">
+            <Card className="overflow-visible bg-default-50/50 fadeIn">
               <CardBody className="p-4">
                 <div className='flex items-center justify-between mb-3'>
                   <h4 className="flex items-center gap-2 font-medium">
@@ -249,22 +250,22 @@ export function SafeTransactionModal() {
                     </div>
                   )}
 
-                  <div className='flex gap-2'>
+                  <div className='flex flex-col gap-2 md:flex-row '>
                     <span className="text-default-500">Safe Wallet: </span>
                     <code className="px-2 py-1 rounded text-tiny bg-default-100">
-                      {safeTransactionHandler.safeAddress}
+                      {truncateString(safeTransactionHandler.safeAddress)}
                     </code>
                   </div>
 
                   {
-                    walletInfo && <div className='flex gap-2'>
+                    walletInfo && <div className='flex flex-col gap-2 md:flex-row'>
                       <span className="flex-shrink-0 text-default-500">Members: </span>
 
                       <div className="flex flex-wrap gap-2">
                         {
                           walletInfo.owners.map((owner: any) => {
                             return <code className="px-2 py-1 rounded text-tiny bg-default-100" key={owner}>
-                              {owner}
+                              {truncateString(owner)}
                             </code>
                           })
                         }
@@ -273,10 +274,10 @@ export function SafeTransactionModal() {
                     </div>
                   }
 
-                  <div className='flex gap-2'>
+                  <div className='flex flex-col gap-2 md:flex-row'>
                     <span className="text-default-500">Safe Hash: </span>
                     <code className="px-2 py-1 rounded text-tiny bg-default-100">
-                      {transactionHash || '...'}
+                      {truncateString(transactionHash) || '...'}
                     </code>
                   </div>
                 </div>
@@ -286,7 +287,7 @@ export function SafeTransactionModal() {
 
           {/* 处理步骤 - 只在显示信息状态时显示 */}
           {!transactionState.isGeneratingHash && !transactionState.isDetecting && (
-            <Card className="bg-default-50/50">
+            <Card className="overflow-visible bg-default-50/50">
               <CardBody className="p-4">
 
                 <div className='flex items-center mb-4 space-x-4'>

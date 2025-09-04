@@ -149,8 +149,6 @@ export default function PodDetailPage() {
       <div className="grid grid-cols-1 gap-8 p-4 lg:grid-cols-3 md:p-0">
         <div className="space-y-8 lg:col-span-2">
           <div>
-            <h2 className="mb-4 text-xl font-bold">Summary</h2>
-
             {/* 标签 */}
             <div className="flex flex-wrap gap-2 mb-3">
               {

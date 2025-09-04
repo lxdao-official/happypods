@@ -22,7 +22,7 @@ interface RefundWarningProps {
 
 export default function RefundWarning({ pod, shortage }: RefundWarningProps) {
   const { isReady: safeWalletReady, getTransactionDetail } = useSafeWallet();
-  const { userInfo, setSafeTransactionHandler, clearSafeTransactionHandler } = useStore();
+  const { userInfo, setSafeTransactionHandler, clearSafeTransactionHandler, setPodDetailRefreshKey } = useStore();
 
   // 权限状态
   const [isGPOwner, setIsGPOwner] = useState(false);
@@ -144,7 +144,7 @@ export default function RefundWarning({ pod, shortage }: RefundWarningProps) {
 
   // 权限检查：确定是否显示按钮
   const canInitiateRefund = useMemo(() => {
-    if (!userInfo?.walletAddress) return false;
+    if (!userInfo?.walletAddress || !refundTransactionHash) return false;
 
     // GP Owner 或者 GP 多签 Owner：只有在主交易已提案时才显示按钮
     if (isGPOwner || isGPMultisigOwner) {
@@ -155,7 +155,7 @@ export default function RefundWarning({ pod, shortage }: RefundWarningProps) {
     if (isPodMultisigOwner) return true;
 
     return false;
-  }, [userInfo, isGPOwner, isGPMultisigOwner, isPodMultisigOwner, mainTransactionExists, checkingTransaction]);
+  }, [userInfo, isGPOwner, isGPMultisigOwner, isPodMultisigOwner, mainTransactionExists, checkingTransaction, refundTransactionHash]);
 
   // 发起退款交易
   const handleRefund = async () => {
@@ -164,7 +164,7 @@ export default function RefundWarning({ pod, shortage }: RefundWarningProps) {
     setIsProcessing(true);
     try {
       // 刷新交易状态
-      await checkMainTransactionStatus(refundTransactionHash);
+      // await checkMainTransactionStatus(refundTransactionHash);
 
       // 如果是 GP 用户，需要先检查主交易是否已经提案
       if (isGPOwner || isGPMultisigOwner) {
@@ -234,7 +234,7 @@ export default function RefundWarning({ pod, shortage }: RefundWarningProps) {
       // 构建交易描述
       const getApprovalDescription = () => (
         <div className="space-y-3">
-          <div className="p-3 border rounded-lg bg-primary/5 border-primary/10">
+          <div className="p-3 border rounded-lg bg-success/5 border-success/10">
             <div className="space-y-1 text-small">
               <div className="flex justify-between">
                 <span>Amount:</span>
@@ -252,7 +252,7 @@ export default function RefundWarning({ pod, shortage }: RefundWarningProps) {
           </div>
           <div className="flex items-center gap-2 text-tiny text-primary">
             <i className="ri-shield-check-line"></i>
-            <span>Step 1: GP multi-sig approves Pod refund transaction</span>
+            <span>GP multi-sig approves Pod refund transaction</span>
           </div>
         </div>
       );
@@ -278,7 +278,8 @@ export default function RefundWarning({ pod, shortage }: RefundWarningProps) {
             try {
               toast.info('GP approval completed, executing refund...');
               await delay_s(2000);
-              await triggerPodRefundExecution();
+              // await triggerPodRefundExecution();
+              setPodDetailRefreshKey();
             } catch (error) {
               console.error('Failed to trigger refund execution:', error);
               toast.error('Refund execution failed, please retry');
@@ -325,9 +326,9 @@ export default function RefundWarning({ pod, shortage }: RefundWarningProps) {
               </div>
             </div>
           </div>
-          <div className="flex items-center gap-2 text-tiny text-success">
+          <div className="flex items-center gap-2 text-tiny text-primary">
             <i className="ri-money-dollar-circle-line"></i>
-            <span>Step 2: Pod wallet executes refund transaction</span>
+            <span>Executes refund transaction</span>
           </div>
         </div>
       );
@@ -351,7 +352,8 @@ export default function RefundWarning({ pod, shortage }: RefundWarningProps) {
             setIsProcessing(false);
 
             // 等待一段时间后刷新页面
-            await delay_s(3000, true);
+            await delay_s(3000);
+            setPodDetailRefreshKey();
           }
         }
       });

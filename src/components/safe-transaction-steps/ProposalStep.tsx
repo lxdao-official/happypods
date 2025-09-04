@@ -161,7 +161,7 @@ export function ProposalStep({
             size="sm"
             isLoading={loading}
             onPress={handleCreateProposal}
-            className="font-medium"
+            className="font-medium text-black"
           >
             {loading ? 'Creating...' : 'Create Proposal'}
           </Button>

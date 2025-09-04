@@ -267,6 +267,8 @@ export default function ReviewMilestoneModal({ milestone, podDetail, onReview }:
 
             const transactionHash = data?.transactionHash || milestone.safeTransactionHash;
 
+            await delay_s(2000);
+            
             // 调用审核API
             await reviewMilestoneDeliveryMutation.mutateAsync({
               milestoneId: Number(milestoneId),

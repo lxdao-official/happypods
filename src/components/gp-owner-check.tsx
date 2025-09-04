@@ -40,7 +40,7 @@ export default function GpOwnerCheck({ onwerId }: {onwerId?: number}) {
             <Button variant="light" onPress={handleCloseModal}>
               Close
             </Button>
-            <Button color="primary" onPress={handleConfirm}>
+            <Button color="primary" onPress={handleConfirm} className="text-black">
               Confirm
             </Button>
           </ModalFooter>

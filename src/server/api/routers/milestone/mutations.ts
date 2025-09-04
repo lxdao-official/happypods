@@ -206,16 +206,23 @@ export const milestoneMutations = {
         ]);
 
         //! 验证提交的transactionHash是否有效，必须是已提案，已执行的交易
-       for(let i = 0; i < 5; i++){
-        console.log('重试机制请求===>',i);
-        const safeTransaction = await getSafeTransactionWithRetry(milestone.safeTransactionHash!);
-        console.log('safeTransaction==>',safeTransaction);
-        const status = safeTransaction?.isExecuted && safeTransaction?.isSuccessful ? 'success' : 'failed';
-        if(status === 'success'){
-          break;
+        let transactionValidated = false;
+        for(let i = 0; i < 5; i++){
+          console.log('重试机制请求===>',i);
+          const safeTransaction = await getSafeTransactionWithRetry(milestone.safeTransactionHash!);
+          console.log('safeTransaction==>',safeTransaction);
+          const status = safeTransaction?.isExecuted && safeTransaction?.isSuccessful ? 'success' : 'failed';
+          if(status === 'success'){
+            transactionValidated = true;
+            break;
+          }
+          await delay_s(3000);
         }
-        await delay_s(3000);
-       }
+
+        // 如果5次重试都失败，则终止并返回验证交易失败
+        if (!transactionValidated) {
+          throw new Error("Please ensure the transaction is properly executed.");
+        }
 
         // !
         // 如果所有milestone都完成，则更新pod状态为COMPLETED

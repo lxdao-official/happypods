@@ -69,8 +69,8 @@ export default function ApprovePodModal({
       setIsTransferring(false);
       onClose();
       
-      await delay_s(2000);
-      setPodDetailRefreshKey();
+      await delay_s(2000,true);
+      // setPodDetailRefreshKey();
 
     } catch (error) {
       setIsApproving(false);

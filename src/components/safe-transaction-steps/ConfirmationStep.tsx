@@ -178,7 +178,7 @@ export function ConfirmationStep({
             size="sm"
             isLoading={loading}
             onPress={handleConfirmTransaction}
-            className="font-medium"
+            className="font-medium text-black"
           >
             {loading ? 'Signing...' : 'Confirm Transaction'}
           </Button>

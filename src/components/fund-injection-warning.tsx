@@ -24,7 +24,7 @@ interface FundInjectionWarningProps {
 
 export default function FundInjectionWarning({ pod, shortage }: FundInjectionWarningProps) {
   const { isReady: safeWalletReady } = useSafeWallet();
-  const { userInfo, setSafeTransactionHandler,setPodDetailRefreshKey } = useStore();
+  const { userInfo, setSafeTransactionHandler,setPodDetailRefreshKey,clearSafeTransactionHandler } = useStore();
   const [isProcessing, setIsProcessing] = useState<boolean>(false);
 
   // 构建注资交易参数
@@ -41,7 +41,7 @@ export default function FundInjectionWarning({ pod, shortage }: FundInjectionWar
         )]
       };
     } catch (error) {
-      console.error('构建注资交易参数失败:', error);
+      console.error('build fund injection transaction params failed:', error);
       return null;
     }
   }, [shortage, pod.grantsPool.treasuryWallet, pod.walletAddress, pod.currency, safeWalletReady]);
@@ -52,8 +52,6 @@ export default function FundInjectionWarning({ pod, shortage }: FundInjectionWar
   // 发起注资交易
   const handleFundInjection = async () => {
     if (!transactionParams || isProcessing) return;
-
-    setIsProcessing(true);
     try {
       const safeAddress = transactionParams.safeAddress;
       const transfersData = transactionParams.transfers;
@@ -77,7 +75,7 @@ export default function FundInjectionWarning({ pod, shortage }: FundInjectionWar
               </div>
             </div>
           </div>
-          <div className="flex items-center gap-2 text-tiny text-warning">
+          <div className="flex items-center gap-2 text-tiny text-primary">
             <i className="ri-alert-line"></i>
             <span>Requires GP multi-sig wallet confirmation</span>
           </div>
@@ -99,16 +97,15 @@ export default function FundInjectionWarning({ pod, shortage }: FundInjectionWar
           console.log('Fund injection transaction step change:', { step, status, data, error });
           
           // 当注资交易完成后
-          if (step === SafeTransactionStep.COMPLETED && status === SafeStepStatus.SUCCESS) {
+          if (step === SafeTransactionStep.EXECUTION && status === SafeStepStatus.SUCCESS) {
             try {
               toast.success('Fund injection successful!');
-              setIsProcessing(false);
+              clearSafeTransactionHandler();
               await delay_s(3000);
               setPodDetailRefreshKey();
             } catch (error) {
               console.error('Fund injection completion failed:', error);
               toast.error('Fund injection completion failed');
-              setIsProcessing(false);
             }
           }
 
@@ -124,6 +121,7 @@ export default function FundInjectionWarning({ pod, shortage }: FundInjectionWar
     } catch (error) {
       console.error('资金注入操作失败:', error);
       toast.error('Fund injection failed, please retry');
+    } finally {
       setIsProcessing(false);
     }
   };

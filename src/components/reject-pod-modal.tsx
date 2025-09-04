@@ -3,6 +3,9 @@
 import { useState } from "react";
 import { Button, Modal, ModalBody, ModalContent, ModalFooter, ModalHeader, Textarea } from "@heroui/react";
 import { api } from "~/trpc/react";
+import { toast } from "sonner";
+import useStore from "~/store";
+import { delay_s } from "~/lib/utils";
 
 interface RejectPodModalProps {
   isOpen: boolean;
@@ -21,6 +24,7 @@ export default function RejectPodModal({
 }: RejectPodModalProps) {
   const [rejectReason, setRejectReason] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const {setPodDetailRefreshKey} = useStore();
 
   const rejectPodMutation = api.pod.reject.useMutation({
     onSuccess: () => {
@@ -29,7 +33,7 @@ export default function RejectPodModal({
     },
     onError: (error) => {
       console.error("Failed to reject Pod:", error);
-      alert(`Failed to reject: ${error.message}`);
+      toast.error(`Failed to reject: ${error.message}`);
     },
     onSettled: () => {
       setIsSubmitting(false);
@@ -55,8 +59,12 @@ export default function RejectPodModal({
         id: podId,
         rejectReason: rejectReason.trim(),
       });
+      handleClose();
+      await delay_s(2000,true);
     } catch (error) {
-      // 错误处理在mutation的onError中
+      toast.error("Failed to reject Pod");
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -106,6 +114,7 @@ export default function RejectPodModal({
             onPress={handleSubmit}
             isLoading={isSubmitting}
             isDisabled={!rejectReason.trim()}
+            className="text-black"
           >
             Confirm Rejection
           </Button>

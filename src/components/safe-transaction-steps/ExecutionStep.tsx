@@ -129,7 +129,7 @@ export function ExecutionStep({
             size="sm"
             isLoading={loading}
             onPress={handleExecuteTransaction}
-            className="font-medium"
+            className="font-medium text-black"
           >
             {loading ? 'Executing...' : 'Execute Transaction'}
           </Button>
