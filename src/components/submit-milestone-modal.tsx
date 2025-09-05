@@ -14,7 +14,7 @@ interface SubmitMilestoneModalProps {
   safeTransactionHash: string | null;
 }
 
-export default function SubmitMilestoneModal({ milestoneId }: SubmitMilestoneModalProps) {
+export default function SubmitMilestoneModal({ milestoneId, safeTransactionHash }: SubmitMilestoneModalProps) {
   
   const { isOpen, onOpen, onClose } = useDisclosure();
   const [description, setDescription] = useState("");
@@ -73,6 +73,17 @@ export default function SubmitMilestoneModal({ milestoneId }: SubmitMilestoneMod
       const transfersData = buildTransfersData();
       if (transfersData.length === 0) {
         toast.error("No transaction data to process");
+        return;
+      }
+      
+      // 如果存在则直接提交，不用再次执行safe钱包交易
+      if(safeTransactionHash){
+         await submitMilestoneDeliveryMutation.mutateAsync({
+          milestoneId: Number(milestoneId),
+          content: description.trim(),
+          links: links,
+          transactionHash: safeTransactionHash
+        });
         return;
       }
 
@@ -182,6 +193,7 @@ export default function SubmitMilestoneModal({ milestoneId }: SubmitMilestoneMod
         placement="center"
         size="4xl"
         scrollBehavior="inside"
+        isDismissable={false}
       >
         <ModalContent>
           <ModalHeader className="text-xl font-bold">

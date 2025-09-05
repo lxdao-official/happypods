@@ -7,6 +7,7 @@ import useSafeWallet from '~/hooks/useSafeWallet';
 import { useAccount } from 'wagmi';
 import type { MetaTransactionData } from "@safe-global/types-kit";
 import { SafeTransactionStep, SafeStepStatus } from '~/store';
+import useStore from '~/store';
 
 interface ProposalStepProps {
   transactionHash: string;
@@ -15,12 +16,6 @@ interface ProposalStepProps {
   transactionDetail: any;
   walletInfo: any;
   onComplete: () => void;
-  onStepChange?: (
-    step: SafeTransactionStep, 
-    status: SafeStepStatus, 
-    data?: any, 
-    error?: Error
-  ) => void;
 }
 
 export function ProposalStep({
@@ -29,12 +24,14 @@ export function ProposalStep({
   transfers,
   transactionDetail,
   walletInfo,
-  onComplete,
-  onStepChange
+  onComplete
 }: ProposalStepProps) {
   const [loading, setLoading] = useState(false);
   const { apiKit,initSafeInstance } = useSafeWallet();
   const { address } = useAccount();
+  const { safeTransactionHandler } = useStore();
+
+
   // 检查当前钱包是否在多签 owners 中
   const isOwner = useMemo(() => {
     if (!walletInfo?.owners || !address) return false;
@@ -54,7 +51,7 @@ export function ProposalStep({
 
   useEffect(()=>{
     if(isCompleted && transactionHash){//默认吊起一次，主要是交付的时候需要用到
-      onStepChange?.(SafeTransactionStep.PROPOSAL, SafeStepStatus.SUCCESS, { transactionHash });
+      safeTransactionHandler?.onStepChange?.(SafeTransactionStep.PROPOSAL, SafeStepStatus.SUCCESS, { transactionHash });
     }
   },[isCompleted,transactionHash]);
   
@@ -62,7 +59,7 @@ export function ProposalStep({
   // 创建提案
   const handleCreateProposal = async () => {
     setLoading(true);
-    onStepChange?.(SafeTransactionStep.PROPOSAL, SafeStepStatus.PROCESSING);
+    safeTransactionHandler?.onStepChange?.(SafeTransactionStep.PROPOSAL, SafeStepStatus.PROCESSING);
     
     try {
       toast.info('Creating transaction proposal...');
@@ -92,14 +89,13 @@ export function ProposalStep({
       })
       
       toast.success('Proposal created successfully!');
-      onStepChange?.(SafeTransactionStep.PROPOSAL, SafeStepStatus.SUCCESS, { transactionHash });
       onComplete(); // 触发父组件刷新
       
     } catch (error) {
       console.error('创建提案失败:', error);
       const errorObj = error instanceof Error ? error : new Error('Proposal creation failed');
       toast.error(errorObj.message);
-      onStepChange?.(SafeTransactionStep.PROPOSAL, SafeStepStatus.ERROR, null, errorObj);
+      safeTransactionHandler?.onStepChange?.(SafeTransactionStep.PROPOSAL, SafeStepStatus.ERROR, null, errorObj);
     } finally {
       setLoading(false);
     }

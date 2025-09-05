@@ -21,6 +21,7 @@ import { toast } from "sonner";
 import { zeroAddress, type Address } from "viem";
 import useStore from "~/store";
 import { DEFAULT_MILESTONE_AMOUNTS, PLATFORM_MOD_ADDRESS } from "~/lib/config";
+import { delay_s } from "~/lib/utils";
 
 interface RelatedLinks {
   website: string;
@@ -169,6 +170,7 @@ export default function CreatePodPage() {
       }));
 
       try {
+        await delay_s(3000); //创建延迟请求
         await createPodMutation.mutateAsync({
           isCheck,
           grantsPoolId: parseInt(formData.grantsPoolId),

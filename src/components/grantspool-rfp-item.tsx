@@ -52,7 +52,7 @@ const GrantspoolRFPItem = ({ proposal, onClick, className = "", gpId }: Grantspo
           </NextLink>
         </div>
       </div>
-      <Modal isOpen={isOpen} onOpenChange={onClose} placement="center" size="3xl">
+      <Modal isOpen={isOpen} onOpenChange={onClose} placement="center" size="3xl" isDismissable={false}>
         <ModalContent>
           <ModalHeader className="text-xl font-bold">{proposal.title}</ModalHeader>
           <ModalBody>

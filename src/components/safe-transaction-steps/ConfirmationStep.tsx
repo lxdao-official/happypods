@@ -4,7 +4,7 @@ import { useState, useMemo, useEffect } from 'react';
 import { Button, Chip } from '@heroui/react';
 import { toast } from 'sonner';
 import { useAccount } from 'wagmi';
-import { SafeTransactionStep, SafeStepStatus } from '~/store';
+import useStore, { SafeTransactionStep, SafeStepStatus } from '~/store';
 
 interface ConfirmationStepProps {
   transactionHash: string;
@@ -12,24 +12,17 @@ interface ConfirmationStepProps {
   transactionDetail: any;
   walletInfo: any;
   onComplete: () => void;
-  onStepChange?: (
-    step: SafeTransactionStep, 
-    status: SafeStepStatus, 
-    data?: any, 
-    error?: Error
-  ) => void;
 }
 
 export function ConfirmationStep({
   transactionHash,
-  safeAddress,
   transactionDetail,
   walletInfo,
   onComplete,
-  onStepChange
 }: ConfirmationStepProps) {
   const [loading, setLoading] = useState(false);
   const { address } = useAccount();
+  const { safeTransactionHandler } = useStore();
 
   // 检查当前钱包是否在多签 owners 中
   const isOwner = useMemo(() => {
@@ -71,18 +64,11 @@ export function ConfirmationStep({
   }, [transactionDetail, hasSignedByMe]);
 
 
-  useEffect(()=>{
-    if(isCompleted && transactionHash){//默认吊起一次，主要是交付的时候需要用到
-      setTimeout(() => {
-        onStepChange?.(SafeTransactionStep.CONFIRMATION, SafeStepStatus.SUCCESS, { transactionHash });
-      }, 200);
-    }
-  },[isCompleted,transactionHash]);
-
+  
   // 多签确认
   const handleConfirmTransaction = async () => {
     setLoading(true);
-    onStepChange?.(SafeTransactionStep.CONFIRMATION, SafeStepStatus.PROCESSING);
+    safeTransactionHandler?.onStepChange?.(SafeTransactionStep.CONFIRMATION, SafeStepStatus.PROCESSING);
     
     try {
       toast.info('Signing confirmation...');
@@ -97,7 +83,7 @@ export function ConfirmationStep({
       const currentConfirmations = (transactionDetail?.confirmations?.length || 0) + 1;
       const requiredConfirmations = walletInfo?.threshold || 0;
       
-      onStepChange?.(SafeTransactionStep.CONFIRMATION, SafeStepStatus.SUCCESS, {
+      safeTransactionHandler?.onStepChange?.(SafeTransactionStep.CONFIRMATION, SafeStepStatus.SUCCESS, {
         transactionHash,
         confirmationsCount: currentConfirmations,
         confirmationsRequired: requiredConfirmations
@@ -109,7 +95,7 @@ export function ConfirmationStep({
       console.error('签名确认失败:', error);
       const errorObj = error instanceof Error ? error : new Error('Signature confirmation failed');
       toast.error(errorObj.message);
-      onStepChange?.(SafeTransactionStep.CONFIRMATION, SafeStepStatus.ERROR, null, errorObj);
+      safeTransactionHandler?.onStepChange?.(SafeTransactionStep.CONFIRMATION, SafeStepStatus.ERROR, null, errorObj);
     } finally {
       setLoading(false);
     }

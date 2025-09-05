@@ -29,22 +29,27 @@ import TooltipWrap from "~/components/TooltipInfo";
 import Decimal from "decimal.js";
 
 
-export default function PodDetailPage() {
+export default function PodDetailPage({key}: {key: number}) {
   const params = useParams();
   const podId = parseInt(params.id as string);
   const { userInfo } = useStore();
 
   // 查询 Pod 详情
-  const { data: podDetail, isLoading: isPodLoading } = api.pod.getPodDetail.useQuery(
+  const { data: podDetail, isLoading: isPodLoading, refetch: refetchPodDetail } = api.pod.getPodDetail.useQuery(
     { id: podId },
     { enabled: !!podId }
   );
 
   // 查询里程碑
-  const { data: milestones, isLoading: isMilestonesLoading } = api.milestone.getPodMilestones.useQuery(
+  const { data: milestones, isLoading: isMilestonesLoading, refetch: refetchMilestones } = api.milestone.getPodMilestones.useQuery(
     { podId },
     { enabled: !!podId }
   );
+
+  useEffect(()=>{
+    refetchPodDetail();
+    refetchMilestones();
+  },[key]);
 
    // 我是GP owner
    const isGPOwner = useMemo(()=>{

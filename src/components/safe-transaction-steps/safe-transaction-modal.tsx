@@ -11,7 +11,7 @@ import {
   CardBody,
 } from '@heroui/react';
 import { toast } from 'sonner';
-import useStore from '~/store';
+import useStore, { SafeStepStatus, SafeTransactionStep } from '~/store';
 import useSafeWallet from '~/hooks/useSafeWallet';
 import { ProposalStep } from './ProposalStep';
 import { ConfirmationStep } from './ConfirmationStep';
@@ -31,6 +31,7 @@ export function SafeTransactionModal() {
     safeTransactionHandler,
     clearSafeTransactionHandler
   } = useStore();
+
 
   const {
     getTransactionDetail,
@@ -56,7 +57,8 @@ export function SafeTransactionModal() {
       // 打开时先生成 hash，再获取交易详情
       generateTransactionHash();
     }
-  }, [safeTransactionHandler]);
+  }, [safeTransactionHandler?.transfers]);
+
 
   // 处理关闭
   const handleClose = () => {
@@ -90,10 +92,6 @@ export function SafeTransactionModal() {
       setTransactionHash(hash);
 
       setTransactionState(prev => ({ ...prev, isGeneratingHash: false }));
-
-      // hash 生成成功后，获取交易详情
-      await refreshTransactionData(hash);
-
     } catch (error) {
       console.error('生成交易 hash 失败:', error);
       const errorMessage = error instanceof Error ? error.message : 'Failed to generate transaction hash';
@@ -110,13 +108,14 @@ export function SafeTransactionModal() {
     }
   };
 
-  // 获取交易详情和钱包信息 - 添加防抖保护
-  const refreshTransactionData = async (hash?: string) => {
-    if (!safeTransactionHandler || !isReady) return;
+  useEffect(()=>{
+    transactionHash && refreshTransactionData();
+  },[transactionHash]);
 
-    const targetHash = hash || transactionHash;
-    console.log('targetHash===>', { targetHash, hash, transactionHash, isDetecting: transactionState.isDetecting });
-    if (!targetHash) return;
+  // 获取交易详情和钱包信息 - 添加防抖保护
+  const refreshTransactionData = async () => {
+    console.log('targetHash===>', {transactionHash, isDetecting: transactionState.isDetecting });
+    if (!safeTransactionHandler || !isReady || !transactionHash) return;
 
     // 防抖：如果正在检测中，避免重复调用
     if (transactionState.isDetecting) {
@@ -129,7 +128,7 @@ export function SafeTransactionModal() {
     try {
       // 并行获取交易详情和钱包信息
       const [detail, wallet] = await Promise.all([
-        getTransactionDetail(targetHash),
+        getTransactionDetail(transactionHash),
         getWallet(safeTransactionHandler.safeAddress)
       ]);
 
@@ -139,6 +138,21 @@ export function SafeTransactionModal() {
       setWalletInfo(wallet);
 
       setTransactionState(prev => ({ ...prev, isDetecting: false }));
+
+      if(!detail) return;
+      if(detail.isExecuted) {
+        //交易已执行完成
+        safeTransactionHandler?.onStepChange?.(SafeTransactionStep.EXECUTION, SafeStepStatus.SUCCESS, { transactionHash });
+      } else if(detail.confirmations && detail.confirmations.length >= detail.confirmationsRequired) {
+        //签名已达到阈值，可以执行
+        safeTransactionHandler?.onStepChange?.(SafeTransactionStep.CONFIRMATION, SafeStepStatus.SUCCESS, { transactionHash });
+      } else if(detail.confirmations && detail.confirmations.length > 0) {
+        //有签名但未达到阈值
+        safeTransactionHandler?.onStepChange?.(SafeTransactionStep.CONFIRMATION, SafeStepStatus.SUCCESS, { transactionHash });
+      } else {
+        //交易已创建但无签名
+        safeTransactionHandler?.onStepChange?.(SafeTransactionStep.COMPLETED, SafeStepStatus.SUCCESS, { transactionHash });
+      }
 
     } catch (error) {
       console.error('获取交易数据失败:', error);
@@ -164,7 +178,7 @@ export function SafeTransactionModal() {
       isOpen={isOpen}
       onClose={handleClose}
       size="2xl"
-      isDismissable={true}
+      isDismissable={false}
     >
       <ModalContent className="bg-gradient-to-br from-background to-default-50">
         <ModalHeader className="flex flex-col gap-1 pb-2">
@@ -194,36 +208,28 @@ export function SafeTransactionModal() {
                 </div>
               </CardBody>
             </Card>
-          ) : transactionState.isDetecting ? (
-            <Card className="border-primary/20 bg-primary/5 fadeIn">
-              <CardBody className="p-4">
-                <div className="flex items-center gap-3">
-                  <i className="text-lg ri-loader-line text-primary animate-spin"></i>
-                  <span className="text-small text-primary">Fetching transaction data...</span>
-                </div>
-              </CardBody>
-            </Card>
           ) : (
             <Card className="overflow-visible bg-default-50/50 fadeIn">
               <CardBody className="p-4">
                 <div className='flex items-center justify-between mb-3'>
                   <h4 className="flex items-center gap-2 font-medium">
                     <i className="ri-information-line text-default-500"></i>
-                    Transaction Details
+                    <span>Transaction Details</span>
                   </h4>
 
 
                   {/* 刷新按钮 */}
                   <div className='flex items-center space-x-2'>
-                    <Button
-                      isIconOnly
-                      variant="light"
-                      size="sm"
-                      onPress={() => refreshTransactionData()}
-                      isLoading={transactionState.isDetecting}
-                    >
-                      <i className="text-xl ri-refresh-line"></i>
-                    </Button>
+                    {
+                      !transactionState.isDetecting && <Button
+                        isIconOnly
+                        variant="light"
+                        size="sm"
+                        onPress={() => refreshTransactionData()}
+                      >
+                        <i className="text-xl ri-refresh-line"></i>
+                      </Button>
+                    }
 
                     {transactionHash && (
                       <Link href={`https://app.safe.global/transactions/tx?safe=oeth:${safeTransactionHandler.safeAddress}&id=multisig_${safeTransactionHandler.safeAddress}_${transactionHash}`} target='_blank'>
@@ -286,7 +292,7 @@ export function SafeTransactionModal() {
           )}
 
           {/* 处理步骤 - 只在显示信息状态时显示 */}
-          {!transactionState.isGeneratingHash && !transactionState.isDetecting && (
+          {!transactionState.isGeneratingHash && (
             <Card className="overflow-visible bg-default-50/50">
               <CardBody className="p-4">
 
@@ -306,7 +312,6 @@ export function SafeTransactionModal() {
                     transactionDetail={transactionDetail}
                     walletInfo={walletInfo}
                     onComplete={() => refreshTransactionData()}
-                    onStepChange={safeTransactionHandler.onStepChange}
                   />
 
                   {/* 多签确认步骤 */}
@@ -316,7 +321,6 @@ export function SafeTransactionModal() {
                     transactionDetail={transactionDetail}
                     walletInfo={walletInfo}
                     onComplete={() => refreshTransactionData()}
-                    onStepChange={safeTransactionHandler.onStepChange}
                   />
 
                   {/* 执行交易步骤 */}
@@ -326,7 +330,6 @@ export function SafeTransactionModal() {
                     transactionDetail={transactionDetail}
                     walletInfo={walletInfo}
                     onComplete={() => refreshTransactionData()}
-                    onStepChange={safeTransactionHandler.onStepChange}
                   />
 
                 </div>

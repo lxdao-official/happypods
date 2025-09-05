@@ -5,7 +5,7 @@ import { Button, Chip } from '@heroui/react';
 import { toast } from 'sonner';
 import useSafeWallet from '~/hooks/useSafeWallet';
 import { delay_s } from '~/lib/utils';
-import { SafeTransactionStep, SafeStepStatus } from '~/store';
+import useStore, { SafeTransactionStep, SafeStepStatus } from '~/store';
 
 interface ExecutionStepProps {
   transactionHash: string;
@@ -13,12 +13,6 @@ interface ExecutionStepProps {
   transactionDetail: any;
   walletInfo: any;
   onComplete: () => void;
-  onStepChange?: (
-    step: SafeTransactionStep, 
-    status: SafeStepStatus, 
-    data?: any, 
-    error?: Error
-  ) => void;
 }
 
 export function ExecutionStep({
@@ -27,10 +21,10 @@ export function ExecutionStep({
   transactionDetail,
   walletInfo,
   onComplete,
-  onStepChange
 }: ExecutionStepProps) {
   const [loading, setLoading] = useState(false);
   const { initSafeInstance,apiKit } = useSafeWallet();
+  const { safeTransactionHandler } = useStore();
 
   // 判断是否应该显示（签名阈值达标）
   const shouldShow = (() => {
@@ -48,7 +42,7 @@ export function ExecutionStep({
   useEffect(()=>{
     if(isCompleted && transactionHash){//默认吊起一次，主要是交付的时候需要用到
       setTimeout(() => {
-        onStepChange?.(SafeTransactionStep.EXECUTION, SafeStepStatus.SUCCESS, { transactionHash });
+        safeTransactionHandler?.onStepChange?.(SafeTransactionStep.EXECUTION, SafeStepStatus.SUCCESS, { transactionHash });
       }, 300);
     }
   },[isCompleted,transactionHash]);
@@ -56,7 +50,7 @@ export function ExecutionStep({
   // 执行交易
   const handleExecuteTransaction = async () => {
     setLoading(true);
-    onStepChange?.(SafeTransactionStep.EXECUTION, SafeStepStatus.PROCESSING);
+    safeTransactionHandler?.onStepChange?.(SafeTransactionStep.EXECUTION, SafeStepStatus.PROCESSING);
     
     try {
       toast.info('Executing transaction...');
@@ -67,13 +61,12 @@ export function ExecutionStep({
       await safeInstance.executeTransaction(safeTransaction);
       await delay_s(8000);
       toast.success('Transaction executed successfully!');
-      onStepChange?.(SafeTransactionStep.EXECUTION, SafeStepStatus.SUCCESS, { transactionHash });
       onComplete(); // 触发父组件刷新
     } catch (error) {
       console.error('执行交易失败:', error);
       const errorObj = error instanceof Error ? error : new Error('Transaction execution failed');
       toast.error(errorObj.message);
-      onStepChange?.(SafeTransactionStep.EXECUTION, SafeStepStatus.ERROR, null, errorObj);
+      safeTransactionHandler?.onStepChange?.(SafeTransactionStep.EXECUTION, SafeStepStatus.ERROR, null, errorObj);
     } finally {
       setLoading(false);
     }

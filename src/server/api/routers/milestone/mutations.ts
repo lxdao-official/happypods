@@ -161,6 +161,11 @@ export const milestoneMutations = {
         throw new Error("Only Milestones with status REVIEWING can be reviewed");
       }
 
+      // 检查是否有待审核的 pod 信息提交，如果有需要先完成审核，否则会出现完全成了 pod，后追加 milestone 的情况
+      if(milestone.pod.versions && Object.values(milestone.pod.versions).length > 0){
+        throw new Error("The pod has no versions, please complete the pod review first");
+      }
+
       // 获取当前的deliveryInfo数组
       const currentDeliveryInfo = (milestone.deliveryInfo as any[]) || [];
       

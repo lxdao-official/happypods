@@ -193,18 +193,6 @@ export default function RefundWarning({ pod, shortage }: RefundWarningProps) {
 
       // 如果是 Pod 多签 Owner，检查交易阈值
       if (isPodMultisigOwner) {
-        const transactionInfo = await getTransactionDetail(refundTransactionHash);
-        if (
-          transactionInfo &&
-          transactionInfo.confirmations &&
-          transactionInfo.confirmations.length >= transactionInfo.confirmationsRequired &&
-          !transactionInfo.isExecuted
-        ) {
-          // 交易已达到阈值，直接执行
-          await triggerPodRefundExecution();
-          return;
-        }
-        // 否则发起或参与提案
         await triggerPodRefundExecution();
         return;
       }
@@ -274,12 +262,12 @@ export default function RefundWarning({ pod, shortage }: RefundWarningProps) {
           // 当 GP 钱包的确认交易执行完成后，触发第二步
           if (step === SafeTransactionStep.EXECUTION && status === SafeStepStatus.SUCCESS) {
             // 先清除当前的交易处理器，让 modal 完全关闭
-            clearSafeTransactionHandler();
+            // clearSafeTransactionHandler();
             try {
               toast.info('GP approval completed, executing refund...');
               await delay_s(2000);
-              // await triggerPodRefundExecution();
-              setPodDetailRefreshKey();
+              await triggerPodRefundExecution();
+              // setPodDetailRefreshKey();
             } catch (error) {
               console.error('Failed to trigger refund execution:', error);
               toast.error('Refund execution failed, please retry');

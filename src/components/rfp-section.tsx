@@ -72,8 +72,8 @@ const RFPSection = ({ rfps, onRfpsChange, isEdit = false, grantsPoolId }: RFPSec
     <CornerFrame backgroundColor="var(--color-background)" color="gray">
       <div className="flex items-center justify-between mb-6">
         <h2 className="flex items-center gap-2 text-xl">
-          <span>RFP Information</span>
-          <i className="ri-question-line"></i>
+          <span>Request-For-Proposal</span>
+          {/* <i className="ri-question-line"></i> */}
         </h2>
       </div>
       

@@ -4,18 +4,11 @@ import { api } from "~/trpc/react";
 import { toast } from "sonner";
 import { delay_s, withRetry, formatToken } from "~/lib/utils";
 import useSafeWallet from "~/hooks/useSafeWallet";
-import type { GrantsPoolTokens, Milestone, Pod } from "@prisma/client";
+import { MilestoneStatus, type GrantsPoolTokens, type Milestone, type Pod } from "@prisma/client";
 import useStore, { SafeTransactionStep, SafeStepStatus } from "~/store";
 import { buildMetaTransactionData, buildNestedMultisigApprovalTransaction } from "~/lib/safeUtils";
-
-interface DeliveryInfo {
-  content: string;
-  links: Record<string, string>;
-  submittedAt: string;
-  approved: boolean | null;
-  reviewComment: string | null;
-  reviewedAt: string | null;
-}
+import { PLATFORM_CHAINS } from "~/lib/config";
+import { optimism } from "viem/chains";
 
 interface ReviewMilestoneModalProps {
   milestone: Milestone;
@@ -34,6 +27,13 @@ export default function ReviewMilestoneModal({ milestone, podDetail, onReview }:
   const { isReady: safeWalletReady, getTransactionDetail } = useSafeWallet();
   const { setSafeTransactionHandler, clearSafeTransactionHandler, setPodDetailRefreshKey } = useStore();
 
+    // 找到最新的待审核的提交
+    const latestPendingDeliveryIndex = deliveryInfo.findIndex((delivery: any) => !delivery?.approved);
+    const isApproved = reviewAction === 'approve';
+  
+    // 最后一次的拒绝操作
+    const isLastReject = deliveryInfo && deliveryInfo.length >= 3;
+
   // 构建里程碑付款的 MetaTransactionData
   const buildMilestonePaymentTransfers = () => {
     if (!safeTransactionData?.transactions) return [];
@@ -47,6 +47,7 @@ export default function ReviewMilestoneModal({ milestone, podDetail, onReview }:
     );
   };
 
+  // 接口请求
   const reviewMilestoneDeliveryMutation = api.milestone.reviewMilestoneDelivery.useMutation({
     onSuccess: async () => {
       setComment("");
@@ -66,12 +67,33 @@ export default function ReviewMilestoneModal({ milestone, podDetail, onReview }:
     },
   });
 
+  // 打开模态框
   const handleOpenModal = (action: 'approve' | 'reject') => {
     setReviewAction(action);
     setComment("");
     onOpen();
   };
 
+      // 构建付款交易描述
+  const SafeDescription = () => (
+    !safeTransactionData? null:
+    <div className="space-y-1 text-small">
+      <div className="flex justify-between">
+        <span>Milestone Amount:</span>
+        <span className="font-mono text-success">{formatToken(safeTransactionData.milestoneAmount)} {safeTransactionData.currency}</span>
+      </div>
+      <div className="flex justify-between">
+        <span>Platform Fee:</span>
+        <span className="font-mono text-tiny">{formatToken(safeTransactionData.fee)} {safeTransactionData.currency}</span>
+      </div>
+      <div className="flex justify-between">
+        <span>Total Amount:</span>
+        <span className="font-mono font-semibold text-success">{formatToken(safeTransactionData.totalAmount)} {safeTransactionData.currency}</span>
+      </div>
+  </div>
+  );
+
+  // 提交审核
   const handleSubmit = async () => {
     if (!comment.trim()) {
       toast.error("Please enter your review");
@@ -106,6 +128,18 @@ export default function ReviewMilestoneModal({ milestone, podDetail, onReview }:
       return;
     }
 
+    // 可能存在safe钱包的异常情况，已经多签支付，但是没有正确触发状态修改，重复点击可以修改掉状态
+    const orginalTransactionInfo = await PLATFORM_CHAINS[optimism.id]?.safeApiKit.getTransaction(milestone.safeTransactionHash);
+    if(orginalTransactionInfo && orginalTransactionInfo.isExecuted && milestone.status === MilestoneStatus.REVIEWING){
+      await reviewMilestoneDeliveryMutation.mutateAsync({
+        milestoneId: Number(milestoneId),
+        approved: true,
+        comment: comment.trim(),
+        safeTransactionHash: milestone.safeTransactionHash
+      });
+      return;
+    }
+
     // 如果交易阈值已经达到，则直接到第二步
     const transactionInfo = await getTransactionDetail(milestone.safeTransactionHash)
     if (
@@ -131,24 +165,7 @@ export default function ReviewMilestoneModal({ milestone, podDetail, onReview }:
         <div className="space-y-3">
           <div className="p-3 border rounded-lg bg-primary/5 border-primary/10">
             <h4 className="mb-2 font-medium text-primary">GP Wallet Approval Details</h4>
-            <div className="space-y-1 text-small">
-              <div className="flex justify-between">
-                <span>Milestone Amount:</span>
-                <span className="font-mono text-primary">{formatToken(safeTransactionData.milestoneAmount)} {safeTransactionData.currency}</span>
-              </div>
-              <div className="flex justify-between">
-                <span>Platform Fee:</span>
-                <span className="font-mono text-tiny">{formatToken(safeTransactionData.fee)} {safeTransactionData.currency}</span>
-              </div>
-              <div className="flex justify-between">
-                <span>Total Amount:</span>
-                <span className="font-mono font-semibold text-primary">{formatToken(safeTransactionData.totalAmount)} {safeTransactionData.currency}</span>
-              </div>
-              <div className="flex justify-between">
-                <span>Pod Wallet:</span>
-                <span className="font-mono text-tiny">{podDetail.walletAddress.slice(0, 6)}...{podDetail.walletAddress.slice(-4)}</span>
-              </div>
-            </div>
+           <SafeDescription/>
           </div>
           <div className="flex items-center gap-2 text-tiny text-primary">
             <i className="ri-shield-check-line"></i>
@@ -174,11 +191,11 @@ export default function ReviewMilestoneModal({ milestone, podDetail, onReview }:
           // 当 GP 钱包的确认交易执行完成后，触发第二步
           if (step === SafeTransactionStep.EXECUTION && status === SafeStepStatus.SUCCESS) {
             try {
-              toast.info('GP approval completed, executing milestone payment...');
-              clearSafeTransactionHandler();
+              toast.info('GP approval completed');
+              // clearSafeTransactionHandler();
 
               // 等待一段时间确保交易状态同步
-              await delay_s(3000);
+              await delay_s(2000);
 
               // 触发第二步：执行Pod钱包的原始付款交易
               await triggerPodPaymentExecution();
@@ -222,20 +239,7 @@ export default function ReviewMilestoneModal({ milestone, podDetail, onReview }:
       <div className="space-y-3">
         <div className="p-3 border rounded-lg bg-success/5 border-success/10">
           <h4 className="mb-2 font-medium text-success">Milestone Payment Execution</h4>
-          <div className="space-y-1 text-small">
-            <div className="flex justify-between">
-              <span>Milestone Amount:</span>
-              <span className="font-mono text-success">{formatToken(safeTransactionData.milestoneAmount)} {safeTransactionData.currency}</span>
-            </div>
-            <div className="flex justify-between">
-              <span>Platform Fee:</span>
-              <span className="font-mono text-tiny">{formatToken(safeTransactionData.fee)} {safeTransactionData.currency}</span>
-            </div>
-            <div className="flex justify-between">
-              <span>Total Amount:</span>
-              <span className="font-mono font-semibold text-success">{formatToken(safeTransactionData.totalAmount)} {safeTransactionData.currency}</span>
-            </div>
-          </div>
+          <SafeDescription/>
         </div>
         <div className="flex items-center gap-2 text-tiny text-success">
           <i className="ri-money-dollar-circle-line"></i>
@@ -265,8 +269,6 @@ export default function ReviewMilestoneModal({ milestone, podDetail, onReview }:
             setIsSubmitting(true);
             clearSafeTransactionHandler();
 
-            const transactionHash = data?.transactionHash || milestone.safeTransactionHash;
-
             await delay_s(2000);
             
             // 调用审核API
@@ -274,7 +276,7 @@ export default function ReviewMilestoneModal({ milestone, podDetail, onReview }:
               milestoneId: Number(milestoneId),
               approved: true,
               comment: comment.trim(),
-              safeTransactionHash: transactionHash
+              safeTransactionHash: data?.transactionHash
             });
 
           } catch (submitError) {
@@ -299,13 +301,6 @@ export default function ReviewMilestoneModal({ milestone, podDetail, onReview }:
       onClose();
     }
   };
-
-  // 找到最新的待审核的提交
-  const latestPendingDeliveryIndex = deliveryInfo.findIndex((delivery: any) => !delivery?.approved);
-  const isApproved = reviewAction === 'approve';
-
-  // 最后一次的拒绝操作
-  const isLastReject = deliveryInfo && deliveryInfo.length >= 3;
 
 
   return (
@@ -338,6 +333,7 @@ export default function ReviewMilestoneModal({ milestone, podDetail, onReview }:
         placement="center"
         size="2xl"
         scrollBehavior="inside"
+        isDismissable={false}
       >
         <ModalContent>
           <ModalHeader className="text-xl font-bold">
@@ -381,7 +377,7 @@ export default function ReviewMilestoneModal({ milestone, podDetail, onReview }:
               color={isApproved ? 'success' : 'danger'}
               onPress={handleSubmit}
               isLoading={isSubmitting}
-              isDisabled={!safeWalletReady || !safeTransactionData}
+              isDisabled={!safeWalletReady || !safeTransactionData || !comment.trim()}
             >
               {isSubmitting
                 ? 'Submitting...'

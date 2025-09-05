@@ -23,6 +23,7 @@ export default function ApplyExtensionModal({ milestoneId }: ApplyExtensionModal
         onOpenChange={onClose} 
         placement="center"
         size="md"
+        isDismissable={false}
       >
         <ModalContent>
           <ModalHeader className="text-xl font-bold">

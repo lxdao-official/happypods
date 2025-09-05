@@ -13,7 +13,7 @@ interface CreateSafeModalProps {
   onClose: () => void;
   onConfirm: (safeAddress: string) => void;
   // 可选的预设参数，如果传入则不可更改
-  predefinedOwners?: Address[];
+  predefinedOwners?: string[];
   predefinedThreshold?: number;
   description?: string;
 }
@@ -94,7 +94,7 @@ const CreateSafeModal = ({
   };
 
   return (
-    <Modal isOpen={isOpen} onClose={onClose} size="3xl" scrollBehavior="inside">
+    <Modal isOpen={isOpen} onClose={onClose} size="3xl" scrollBehavior="inside" isDismissable={false}>
       <ModalContent>
         <ModalHeader>Create Safe Multi-sig Wallet</ModalHeader>
         <ModalBody>
