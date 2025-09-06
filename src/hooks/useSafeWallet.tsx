@@ -2,7 +2,7 @@ import { useAccount, useWalletClient, usePublicClient, useChainId, useSwitchChai
 import { useEffect, useMemo, useState, useCallback } from "react";
 import Safe, { type SafeAccountConfig, type PredictedSafeProps } from '@safe-global/protocol-kit';
 import SafeApiKit from '@safe-global/api-kit';
-import { keccak256 } from "viem";
+import { keccak256, type Address } from "viem";
 import { toast } from "sonner";
 import { delay_s } from "~/lib/utils";
 import { buildErc20TransfersSafeTransaction, type TransferInput } from "~/lib/safeUtils";
@@ -118,7 +118,7 @@ const useSafeWallet = () => {
       try {
         const deploymentTransaction = await protocolKit.createSafeDeploymentTransaction();
         await sendTransactionAsync({
-          to: deploymentTransaction.to,
+          to: deploymentTransaction.to as Address,
           value: BigInt(deploymentTransaction.value),
           data: deploymentTransaction.data as `0x${string}`
         });

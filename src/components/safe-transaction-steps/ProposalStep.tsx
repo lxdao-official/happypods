@@ -49,11 +49,11 @@ export function ProposalStep({
   // 是否已完成
   const isCompleted = !!transactionDetail;
 
-  useEffect(()=>{
-    if(isCompleted && transactionHash){//默认吊起一次，主要是交付的时候需要用到
-      safeTransactionHandler?.onStepChange?.(SafeTransactionStep.PROPOSAL, SafeStepStatus.SUCCESS, { transactionHash });
-    }
-  },[isCompleted,transactionHash]);
+  // useEffect(()=>{
+  //   if(isCompleted && transactionHash){//默认吊起一次，主要是交付的时候需要用到
+  //     safeTransactionHandler?.onStepChange?.(SafeTransactionStep.PROPOSAL, SafeStepStatus.SUCCESS, { transactionHash });
+  //   }
+  // },[isCompleted,transactionHash]);
   
 
   // 创建提案

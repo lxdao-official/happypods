@@ -261,13 +261,10 @@ export default function RefundWarning({ pod, shortage }: RefundWarningProps) {
 
           // 当 GP 钱包的确认交易执行完成后，触发第二步
           if (step === SafeTransactionStep.EXECUTION && status === SafeStepStatus.SUCCESS) {
-            // 先清除当前的交易处理器，让 modal 完全关闭
-            // clearSafeTransactionHandler();
             try {
-              toast.info('GP approval completed, executing refund...');
+              toast.info('GP approval completed, next executing refund...');
               await delay_s(2000);
               await triggerPodRefundExecution();
-              // setPodDetailRefreshKey();
             } catch (error) {
               console.error('Failed to trigger refund execution:', error);
               toast.error('Refund execution failed, please retry');

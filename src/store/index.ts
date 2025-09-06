@@ -10,6 +10,7 @@ import type { MetaTransactionData } from "@safe-global/types-kit";
 export enum SafeTransactionStep {
   PROPOSAL = 'proposal',           // 创建提案步骤
   CONFIRMATION = 'confirmation',   // 多签确认步骤
+  WAITEXECUTION = 'waitExecution',   // 多签完成，等待执行
   EXECUTION = 'execution',         // 执行交易步骤
   COMPLETED = 'completed'          // 完成步骤
 }

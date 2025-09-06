@@ -125,7 +125,7 @@ export default function SubmitMilestoneModal({ milestoneId, safeTransactionHash 
           console.log('Milestone payment step change:', { step, status, data, error });
           
           // 只有当提案步骤成功完成时才调用提交接口
-          if (step === SafeTransactionStep.PROPOSAL && status === SafeStepStatus.SUCCESS) {
+          if (step === SafeTransactionStep.CONFIRMATION && status === SafeStepStatus.SUCCESS) {
             try {
               const transactionHash = data?.transactionHash;
               if (!transactionHash) {

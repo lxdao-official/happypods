@@ -50,29 +50,6 @@ export function SafeTransactionModal() {
   const [transactionDetail, setTransactionDetail] = useState<any>(null);
   const [walletInfo, setWalletInfo] = useState<any>(null);
 
-  // 监听交易处理器变化
-  useEffect(() => {
-    if (safeTransactionHandler) {
-      setIsOpen(true);
-      // 打开时先生成 hash，再获取交易详情
-      generateTransactionHash();
-    }
-  }, [safeTransactionHandler?.transfers]);
-
-
-  // 处理关闭
-  const handleClose = () => {
-    setIsOpen(false);
-    clearSafeTransactionHandler();
-    setTransactionState({
-      isDetecting: false,
-      isGeneratingHash: false,
-    });
-    safeTransactionHandler?.onClose?.();
-    setTransactionHash('');
-    setTransactionDetail(null);
-    setWalletInfo(null);
-  };
 
   // 生成交易 hash
   const generateTransactionHash = async () => {
@@ -90,8 +67,8 @@ export function SafeTransactionModal() {
 
       console.log('Generated transaction hash:', hash);
       setTransactionHash(hash);
-
       setTransactionState(prev => ({ ...prev, isGeneratingHash: false }));
+      refreshTransactionData();
     } catch (error) {
       console.error('生成交易 hash 失败:', error);
       const errorMessage = error instanceof Error ? error.message : 'Failed to generate transaction hash';
@@ -108,13 +85,11 @@ export function SafeTransactionModal() {
     }
   };
 
-  useEffect(()=>{
-    transactionHash && refreshTransactionData();
-  },[transactionHash]);
-
   // 获取交易详情和钱包信息 - 添加防抖保护
   const refreshTransactionData = async () => {
-    console.log('targetHash===>', {transactionHash, isDetecting: transactionState.isDetecting });
+    console.log('targetHash===>', {transactionHash, isDetecting: transactionState.isDetecting,safeTransactionHandler, isReady});
+    console.log(safeTransactionHandler, isReady, transactionHash);
+    console.log(!safeTransactionHandler || !isReady || !transactionHash);
     if (!safeTransactionHandler || !isReady || !transactionHash) return;
 
     // 防抖：如果正在检测中，避免重复调用
@@ -145,13 +120,13 @@ export function SafeTransactionModal() {
         safeTransactionHandler?.onStepChange?.(SafeTransactionStep.EXECUTION, SafeStepStatus.SUCCESS, { transactionHash });
       } else if(detail.confirmations && detail.confirmations.length >= detail.confirmationsRequired) {
         //签名已达到阈值，可以执行
-        safeTransactionHandler?.onStepChange?.(SafeTransactionStep.CONFIRMATION, SafeStepStatus.SUCCESS, { transactionHash });
+        safeTransactionHandler?.onStepChange?.(SafeTransactionStep.WAITEXECUTION, SafeStepStatus.SUCCESS, { transactionHash });
       } else if(detail.confirmations && detail.confirmations.length > 0) {
         //有签名但未达到阈值
         safeTransactionHandler?.onStepChange?.(SafeTransactionStep.CONFIRMATION, SafeStepStatus.SUCCESS, { transactionHash });
-      } else {
-        //交易已创建但无签名
-        safeTransactionHandler?.onStepChange?.(SafeTransactionStep.COMPLETED, SafeStepStatus.SUCCESS, { transactionHash });
+      }else if(!detail.isExecuted){
+        // 只是提案成功
+        safeTransactionHandler?.onStepChange?.(SafeTransactionStep.PROPOSAL, SafeStepStatus.SUCCESS, { transactionHash });
       }
 
     } catch (error) {
@@ -169,6 +144,35 @@ export function SafeTransactionModal() {
       });
     }
   };
+
+
+  // 处理关闭
+  const handleClose = (init = false) => {
+    !init && safeTransactionHandler?.onClose?.();
+    !init && setIsOpen(false);
+    !init && clearSafeTransactionHandler();
+    setTransactionState({
+      isDetecting: false,
+      isGeneratingHash: false,
+    });
+    setTransactionHash('');
+    setTransactionDetail(null);
+    setWalletInfo(null);
+  };
+
+  // 监听交易处理器变化
+  useEffect(() => {
+    if (safeTransactionHandler) {
+      handleClose(true);
+      setIsOpen(true);
+      generateTransactionHash();
+    }
+  }, [safeTransactionHandler]);
+
+
+  useEffect(()=>{
+    transactionHash && refreshTransactionData();
+  },[transactionHash]);
 
   if (!safeTransactionHandler) return null;
 

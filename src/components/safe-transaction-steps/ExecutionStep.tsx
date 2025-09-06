@@ -39,14 +39,6 @@ export function ExecutionStep({
   // 是否已完成
   const isCompleted = transactionDetail?.isExecuted;
 
-  useEffect(()=>{
-    if(isCompleted && transactionHash){//默认吊起一次，主要是交付的时候需要用到
-      setTimeout(() => {
-        safeTransactionHandler?.onStepChange?.(SafeTransactionStep.EXECUTION, SafeStepStatus.SUCCESS, { transactionHash });
-      }, 300);
-    }
-  },[isCompleted,transactionHash]);
-
   // 执行交易
   const handleExecuteTransaction = async () => {
     setLoading(true);
