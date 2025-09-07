@@ -47,13 +47,35 @@ export function ExecutionStep({
     try {
       toast.info('Executing transaction...');
       
-      // 这里需要调用具体的执行方法
+      // 执行交易
       const safeInstance = await initSafeInstance(safeAddress);
-      const safeTransaction = await apiKit.getTransaction(transactionHash)
+      const safeTransaction = await apiKit.getTransaction(transactionHash);
       await safeInstance.executeTransaction(safeTransaction);
-      await delay_s(8000);
-      toast.success('Transaction executed successfully!');
-      onComplete(); // 触发父组件刷新
+      
+      //!由于交易提交之后，safe 官方的接口什么时候更新状态不确定，这里轮训尽量保证业务是生效的
+      for (let attempt = 1; attempt <= 6; attempt++) {
+        await delay_s(4000); // 等待4秒
+        
+        try {
+          const updatedTransaction = await apiKit.getTransaction(transactionHash);
+          if (updatedTransaction.isExecuted === true) {
+            onComplete(); // 触发父组件刷新
+            return;
+          }
+          // 从第二次尝试开始显示提示
+          if (attempt > 1) {
+            toast.info(`Transaction still processing, ${6 - attempt} attempts remaining...`);
+          }
+        } catch (pollError) {
+          console.error('轮询检查交易状态失败:', pollError);
+          // 继续下一次尝试
+        }
+      }
+      
+      // 如果6次尝试后仍未完成
+      toast.warning('Transaction execution is taking longer than expected. Please check the transaction status manually.');
+      onComplete(); // 仍然触发刷新，让用户看到最新状态
+      
     } catch (error) {
       console.error('执行交易失败:', error);
       const errorObj = error instanceof Error ? error : new Error('Transaction execution failed');

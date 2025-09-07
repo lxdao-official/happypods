@@ -53,15 +53,13 @@ export default function PodVersionReviewModal({
     setIsSubmitting(true);
     await approveMutation.mutateAsync({
         podId,
-        versionData
     });
   };
 
   const handleReject = async () => {
     setIsSubmitting(true);
     await rejectMutation.mutateAsync({
-        podId,
-        versionData
+        podId
     });
   };
 
@@ -128,7 +126,7 @@ export default function PodVersionReviewModal({
                   {versionData.milestones.map((milestone: any, index: number) => (
                     <div key={index} className="p-4 border rounded-lg border-secondary">
                       <div className="flex items-center justify-between mb-2">
-                        <h4 className="font-medium">#{index + 1} {milestone.title}</h4>
+                        <h4 className="text-2xl font-medium text-green-500">{milestone.title}</h4>
                       </div>
                       <div className="space-y-2 text-sm">
                         <div>

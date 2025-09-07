@@ -335,12 +335,15 @@ export const podMutations = {
   // 审核通过版本
   approveVersion: protectedProcedure
     .input(z.object({
-      podId: z.number(),
-      versionData: z.any(),
+      podId: z.number()
     }))
     .mutation(async ({ ctx, input }) => {
-      const { podId, versionData } = input;
-      return await PodEditService.reviewVersion(ctx as any, podId, versionData, true);
+      const { podId } = input;
+      const data = await ctx.db.pod.findUnique({
+        where: { id: podId },
+        select: { versions: true },
+      });
+      return await PodEditService.reviewVersion(ctx as any, podId, data?.versions[0], true);
     }),
 
   // 驳回版本
@@ -350,8 +353,12 @@ export const podMutations = {
       versionData: z.any(),
     }))
     .mutation(async ({ ctx, input }) => {
-      const { podId, versionData } = input;
-      return await PodEditService.reviewVersion(ctx as any, podId, versionData, false);
+      const { podId } = input;
+      const data = await ctx.db.pod.findUnique({
+        where: { id: podId },
+        select: { versions: true },
+      });
+      return await PodEditService.reviewVersion(ctx as any, podId, data?.versions[0], false);
     }),
 
 }; 

@@ -1,16 +1,16 @@
 import { z } from "zod";
-import { publicProcedure } from "~/server/api/trpc";
+import { publicProcedure, protectedProcedure } from "~/server/api/trpc";
 import { createUserSchema, updateUserSchema } from "./schemas";
 
 export const userMutations = {
   // 更新用户
-  update: publicProcedure
+  update: protectedProcedure
     .input(updateUserSchema)
     .mutation(async ({ ctx, input }) => {
       const { id, ...updateData } = input;
       
       return ctx.db.user.update({
-        where: { id },
+        where: { id: ctx.user.id },
         data: updateData,
       });
     }),

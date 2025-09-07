@@ -123,8 +123,9 @@ export const publicProcedure = t.procedure.use(timingMiddleware);
  * @see https://trpc.io/docs/procedures
  */
 const authMiddleware = t.middleware(({ next, ctx, path }) => {
+  console.log(ctx.user);
   // 不在白名单中，需要认证
-  if (!ctx.user && !PUBLIC_ROUTES.includes(path)) {
+  if (!ctx.user.id && !PUBLIC_ROUTES.includes(path)) {
     throw new TRPCError({
       code: 'UNAUTHORIZED',
       message: 'you need to login to access this feature',

@@ -42,6 +42,7 @@ export interface SafeTransactionHandler {
   ) => void;
 
   onClose?: () => void;
+  uuid?:string; // 用于区分交易，可能存在同一个交易再次触发
 }
 
 interface State {
@@ -74,7 +75,7 @@ const useStore = create<State>()(
         
         // SafeWallet 相关
         safeTransactionHandler: null,
-        setSafeTransactionHandler: (handler: SafeTransactionHandler | null) => set({ safeTransactionHandler: handler }),
+        setSafeTransactionHandler: (handler: SafeTransactionHandler | null) => set({ safeTransactionHandler: handler ? {...handler,uuid: `safe-tx-${Date.now()}`} : null }),
         clearSafeTransactionHandler: () => set({ safeTransactionHandler: null }),
 
         // pod 详情刷新

@@ -1,10 +1,9 @@
-import { z } from "zod";
 import { verifyTypedData } from "viem";
 import { createTRPCRouter, publicProcedure } from "~/server/api/trpc";
-import { generateToken, verifyToken } from "./jwt";
 import { verifySignatureSchema, validateTokenSchema } from "./schemas";
 import { NotificationService } from "../notification/notification-service";
 import { NotificationType } from "@prisma/client";
+import { generateToken, verifyToken } from "~/lib/jwt";
 
 // 定义TypedData结构
 const domain = {

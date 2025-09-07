@@ -55,6 +55,9 @@ export function SafeTransactionModal() {
   const generateTransactionHash = async () => {
     if (!safeTransactionHandler || !isReady) return;
 
+    // 确保清理状态，避免显示旧数据
+    setTransactionDetail(null);
+    setWalletInfo(null);
     setTransactionState(prev => ({ ...prev, isGeneratingHash: true, error: undefined }));
 
     try {
@@ -68,7 +71,6 @@ export function SafeTransactionModal() {
       console.log('Generated transaction hash:', hash);
       setTransactionHash(hash);
       setTransactionState(prev => ({ ...prev, isGeneratingHash: false }));
-      refreshTransactionData();
     } catch (error) {
       console.error('生成交易 hash 失败:', error);
       const errorMessage = error instanceof Error ? error.message : 'Failed to generate transaction hash';
@@ -92,12 +94,6 @@ export function SafeTransactionModal() {
     console.log(!safeTransactionHandler || !isReady || !transactionHash);
     if (!safeTransactionHandler || !isReady || !transactionHash) return;
 
-    // 防抖：如果正在检测中，避免重复调用
-    if (transactionState.isDetecting) {
-      console.log('refreshTransactionData: 已在检测中，跳过重复调用');
-      return;
-    }
-
     setTransactionState(prev => ({ ...prev, isDetecting: true, error: undefined }));
 
     try {
@@ -114,18 +110,21 @@ export function SafeTransactionModal() {
 
       setTransactionState(prev => ({ ...prev, isDetecting: false }));
 
-      if(!detail) return;
-      if(detail.isExecuted) {
-        //交易已执行完成
+      // 根据交易状态触发相应的步骤变化
+      if (!detail) {
+        // 交易不存在，等待创建提案
+        return;
+      }else if (detail.isExecuted) {
+        // 交易已执行完成
         safeTransactionHandler?.onStepChange?.(SafeTransactionStep.EXECUTION, SafeStepStatus.SUCCESS, { transactionHash });
-      } else if(detail.confirmations && detail.confirmations.length >= detail.confirmationsRequired) {
-        //签名已达到阈值，可以执行
+      } else if (detail.confirmations && detail.confirmations.length >= detail.confirmationsRequired) {
+        // 签名已达到阈值，等待执行
         safeTransactionHandler?.onStepChange?.(SafeTransactionStep.WAITEXECUTION, SafeStepStatus.SUCCESS, { transactionHash });
-      } else if(detail.confirmations && detail.confirmations.length > 0) {
-        //有签名但未达到阈值
+      } else if (detail.confirmations && detail.confirmations.length > 0) {
+        // 有签名但未达到阈值，继续确认
         safeTransactionHandler?.onStepChange?.(SafeTransactionStep.CONFIRMATION, SafeStepStatus.SUCCESS, { transactionHash });
-      }else if(!detail.isExecuted){
-        // 只是提案成功
+      } else {
+        // 提案已创建，等待确认
         safeTransactionHandler?.onStepChange?.(SafeTransactionStep.PROPOSAL, SafeStepStatus.SUCCESS, { transactionHash });
       }
 
@@ -147,31 +146,47 @@ export function SafeTransactionModal() {
 
 
   // 处理关闭
-  const handleClose = (init = false) => {
-    !init && safeTransactionHandler?.onClose?.();
-    !init && setIsOpen(false);
-    !init && clearSafeTransactionHandler();
+  const handleClose = () => {
+    // 完全重置所有状态
+    safeTransactionHandler?.onClose?.();
+    setIsOpen(false);
+    clearSafeTransactionHandler();
     setTransactionState({
       isDetecting: false,
       isGeneratingHash: false,
+      error: undefined
     });
+    
     setTransactionHash('');
     setTransactionDetail(null);
     setWalletInfo(null);
   };
 
-  // 监听交易处理器变化
+  // 监听交易处理器变化 - 重置所有状态并重新开始
   useEffect(() => {
+    console.log("safeTransactionHandler===>",safeTransactionHandler);
     if (safeTransactionHandler) {
-      handleClose(true);
+      // 清理之前的状态
+      setTransactionHash('');
+      setTransactionDetail(null);
+      setWalletInfo(null);
+      setTransactionState({
+        isDetecting: false,
+        isGeneratingHash: false,
+      });
       setIsOpen(true);
+      
+      // 生成新的交易 hash
       generateTransactionHash();
     }
-  }, [safeTransactionHandler]);
+  }, [safeTransactionHandler?.uuid]);
 
-
+  // 监听 hash 的变化，刷新全局状态
   useEffect(()=>{
-    transactionHash && refreshTransactionData();
+    console.log('transactionHash mian debug====>',transactionHash);
+    if (transactionHash) {
+      refreshTransactionData();
+    }
   },[transactionHash]);
 
   if (!safeTransactionHandler) return null;
@@ -307,9 +322,10 @@ export function SafeTransactionModal() {
                   </h4>
                 </div>
 
-                <div className="space-y-4">
+                <div className="space-y-4" key={`main-${safeTransactionHandler?.uuid}`}>
                   {/* 创建提案步骤 */}
                   <ProposalStep
+                    key={`proposal-${safeTransactionHandler?.uuid}`}
                     transactionHash={transactionHash}
                     safeAddress={safeTransactionHandler.safeAddress}
                     transfers={safeTransactionHandler.transfers}
@@ -320,6 +336,7 @@ export function SafeTransactionModal() {
 
                   {/* 多签确认步骤 */}
                   <ConfirmationStep
+                    key={`confirmation-${safeTransactionHandler?.uuid}`}
                     transactionHash={transactionHash}
                     safeAddress={safeTransactionHandler.safeAddress}
                     transactionDetail={transactionDetail}
@@ -329,6 +346,7 @@ export function SafeTransactionModal() {
 
                   {/* 执行交易步骤 */}
                   <ExecutionStep
+                    key={`execution-${safeTransactionHandler?.uuid}`}
                     transactionHash={transactionHash}
                     safeAddress={safeTransactionHandler.safeAddress}
                     transactionDetail={transactionDetail}

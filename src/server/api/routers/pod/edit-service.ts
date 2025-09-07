@@ -173,7 +173,7 @@ export class PodEditService {
     // 1. 权限验证
     const existingPod = await this.validateReviewPermissions(ctx, podId);
     
-    // 2. 清空 versions 字段
+    // 2. 清空 versions 字段(通过或者成功都是清空)
     await ctx.db.pod.update({
       where: { id: podId, status: PodStatus.IN_PROGRESS },
       data: { versions: [] }
@@ -192,7 +192,6 @@ export class PodEditService {
           links: versionData.links,
         },
       });
-
 
       // 筛选需要失效的 milestone，将删除的 active 失效
       const milestonesIds = versionData.milestones.map((v:any)=>v.id);
@@ -244,7 +243,7 @@ export class PodEditService {
       // 4. 发送通知
       await this.sendReviewNotification(ctx, existingPod, versionData, isApproved);
       
-      return isApproved ? { success: true } : { success: true };
+      return  { success: true };
   }
 
   private static async validateReviewPermissions(ctx: EditPodContext, podId: number) {
