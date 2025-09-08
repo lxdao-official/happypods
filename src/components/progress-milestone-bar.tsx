@@ -89,10 +89,10 @@ export default function ProgressMilestoneBar({ milestones = [], children }: Prog
 
   // 十六进制颜色数组
   const colors = [
-    "#874ef1", // 蓝色
-    "#1cc127", // 绿色
-    "#F59E0B", // 紫色
-    "#166dc3", // 橙色
+    "#31d349", // 蓝色
+    "#F59E0B", // 绿色
+    "#2e8df3", // 紫色
+    "#c6d247", // 橙色
     "#EC4899", // 粉色
     "#EF4444", // 红色
     "#06B6D4", // 青色

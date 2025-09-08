@@ -174,7 +174,7 @@ export default function PodDetailPage({key}: {key: number}) {
             </div>
           </div>
 
-          <EdgeLine color="var(--color-background)"/>
+          {/* <EdgeLine color="var(--color-background)"/> */}
 
           <div>
             {milestones && 
@@ -280,16 +280,6 @@ export default function PodDetailPage({key}: {key: number}) {
                     {formatDate(podDetail.createdAt.toISOString())}
                   </span>
                 </div>
-
-                {/* {
-                  Object.keys(podDetail.metadata as Record<string, any>).length > 0 &&
-                  <div className="flex items-center justify-between space-x-2">
-                    <div className="mb-1 text-sm shrink-0 text-secondary">Extra info</div>
-                    <JsonInfoDisplay data={podDetail.metadata as Record<string, any>} nameMapping={{
-                      rejectReason: "Reject Reason"
-                    }}/>
-                  </div>
-                } */}
 
               </div>
             </div>

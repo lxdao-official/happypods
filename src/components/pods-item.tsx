@@ -11,9 +11,10 @@ interface PodsItemProps {
   };
   onClick?: () => void;
   className?: string;
+  type?: 'all' | 'gp' | 'my';
 }
 
-const PodsItem = ({ pod, onClick, className = "" }: PodsItemProps) => {
+const PodsItem = ({ pod, onClick, className = "", type = 'all' }: PodsItemProps) => {
   // 在组件内部进行必要的数据处理
   const tags = pod.tags ? pod.tags.split(',').map(tag => tag.trim()).filter(Boolean) : [];
   
@@ -35,14 +36,15 @@ const PodsItem = ({ pod, onClick, className = "" }: PodsItemProps) => {
     <NextLink 
       href={`/pods/${pod.id}`}
       className={`
-        text-black bg-pink rounded-md overflow-hidden 3px 3px 0px 0px var( --color-primary cursor-pointer fadeIn
+        text-black bg-pink rounded-xl overflow-hidden cursor-pointer fadeIn
+        transition-all duration-300
+        border border-black
+        hover:shadow-[5px_5px_0px_0px_#ffffffcb]
+        hover:translate-x-[-3px] hover:translate-y-[-3px]
         ${className}
+      ${type === 'gp' ? 'hover:shadow-[5px_5px_0px_0px_#000000ca] bg-white' : ''}
       `}
       onClick={onClick}
-      style={{
-        boxShadow: "3px 3px 0px 0px var( --color-primary",
-        border:"1px solid black"
-      }}
     >
       {/* 卡片头部 */}
       <div className="flex items-center p-2 space-x-4 bg-white border-b border-black md:p-4">

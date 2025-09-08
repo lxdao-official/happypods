@@ -2,6 +2,7 @@ import { useState } from "react";
 import { LinkDisplay } from "./link-display";
 import { formatDate } from "~/lib/utils";
 import { MilestoneStatus } from "@prisma/client";
+import { MarkdownRenderer } from "~/components/Tiptap";
 
 interface SubmissionData {
   content: string;
@@ -48,7 +49,7 @@ export default function MilestoneSubmissionDisplay({ deliveryInfo, status }: Mil
         const isLatest = index === 0 && status === MilestoneStatus.REVIEWING;
         
         return (
-          <div key={index} className="p-4 bg-white border border-black rounded-lg">
+          <div key={index} className="p-4 border border-gray-200 rounded-lg">
             {/* Header */}
             <div
               className="flex items-center justify-between cursor-pointer select-none group"
@@ -62,7 +63,7 @@ export default function MilestoneSubmissionDisplay({ deliveryInfo, status }: Mil
                   <i className="text-xl text-gray-500 ri-file-close-line"></i> :
                   <i className="text-xl text-purple-500 ri-file-history-line"></i>
                 }
-                <b className="font-medium text-gray-900 text-xs md:text-sm">
+                <b className="text-xs font-medium text-gray-900 md:text-sm">
                   Submission • {formatDate(submission.submittedAt)}
                 </b>
                 <small>{isLatest && <span className="ml-1 text-xs text-blue-600">(Latest)</span>}</small>
@@ -75,11 +76,10 @@ export default function MilestoneSubmissionDisplay({ deliveryInfo, status }: Mil
             {/* Content */}
             {isExpanded && (
               <div className="mt-4 space-y-4">
+                
                 {/* Description */}
-                <div>
-                  <p className="text-sm leading-relaxed text-gray-700 whitespace-pre-wrap">
-                    {submission.content}
-                  </p>
+                <div className="py-4 border-t-2 border-b-2 border-gray-200 border-dashed">
+                  <MarkdownRenderer content={submission.content} className="light" />
                 </div>
 
                 {/* Links */}

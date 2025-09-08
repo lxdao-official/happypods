@@ -1,7 +1,8 @@
 import { useState } from "react";
-import { Input, Textarea, Button } from "@heroui/react";
+import { Input, Button } from "@heroui/react";
 import CornerFrame from "~/components/corner-frame";
 import EdgeLine from "./edge-line";
+import { MarkdownEditor } from "~/components/Tiptap";
 import { api } from "~/trpc/react";
 import { toast } from "sonner";
 
@@ -108,15 +109,10 @@ const RFPSection = ({ rfps, onRfpsChange, isEdit = false, grantsPoolId }: RFPSec
                 errorMessage="Please enter an RFP title"
               />
 
-              <Textarea
-                variant="bordered"
-                label="RFP Description"
-                value={rfp.description}
-                onChange={(e) => updateRFP(rfp.id, "description", e.target.value)}
+              <MarkdownEditor
+                content={rfp.description}
+                onChange={(value) => updateRFP(rfp.id, "description", value)}
                 placeholder="Describe the background and objectives of the RFP"
-                minRows={3}
-                isRequired
-                errorMessage="Please enter an RFP description"
               />
 
             </div>

@@ -1,6 +1,7 @@
 import { useState } from "react";
-import { Button, Modal, ModalBody, ModalContent, ModalHeader, ModalFooter, Textarea, useDisclosure } from "@heroui/react";
+import { Button, Modal, ModalBody, ModalContent, ModalHeader, ModalFooter, useDisclosure } from "@heroui/react";
 import RelatedLinksSection from "./related-links-section";
+import { MarkdownEditor } from "~/components/Tiptap";
 import { api } from "~/trpc/react";
 import { toast } from "sonner";
 import { delay_s, formatToken } from "~/lib/utils";
@@ -181,7 +182,6 @@ export default function SubmitMilestoneModal({ milestoneId, safeTransactionHash 
       <Button 
         size="sm" 
         color="success" 
-        variant="flat"
         onPress={onOpen}
       >
       Submit Delivery
@@ -203,16 +203,10 @@ export default function SubmitMilestoneModal({ milestoneId, safeTransactionHash 
             <div className="space-y-6">
               {/* Description Input */}
               <div>
-                <Textarea
-                  variant="bordered"
-                  label="Milestone Delivery Content"
+                <MarkdownEditor
+                  content={description}
+                  onChange={setDescription}
                   placeholder="Describe in detail the work you have completed in this milestone, including deliverables, progress, and any relevant details..."
-                  value={description}
-                  onChange={(e) => setDescription(e.target.value)}
-                  minRows={6}
-                  maxRows={12}
-                  isRequired
-                  errorMessage="Please enter a milestone description"
                 />
               </div>
 

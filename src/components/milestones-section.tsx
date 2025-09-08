@@ -49,7 +49,7 @@ export default function MilestonesSection({ milestones, podDetail }: MilestonesS
 
   return (
     <div>
-      <div className="mb-6 text-xl font-bold">Milestones</div>
+      <div className="mb-4 text-xl font-bold">Milestones</div>
 
       <ProgressMilestoneBar milestones={progressMilestones} />
       
@@ -58,7 +58,7 @@ export default function MilestonesSection({ milestones, podDetail }: MilestonesS
           const remainingSubmissions = Math.max(0, 3 - (milestone.deliveryInfo.length || 0));
           
           return (
-            <div key={milestone.id} className="p-4 border border-black rounded-md">
+            <div key={milestone.id} className="p-4 bg-white border border-gray-200 rounded-xl">
 
               <div className="flex flex-col">
                   { new Date(milestone.deadline) < new Date() && !milestone.deliveryInfo.length && milestone.status === MilestoneStatus.PENDING_DELIVERY &&

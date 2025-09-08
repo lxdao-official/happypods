@@ -1,9 +1,10 @@
 import { Button } from "@heroui/button";
-import { Modal, ModalBody, ModalContent, ModalHeader, useDisclosure } from "@heroui/react";
+import { Modal, ModalBody, ModalContent, ModalFooter, ModalHeader, useDisclosure } from "@heroui/react";
 import { useRef, useEffect, useState } from "react";
 import NextLink from "next/link";
 import ExpandableText from "./expandable-text";
 import { replaceNewLine } from "~/lib/utils";
+import { MarkdownRenderer } from "./Tiptap";
 
 interface GrantspoolRFPItemProps {
   proposal: {
@@ -28,38 +29,35 @@ const GrantspoolRFPItem = ({ proposal, onClick, className = "", gpId }: Grantspo
         className={`border border-black rounded-lg p-4 relative hover:shadow-md transition-shadow ${className}`}
         onClick={onClick}
       >
-        <h3 className="mb-2 text-sm font-semibold text-gray-900">
-          {proposal.title}
-        </h3>
-        <p
-          ref={descRef}
-          className="mb-4 text-xs text-gray-600 line-clamp-3 min-h-[3.6em]"
-          style={{ WebkitLineClamp: 3 }}
-        >
-          <ExpandableText text={replaceNewLine(proposal.description)} maxLines={3} />
-        </p>
+        
         <div className="flex items-center justify-between">
-          
-          <div
-            className="text-sm cursor-pointer text-secondary hover:text-primary"
-            onClick={e => { e.stopPropagation(); onOpen(); }}
+          <h3 className="mb-2 text-base font-semibold text-gray-900">
+            {proposal.title}
+          </h3>
+          <button 
+            className="px-2 py-1 space-x-1 text-xs text-black border border-black rounded-md hover:bg-black hover:text-white"
+            onClick={() => onOpen()}
           >
-            <i className="text-xl ri-more-fill"></i>
-          </div>
-          
-          <NextLink href={`/pods/create?rfpId=${proposal.id}&gpId=${gpId}`}>
-            <button className="px-4 py-2 text-xs text-white bg-black rounded-md hover:opacity-80"><span>Apply</span><i className="ri-arrow-right-line"></i></button>
-          </NextLink>
+            <i className="ri-arrow-right-line"></i>
+          </button>
         </div>
+
       </div>
-      <Modal isOpen={isOpen} onOpenChange={onClose} placement="center" size="3xl" isDismissable={false}>
+      
+      <Modal isOpen={isOpen} onOpenChange={onClose} size="3xl" isDismissable={false}>
         <ModalContent>
           <ModalHeader className="text-xl font-bold">{proposal.title}</ModalHeader>
-          <ModalBody>
-            <div className="pb-4 whitespace-pre-line">
-              {proposal.description}
+          <ModalBody className="max-h-[80vh] overflow-y-auto">
+            <div className="pb-4">
+              <MarkdownRenderer content={proposal.description} />
             </div>
           </ModalBody>
+          <ModalFooter>
+            <Button color="default" size="lg" variant="light" onPress={onClose}>Close</Button>
+            <NextLink href={`/pods/create?rfpId=${proposal.id}&gpId=${gpId}`}>
+              <Button color="primary" size="lg" className="text-black">Apply Now</Button>
+            </NextLink>
+          </ModalFooter>
         </ModalContent>
       </Modal>
     </>

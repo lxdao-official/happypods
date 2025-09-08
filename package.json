@@ -49,6 +49,8 @@
         "react": "^19.0.0",
         "react-copy-to-clipboard": "^5.1.0",
         "react-dom": "^19.0.0",
+        "react-markdown": "^10.1.0",
+        "remark-gfm": "^4.0.1",
         "remixicon": "^4.6.0",
         "rough-notation": "^0.5.1",
         "sass": "^1.89.2",

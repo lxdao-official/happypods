@@ -158,6 +158,7 @@ export const DataDisplayGrid = ({
           <PodsItem
             key={pod.id}
             pod={pod}
+            type={type}
             onClick={() => {}}
           />
         ))}
