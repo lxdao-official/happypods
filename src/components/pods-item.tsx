@@ -1,10 +1,11 @@
 import NextLink from 'next/link';
 import ProgressMilestoneBar from './progress-milestone-bar';
 import StatusChip from './status-chip';
-import { formatDate, formatToken } from '~/lib/utils';
+import { formatDate, formatRelativeTime, formatToken, getColorFromString } from '~/lib/utils';
 import { MilestoneStatus, type Milestone, type Pod } from '@prisma/client';
 import Decimal from "decimal.js"
 import ExpandableText from './expandable-text';
+import Tag from './tag';
 interface PodsItemProps {
   pod: Pod & {
     milestones: Milestone[];
@@ -36,18 +37,19 @@ const PodsItem = ({ pod, onClick, className = "", type = 'all' }: PodsItemProps)
     <NextLink 
       href={`/pods/${pod.id}`}
       className={`
-        text-black bg-pink rounded-xl overflow-hidden cursor-pointer fadeIn
+        text-black rounded-xl overflow-hidden cursor-pointer fadeIn
         transition-all duration-300
-        border border-black
-        hover:shadow-[5px_5px_0px_0px_#ffffffcb]
+        border border-black bg-white
+        hover:shadow-[5px_5px_0px_0px_${getColorFromString(pod.title)}]
         hover:translate-x-[-3px] hover:translate-y-[-3px]
-        ${className}
-      ${type === 'gp' ? 'hover:shadow-[5px_5px_0px_0px_#000000ca] bg-white' : ''}
-      `}
+        ${className}`}
       onClick={onClick}
     >
       {/* 卡片头部 */}
-      <div className="flex items-center p-2 space-x-4 bg-white border-b border-black md:p-4">
+      <div 
+      className="flex items-center p-2 space-x-4 bg-white md:p-4" 
+      style={{background: `linear-gradient(to top, white 5%, ${getColorFromString(pod.title , 0.4)})`}}
+      >
         <img src={pod.avatar || ""} alt="" className="object-contain w-10 h-10 rounded-full" />
         <div className="text-xl font-bold text-gray-900"><ExpandableText text={pod.title} maxLines={1} /></div>
       </div>
@@ -70,21 +72,16 @@ const PodsItem = ({ pod, onClick, className = "", type = 'all' }: PodsItemProps)
 
          {/* 标签 */}
          <div className="flex flex-wrap gap-2 mb-2">
+          <StatusChip status={pod.status} />
           {tags.map((tag, index) => (
-            <small 
-              key={index}
-              className="px-3 py-1 text-[10px] text-black border border-black rounded-full"
-            >
-              {tag}
-            </small>
+            <Tag key={index}>{tag}</Tag>
           ))}
         </div>
 
 
         {/* 最后更新 */}
         <div className="flex items-center justify-between">
-          <i className="block text-xs text-gray-500">Last update: {formatDate(pod.updatedAt)}</i>
-          <StatusChip status={pod.status} />
+          <i className="block text-xs text-gray-500">Last update: {formatRelativeTime(pod.updatedAt)}</i>
         </div>
       </div>
     </NextLink>

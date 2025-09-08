@@ -52,6 +52,31 @@ export const delay_s = (ms=300, reload=false) => {
 };
 
 
+// 相对时间格式化 - 用于交易记录时间显示
+export const formatRelativeTime = (date: string|Date): string => {
+  const timestamp = dayjs(date).unix();
+  const now = dayjs();
+  const target = dayjs(timestamp * 1000); // 转换为毫秒
+  const diffInSeconds = now.diff(target, 'second');
+  const diffInMinutes = now.diff(target, 'minute');
+  const diffInHours = now.diff(target, 'hour');
+  const diffInDays = now.diff(target, 'day');
+
+  if (diffInSeconds < 60) {
+    return 'Now';
+  } else if (diffInMinutes < 60) {
+    return `${diffInMinutes}m ago`;
+  } else if (diffInHours < 24) {
+    return `${diffInHours}h ago`;
+  } else if (diffInDays < 7) {
+    return `${diffInDays}d ago`;
+  } else {
+    // 超过一周显示月-日格式
+    return formatDate(date);
+  }
+};
+
+
 // 数字格式化
 export function toFixed(
   value: number | string,
@@ -152,4 +177,65 @@ export const withRetry = async <T>(
   throw lastError;
 };
 
-// 
+/**
+ * 根据输入字符串返回预设颜色
+ * 用于头像背景色、标签颜色等场景
+ * @param input 输入字符串
+ * @param opacity 透明度，范围 0-1，默认 1（完全不透明）
+ * @returns 返回对应的颜色值
+ */
+// 十六进制颜色转换为RGB
+const hexToRgb = (hex: string): { r: number; g: number; b: number } | null => {
+  const result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
+  return result ? {
+    r: parseInt(result[1]!, 16),
+    g: parseInt(result[2]!, 16),
+    b: parseInt(result[3]!, 16)
+  } : null;
+};
+
+export const getColorFromString = (input: string, opacity: number = 1): string => {
+  // 预设颜色数组 - 浅色系，避免灰色
+  const colors: string[] = [
+    '#00c75d', // 主色调绿色
+    '#9267F4', // 紫色
+    '#ff6655', // 红色
+    '#02BC59', // 深绿色
+    '#FFE4E1', // 浅粉色
+    '#E6F3FF', // 浅蓝色
+    '#F0FFF0', // 浅绿色
+    '#FFF8DC', // 浅黄色
+    '#F5DEB3', // 小麦色
+    '#DDA0DD', // 梅红色
+    '#98FB98', // 淡绿色
+    '#F0E68C', // 卡其色
+    '#FFE4B5', // 莫卡辛色
+    '#DDA0DD', // 浅紫色
+    '#FFFACD', // 柠檬色
+  ];
+
+  // 计算字符串的hash值来选择颜色
+  let hash = 0;
+  for (let i = 0; i < input.length; i++) {
+    const char = input.charCodeAt(i);
+    hash = ((hash << 5) - hash) + char;
+    hash = hash & hash; // 转换为32位整数
+  }
+
+  // 确保hash值为正数，并取模得到颜色索引
+  const index = Math.abs(hash) % colors.length;
+  const selectedColor = colors[index]!;
+
+  // 如果透明度为1，返回原始十六进制颜色
+  if (opacity === 1) {
+    return selectedColor;
+  }
+
+  // 否则转换为rgba格式
+  const rgb = hexToRgb(selectedColor);
+  if (!rgb) {
+    return selectedColor; // 如果转换失败，返回原始颜色
+  }
+
+  return `rgba(${rgb.r}, ${rgb.g}, ${rgb.b}, ${opacity})`;
+};

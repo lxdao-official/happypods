@@ -2,7 +2,7 @@
 
 import { useParams } from "next/navigation";
 import NextLink from 'next/link';
-import { formatDate, formatToken } from "~/lib/utils";
+import { formatDate, formatRelativeTime, formatToken, getColorFromString } from "~/lib/utils";
 import { QRCodeTooltip } from "~/components/qr-code-tooltip";
 import MilestonesSection from "~/components/milestones-section";
 import CardBox from "~/components/card-box";
@@ -132,7 +132,9 @@ export default function PodDetailPage({key}: {key: number}) {
       }
 
       <CardBox
-      titleBg="var(--color-primary)"
+      titleBg={`linear-gradient(to top, white 0%, ${getColorFromString(podDetail.title , 0.4)})`}
+      shadowBg={getColorFromString(podDetail.title)}
+      contentBg="white"
       title={
        <div className="flex items-center justify-between">
          <div className="flex items-center">
@@ -160,7 +162,7 @@ export default function PodDetailPage({key}: {key: number}) {
                 isPodOwner && <Tag color="primary">Pod Owner</Tag>
               }
               {
-                isGPOwner && <Tag color="success">GP Owner</Tag>
+                isGPOwner && <Tag color="warning">GP Owner</Tag>
               }
               {podDetail.tags?.split(',').map((tag:string, index:number) => <Tag key={index}>{tag}</Tag>)}
             </div>
@@ -185,7 +187,7 @@ export default function PodDetailPage({key}: {key: number}) {
         <EdgeLine color="var(--color-background)" className="md:hidden"/>
 
         <div className="space-y-6">
-          <div>
+          <div className="p-4 border border-black rounded-xl">
             <div className="flex items-center justify-between mb-4">
               <div className="flex items-center gap-2">
                 <span className="text-xl font-bold">Treasury</span>
@@ -229,9 +231,9 @@ export default function PodDetailPage({key}: {key: number}) {
             </div>
           </div>
 
-          <EdgeLine color="var(--color-background)"/>
+          {/* <EdgeLine color="var(--color-background)"/> */}
 
-          <div>
+          <div className="p-4 border border-black rounded-xl">
             <h2 className="mb-4 text-xl font-bold">Project Details</h2>
               <div className="space-y-4">
 
@@ -275,9 +277,9 @@ export default function PodDetailPage({key}: {key: number}) {
                 </div>
 
                 <div className="flex items-center justify-between space-x-2">
-                  <div className="mb-1 text-sm text-secondary shrink-0">Created</div>
+                  <div className="mb-1 text-sm text-secondary shrink-0">Last update</div>
                   <span className="text-sm">
-                    {formatDate(podDetail.createdAt.toISOString())}
+                    {formatRelativeTime(podDetail.updatedAt)}
                   </span>
                 </div>
 

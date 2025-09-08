@@ -11,6 +11,7 @@ import useStore from "~/store";
 import { GpModInfo } from "./gp-mod-info";
 import ExpandableText from "./expandable-text";
 import { useMobile } from "~/hooks/useMobile";
+import Tag from "./tag";
 
 
 const GrantspoolItem = ({ grantsPool, className = "", children, type = "list" }: {
@@ -37,7 +38,7 @@ const GrantspoolItem = ({ grantsPool, className = "", children, type = "list" }:
   };
 
   // 在组件内部处理数据转换
-  const categories = grantsPool.tags ? grantsPool.tags.split(',').map(tag => tag.trim()).filter(Boolean) : ["Default"];
+  const tags = grantsPool.tags ? grantsPool.tags.split(',').map(tag => tag.trim()).filter(Boolean) : ["Default"];
   const avatarSrc = grantsPool.avatar || "/logo.svg";
 
   const isOwner = userInfo && userInfo?.id === grantsPool.ownerId;
@@ -88,16 +89,11 @@ const GrantspoolItem = ({ grantsPool, className = "", children, type = "list" }:
     }
     >
       {/* 主内容区域 */}
-      <div className="p-4 space-y-4 md:p-0">
+      <div className="p-4 space-y-6 md:p-0">
         {/* 导航标签 */}
         <div className="flex space-x-2">
-          {categories.map((category) => (
-            <button
-              key={category}
-              className="px-3 py-1 text-xs text-black border border-black rounded-full"
-            >
-              {category}
-            </button>
+          {tags.map((category) => (
+            <Tag key={category}>{category}</Tag>
           ))}
         </div>
         {/* 描述 */}
@@ -116,7 +112,10 @@ const GrantspoolItem = ({ grantsPool, className = "", children, type = "list" }:
         )}
         {/* Request-For-Proposal 部分 */}
         <div>
-          <h2 className="mb-4 text-xl font-bold md:text-2xl">Request-For-Proposal</h2>
+          <h2 className="flex items-center gap-2 mb-4 text-xl font-bold md:text-xl">
+            <i className="text-2xl ri-arrow-right-s-fill"></i>
+            <span>Request-For-Proposal</span>
+          </h2>
           <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
           {grantsPool.rfps?.map((rfp) => (
               <GrantspoolRFPItem

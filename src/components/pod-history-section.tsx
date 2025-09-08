@@ -43,9 +43,9 @@ export default function PodHistorySection({ pod }: PodHistorySectionProps) {
   if(!pod.versions) return null;
 
   return (
-    <div className="mt-8">
+    <div className="p-4 mt-8 border border-black rounded-xl">
 
-    <EdgeLine color="var(--color-background)" className="mb-4"/>
+    {/* <EdgeLine color="var(--color-background)" className="mb-4"/> */}
     
       <div className="flex items-center justify-between mb-4">
         <div className="text-xl font-bold">Modify</div>

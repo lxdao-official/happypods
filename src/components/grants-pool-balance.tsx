@@ -38,7 +38,8 @@ const GrantsPoolBalance = ({ gpId, treasuryWallet, chainType, token }: GrantsPoo
   return (
     <div className="space-y-4">
       <div className="flex items-center space-x-3 text-xl">
-        <div className="text-2xl font-bold">Grants Pool</div>
+        <i className="text-2xl ri-arrow-right-s-fill"></i>
+        <div className="text-xl font-bold">Grants Pool</div>
         <QRCodeTooltip content={treasuryWallet} />
         <a href={`https://app.safe.global/home?safe=oeth:${treasuryWallet}`} target="_blank" className="hover:opacity-70">
           <i className="ri-external-link-line"></i>

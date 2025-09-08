@@ -182,7 +182,7 @@ export default function ProgressMilestoneBar({ milestones = [], children }: Prog
             showArrow={true}
           >
             <div 
-              className="absolute top-0 z-10 w-4 h-4 transition-all duration-300 scale-125 bg-white border-2 rounded-full shadow-lg cursor-pointer border-primary hover:scale-150 hover:shadow-xl"
+              className="absolute top-0 z-10 w-4 h-4 transition-all duration-300 scale-125 bg-white border-2 border-black rounded-full shadow-lg cursor-pointer hover:scale-150 hover:shadow-xl"
               style={{ left: `max(calc(${currentPosition}% - 18px), 0%)` }}
             >
               <div className="w-full h-full rounded-full bg-primary opacity-20"></div>
@@ -208,7 +208,8 @@ export default function ProgressMilestoneBar({ milestones = [], children }: Prog
                 className="w-3 h-3 rounded"
                 style={{ backgroundColor: getSegmentColor(index) }}
               ></div>
-              <span>{segment.name} ({segment.days}d)</span>
+              <span>{segment.days}d</span>
+              {/* {segment.name}  */}
             </div>
           ))}
         </div>

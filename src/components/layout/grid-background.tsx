@@ -9,11 +9,11 @@ export const GridBackground = () => {
         className="fixed inset-0 w-full h-full z-[1]"
         style={{
           background: `
-            linear-gradient(rgba(255, 255, 255, 0.02) 1px, transparent 1px),
-            linear-gradient(90deg, rgba(255, 255, 255, 0.02) 1px, transparent 1px)
+            linear-gradient(rgba(9, 9, 9, 0.041) 1px, transparent 1px),
+            linear-gradient(90deg, rgba(26, 26, 26, 0.041) 1px, transparent 1px)
           `,
           backgroundSize: '30px 30px',
-          backgroundColor: '#1F1F1D',
+          // backgroundColor: 'var(--color-background)',
         }}
       />
     </>
