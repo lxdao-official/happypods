@@ -7,6 +7,7 @@ interface CornerFrameProps {
   borderWidth?: number;
   backgroundColor?: string;
   color?: 'white' | 'black' | 'gray';
+  style?:"shadow" | "border";
 }
 
 const CornerFrame = ({
@@ -14,14 +15,23 @@ const CornerFrame = ({
   className = "",
   cornerSize = 8,
   borderWidth = 1,
-  color="white",
-  backgroundColor = "transparent"
+  color="black",
+  backgroundColor = "transparent",
+  style = "shadow"
 }: CornerFrameProps) => {
   const colorMap = {
     white: 'white',
     black: 'black',
     gray: 'var(--color-secondary)',
   };
+
+  if(style === "shadow") {
+    return (
+      <div className={`relative ${className} shadow-medium bg-white rounded-xl p-6`}>
+        {children}
+      </div>
+    );
+  }
 
   return (
     <div 
@@ -38,6 +48,7 @@ const CornerFrame = ({
           width: cornerSize,
           height: cornerSize,
           backgroundColor: colorMap[color],
+          zIndex: 22,
           transform: 'translate(-50%, -50%)',
         }}
       />
@@ -49,6 +60,7 @@ const CornerFrame = ({
           width: cornerSize,
           height: cornerSize,
           backgroundColor: colorMap[color],
+          zIndex: 22,
           transform: 'translate(50%, -50%)',
         }}
       />
@@ -59,6 +71,7 @@ const CornerFrame = ({
         style={{
           width: cornerSize,
           height: cornerSize,
+          zIndex: 22,
           backgroundColor: colorMap[color],
           transform: 'translate(-50%, 50%)',
         }}
@@ -70,13 +83,14 @@ const CornerFrame = ({
         style={{
           width: cornerSize,
           height: cornerSize,
+          zIndex: 22,
           backgroundColor: colorMap[color],
           transform: 'translate(50%, 50%)',
         }}
       />
       
       {/* 内容区域 */}
-      <div className="relative z-10 p-4 md:p-6">
+      <div className="relative z-10 p-4 bg-white md:p-6">
         {children}
       </div>
     </div>

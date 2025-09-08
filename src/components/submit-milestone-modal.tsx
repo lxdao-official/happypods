@@ -222,7 +222,7 @@ export default function SubmitMilestoneModal({ milestoneId, safeTransactionHash 
           <ModalFooter>
             <Button 
               color="default" 
-              variant="bordered" 
+              variant="faded" 
               onPress={handleClose}
               isDisabled={isSubmitting}
             >

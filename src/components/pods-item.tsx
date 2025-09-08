@@ -6,6 +6,7 @@ import { MilestoneStatus, type Milestone, type Pod } from '@prisma/client';
 import Decimal from "decimal.js"
 import ExpandableText from './expandable-text';
 import Tag from './tag';
+import LazyImage from './LazyImage';
 interface PodsItemProps {
   pod: Pod & {
     milestones: Milestone[];
@@ -39,9 +40,10 @@ const PodsItem = ({ pod, onClick, className = "", type = 'all' }: PodsItemProps)
       className={`
         text-black rounded-xl overflow-hidden cursor-pointer fadeIn
         transition-all duration-300
-        border border-black bg-white
-        hover:shadow-[5px_5px_0px_0px_${getColorFromString(pod.title)}]
-        hover:translate-x-[-3px] hover:translate-y-[-3px]
+        bg-white
+        hover:border-black
+        shadow-medium
+        hover:scale-105
         ${className}`}
       onClick={onClick}
     >
@@ -50,16 +52,16 @@ const PodsItem = ({ pod, onClick, className = "", type = 'all' }: PodsItemProps)
       className="flex items-center p-2 space-x-4 bg-white md:p-4" 
       style={{background: `linear-gradient(to top, white 5%, ${getColorFromString(pod.title , 0.4)})`}}
       >
-        <img src={pod.avatar || ""} alt="" className="object-contain w-10 h-10 rounded-full" />
+        <LazyImage src={pod.avatar || ""} alt="" className="object-cover w-10 h-10 rounded-full" />
         <div className="text-xl font-bold text-gray-900"><ExpandableText text={pod.title} maxLines={1} /></div>
       </div>
 
       {/* 卡片内容 */}
-      <div className="p-4">
+      <div className="p-4 pt-2">
        
         {/* 描述 */}
-        <p className="mb-4 text-xs leading-relaxed md:text-sm">
-        <ExpandableText text={pod.description} maxLines={3} />
+        <p className="mb-4 text-xs leading-relaxed md:text-sm h-[40px]">
+          <ExpandableText text={pod.description} maxLines={2} className='text-secondary' />
         </p>
 
         {/* 资金进度 */}
@@ -81,7 +83,7 @@ const PodsItem = ({ pod, onClick, className = "", type = 'all' }: PodsItemProps)
 
         {/* 最后更新 */}
         <div className="flex items-center justify-between">
-          <i className="block text-xs text-gray-500">Last update: {formatRelativeTime(pod.updatedAt)}</i>
+          <i className="block text-xs">Last update: {formatRelativeTime(pod.updatedAt)}</i>
         </div>
       </div>
     </NextLink>

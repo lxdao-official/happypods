@@ -123,7 +123,7 @@ export function ProposalStep({
       {/* 步骤信息 */}
       <div className="flex-1 min-w-0 space-y-1">
         <div className={`font-medium ${
-          isCompleted || shouldShow ? 'text-success' : 'text-default-400'
+          isCompleted || shouldShow ? 'text-success' : 'text-black'
         }`}>
           Create Proposal
         </div>

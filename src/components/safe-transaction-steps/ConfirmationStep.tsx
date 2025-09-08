@@ -127,7 +127,7 @@ export function ConfirmationStep({
       {/* 步骤信息 */}
       <div className="flex-1 min-w-0 space-y-1">
         <div className={`font-medium ${
-          isCompleted ? 'text-success' : shouldShow ? 'text-warning' : 'text-default-400'
+          isCompleted ? 'text-success' : shouldShow ? 'text-warning' : 'text-black'
         }`}>
           Multi-sig Confirmation
         </div>

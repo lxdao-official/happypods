@@ -102,7 +102,7 @@ const GrantsPoolInfoSection = ({
           </div>
         ) : (
           <Select
-            variant="bordered"
+            variant="faded"
             label="Select Grants Pool"
             isRequired
             errorMessage="Please select a Grants Pool"
@@ -125,7 +125,7 @@ const GrantsPoolInfoSection = ({
         {/* RFP选择 */}
         {!isPreselected && (
           <Select
-            variant="bordered"
+            variant="faded"
             label="Select RFP"
             isRequired
             errorMessage="Please select an RFP"
@@ -148,7 +148,7 @@ const GrantsPoolInfoSection = ({
 
         {/* 申请币种 */}
         <Select
-          variant="bordered"
+          variant="faded"
           label="Currency"
           isRequired
           errorMessage="Please select a currency"

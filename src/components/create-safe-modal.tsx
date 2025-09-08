@@ -127,7 +127,7 @@ const CreateSafeModal = ({
                       value={safeAddress}
                       readOnly
                       disabled
-                      variant="bordered"
+                      variant="faded"
                       className="mt-1"
                     />
                   </div>

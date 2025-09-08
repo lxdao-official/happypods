@@ -149,7 +149,7 @@ export default function ProfilePage() {
 
               {/* Username */}
               <Input
-                variant="bordered"
+                variant="faded"
                 type="text"
                 label="Username"
                 value={formData.name}
@@ -161,7 +161,7 @@ export default function ProfilePage() {
 
               {/* Email */}
               <Input
-                variant="bordered"
+                variant="faded"
                 type="email"
                 label="Email Address"
                 value={formData.email}
@@ -174,7 +174,7 @@ export default function ProfilePage() {
               {/* Bio */}
               <Textarea
                 isRequired
-                variant="bordered"
+                variant="faded"
                 label="Bio"
                 value={formData.description}
                 onChange={(e) => handleInputChange("description", e.target.value)}

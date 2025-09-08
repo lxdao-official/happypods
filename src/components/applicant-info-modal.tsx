@@ -55,7 +55,7 @@ export default function ApplicantInfoModal({
                   />
                 ) : (
                   <div className="flex items-center justify-center w-16 h-16 bg-gray-200 rounded-full">
-                    <i className="text-2xl text-gray-500 ri-user-2-line"></i>
+                    <i className="text-2xl0 ri-user-2-line"></i>
                   </div>
                 )}
               </div>
@@ -107,6 +107,7 @@ export default function ApplicantInfoModal({
                 {applicant.links && typeof applicant.links === 'object' && (
                  <div className="!mt-8">
                     <LinkDisplay 
+                      theme="light"
                       links={applicant.links as Record<string, string>}
                     />
                  </div>

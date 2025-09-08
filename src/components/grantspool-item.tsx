@@ -12,6 +12,7 @@ import { GpModInfo } from "./gp-mod-info";
 import ExpandableText from "./expandable-text";
 import { useMobile } from "~/hooks/useMobile";
 import Tag from "./tag";
+import LazyImage from "./LazyImage";
 
 
 const GrantspoolItem = ({ grantsPool, className = "", children, type = "list" }: {
@@ -51,7 +52,7 @@ const GrantspoolItem = ({ grantsPool, className = "", children, type = "list" }:
     title={
       <div className="flex items-center justify-between">
         <div className="flex items-center flex-1 gap-2 overflow-hidden text-2xl text-ellipsis whitespace-nowrap">
-          <img 
+          <LazyImage 
             src={avatarSrc} alt="avatar" 
             className="w-10 h-10 bg-white border-black rounded-full border-1" 
           />

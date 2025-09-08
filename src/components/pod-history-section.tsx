@@ -43,7 +43,7 @@ export default function PodHistorySection({ pod }: PodHistorySectionProps) {
   if(!pod.versions) return null;
 
   return (
-    <div className="p-4 mt-8 border border-black rounded-xl">
+    <div className="p-4 mt-8 bg-white shadow-medium rounded-xl">
 
     {/* <EdgeLine color="var(--color-background)" className="mb-4"/> */}
     

@@ -1,6 +1,6 @@
 'use client';
 
-import { darkTheme, RainbowKitProvider } from '@rainbow-me/rainbowkit';
+import { lightTheme, RainbowKitProvider } from '@rainbow-me/rainbowkit';
 import '@rainbow-me/rainbowkit/styles.css';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { WagmiProvider } from 'wagmi';
@@ -11,7 +11,7 @@ const queryClient = new QueryClient();
 export function RainbowKitProviderWrapper({
   children,
 }: Readonly<{ children: React.ReactNode }>) {
-  const theme = darkTheme();
+  const theme = lightTheme();
   theme.colors.accentColor = 'var(--color-green2)';
   return (
     <WagmiProvider config={config}>

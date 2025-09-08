@@ -71,7 +71,7 @@ export function NotificationDrawer() {
                     {notifications.map((notification) => (
                       <div
                         key={notification.id}
-                        className={`relative cursor-default border-b border-border py-4 transition-colors hover:opacity-80 ${
+                        className={`relative cursor-default border-b border-gray-200 py-4 transition-colors hover:opacity-80 ${
                           !notification.read ? "bg-[#ffffff18]" : ""
                         }`}
                         onClick={()=> !notification.read && read(notification.id)}

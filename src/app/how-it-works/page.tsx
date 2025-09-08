@@ -208,7 +208,7 @@ export default function HowItWorksPage() {
     <div className="min-h-screen p-6">
       <div className="mx-auto max-w-7xl">
         {/* Top Banner */}
-        <CornerFrame className="mb-10">
+        <CornerFrame className="mb-10" style="border">
           <div className="flex flex-col items-center justify-center gap-6 py-8 text-xl text-center">
             <h1 className="text-3xl font-bold">How It Works</h1>
             <p className="text-xl md:text-2xl">
@@ -220,18 +220,18 @@ export default function HowItWorksPage() {
         {/* Content Sections */}
         <div className="space-y-10 fadeIn">
           {contentItems.map((item, index) => (
-            <CardBox key={index} title={item.title} titleBg="#dfdfdf" contentBg="#343434">
-              <div className="p-4 text-white">{item.content}</div>
+            <CardBox key={index} title={item.title} titleBg="var(--color-primary)" contentBg="#ffffff">
+              <div className="p-4">{item.content}</div>
             </CardBox>
           ))}
 
           {/* FAQ Section */}
-          <CardBox title={<div className="text-2xl">❓ FAQs</div>} titleBg="#dfdfdf" contentBg="#343434">
+          <CardBox title={<div className="text-2xl">❓ FAQs</div>} titleBg="var(--color-primary)" contentBg="#ffffff">
             <div className="py-4">
-              <Accordion selectionMode="multiple" variant="bordered" itemClasses={{
+              <Accordion selectionMode="multiple" variant="light" itemClasses={{
                 base:"px-4 my-1 rounded-xl",
-                title: "text-base md:text-lg text-white",
-                content: "text-base md:text-base pb-4 text-white",
+                title: "text-base md:text-lg text-black",
+                content: "text-base md:text-base pb-4",
               }}>
                 {faqs.map((item, index) => (
                   <AccordionItem key={index} aria-label={item.question} title={item.question}>

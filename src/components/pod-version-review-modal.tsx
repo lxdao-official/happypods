@@ -78,35 +78,32 @@ export default function PodVersionReviewModal({
       <ModalContent>
         <ModalHeader className="flex flex-col gap-1">
           <div className="flex items-center justify-between">
-            <span>Pod Modify Review</span>
-          </div>
-          <div className="text-sm text-gray-500">
-            Submit Time: {formatDate(versionData.createdAt, 'MMM DD, HH:mm')}
+            <span>Pod Modify Review (Submit Time: {formatDate(versionData.createdAt, 'MMM DD, HH:mm')})</span>
           </div>
         </ModalHeader>
         <ModalBody>
-          <div className="space-y-6">
+          <div className="py-4 space-y-6">
             {/* 基本信息 */}
-            <CornerFrame backgroundColor="var(--color-background)" color="gray">
+            <div className="p-4 rounded-lg shadow-medium">
               <h3 className="mb-4 text-lg font-medium">Basic Information</h3>
-              <div className="space-y-4">
-                <div>
-                  <label className="text-sm font-medium text-secondary">Title</label>
-                  <p className="mt-1">{versionData.title}</p>
+              <div className="space-y-6">
+                <div className="flex items-center gap-2">
+                  <label className="text-sm font-medium text-secondary shrink-0">Title :</label>
+                  <p className="break-all">{versionData.title}</p>
                 </div>
-                <div>
-                  <label className="text-sm font-medium text-secondary">Description</label>
-                  <p className="mt-1 whitespace-pre-wrap">{versionData.description}</p>
+                <div className="flex items-center gap-2">
+                  <label className="text-sm font-medium text-secondary shrink-0">Description :</label>
+                  <p>{versionData.description}</p>
                 </div>
 
-                <div>
-                  <label className="text-sm font-medium text-secondary">Links</label>
-                  <div className="mt-2"><LinkDisplay links={versionData.links} /></div>
+                <div className="flex items-center gap-2">
+                  <label className="text-sm font-medium text-secondary shrink-0">Links :</label>
+                  <div><LinkDisplay links={versionData.links} /></div>
                 </div>
 
                 {versionData.tags && (
-                <div>
-                    <label className="text-sm font-medium text-secondary">Tags</label>
+                <div className="flex items-center gap-2">
+                    <label className="text-sm font-medium text-secondary shrink-0">Tags :</label>
                     <div className="flex flex-wrap gap-2 mt-2">
                         {versionData.tags.split(',').map((tag: string) => (
                         <Tag key={tag} className="text-sm font-medium border-secondary text-secondary">{tag}</Tag>
@@ -115,12 +112,12 @@ export default function PodVersionReviewModal({
                 </div>
                 )}
               </div>
-            </CornerFrame>
+            </div>
 
 
             {/* Milestones */}
             {versionData.milestones && versionData.milestones.length > 0 && (
-              <CornerFrame backgroundColor="var(--color-background)" color="gray">
+              <div className="p-4 rounded-lg shadow-medium">
                 <h3 className="mb-4 text-lg font-medium">Milestones</h3>
                 <div className="space-y-4">
                   {versionData.milestones.map((milestone: any, index: number) => (
@@ -130,19 +127,19 @@ export default function PodVersionReviewModal({
                       </div>
                       <div className="space-y-2 text-sm">
                         <div>
-                          <span className="font-medium">Content:</span> {milestone.description}    
+                          <span className="text-secondary">Content:</span> {milestone.description}    
                         </div>
                         <div>
-                          <span className="font-medium">Amount:</span> {formatToken(milestone.amount)} {pod.currency}
+                          <span className="text-secondary">Amount:</span> {formatToken(milestone.amount)} {pod.currency}
                         </div>
                         <div>
-                          <span className="font-medium">Deadline:</span> {formatDate(milestone.deadline)}
+                          <span className="text-secondary">Deadline:</span> {formatDate(milestone.deadline)}
                         </div>
                       </div>
                     </div>
                   ))}
                 </div>
-              </CornerFrame>
+              </div>
             )}
           </div>
         </ModalBody>
@@ -150,7 +147,7 @@ export default function PodVersionReviewModal({
         isPodOwner && <ModalFooter>
           <Button 
             color="danger" 
-            variant="bordered" 
+            variant="faded" 
             onPress={handleReject}
             isLoading={isSubmitting && rejectMutation.isPending}
             isDisabled={isSubmitting}

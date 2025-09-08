@@ -40,7 +40,7 @@ const GrantsPoolDetailPage = () => {
 
 
   return (
-    <div className="container p-4 py-8 md:p-0">
+    <div className="container py-8">
       <GrantspoolItem grantsPool={grantsPool} type="detail" className="fadeIn" />
       <div className="mt-10">
         <DataDisplayGrid title={`${grantsPool.name} Pods`} sortClassName="text-black" grantsPoolId={grantsPoolId}/>

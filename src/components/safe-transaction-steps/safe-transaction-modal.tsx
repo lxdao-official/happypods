@@ -18,6 +18,7 @@ import { ConfirmationStep } from './ConfirmationStep';
 import { ExecutionStep } from './ExecutionStep';
 import Link from 'next/link';
 import { truncateString } from '~/lib/utils';
+import Tag from '../tag';
 
 // 简化的状态接口
 interface TransactionState {
@@ -276,22 +277,20 @@ export function SafeTransactionModal() {
                   )}
 
                   <div className='flex flex-col gap-2 md:flex-row '>
-                    <span className="text-default-500">Safe Wallet: </span>
-                    <code className="px-2 py-1 rounded text-tiny bg-default-100">
-                      {truncateString(safeTransactionHandler.safeAddress)}
-                    </code>
+                    <span className="text-default-500 min-w-[80px]">Safe Wallet: </span>
+                    <Tag color="error">{truncateString(safeTransactionHandler.safeAddress)}</Tag>
                   </div>
 
                   {
                     walletInfo && <div className='flex flex-col gap-2 md:flex-row'>
-                      <span className="flex-shrink-0 text-default-500">Members: </span>
+                      <span className="flex-shrink-0 text-default-500 min-w-[80px]">Members: </span>
 
                       <div className="flex flex-wrap gap-2">
                         {
                           walletInfo.owners.map((owner: any) => {
-                            return <code className="px-2 py-1 rounded text-tiny bg-default-100" key={owner}>
+                            return <Tag key={owner}>
                               {truncateString(owner)}
-                            </code>
+                            </Tag>
                           })
                         }
                       </div>
@@ -300,10 +299,10 @@ export function SafeTransactionModal() {
                   }
 
                   <div className='flex flex-col gap-2 md:flex-row'>
-                    <span className="text-default-500">Safe Hash: </span>
-                    <code className="px-2 py-1 rounded text-tiny bg-default-100">
+                    <span className="text-default-500 min-w-[80px]">Safe Hash: </span>
+                    <Tag color="default">
                       {truncateString(transactionHash) || '...'}
-                    </code>
+                    </Tag>
                   </div>
                 </div>
               </CardBody>

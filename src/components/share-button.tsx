@@ -56,21 +56,21 @@ export const ShareButton = ({
       >
         <DropdownItem
           key="twitter"
-          startContent={<i className="text-xl text-gray-50 ri-twitter-fill"></i>}
+          startContent={<i className="text-xl ri-twitter-fill"></i>}
           onClick={shareToTwitter}
         >
           分享到推特
         </DropdownItem>
         <DropdownItem
           key="copy"
-          startContent={<i className="text-xl text-gray-50 ri-link"></i>}
+          startContent={<i className="text-xl ri-link"></i>}
           onClick={copyLink}
         >
           复制链接
         </DropdownItem>
         <DropdownItem
           key="telegram"
-          startContent={<i className="text-xl text-gray-50 ri-telegram-fill"></i>}
+          startContent={<i className="text-xl ri-telegram-fill"></i>}
           onClick={shareToTelegram}
         >
           分享到 Telegram

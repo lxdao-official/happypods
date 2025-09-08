@@ -147,7 +147,7 @@ export default function FundInjectionWarning({ pod, shortage }: FundInjectionWar
     <div className="fadeIn">
       <Alert
         color="warning"
-        variant="bordered"
+        variant="flat"
         title="Pod Treasury Balance Insufficient!"
         className="mb-4"
         classNames={{ base: "bg-background" }}

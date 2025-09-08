@@ -4,8 +4,8 @@
 @import url('https://fonts.googleapis.com/css2?family=Quicksand:wght@300..700&display=swap');
 :root {
     /* 主题色 */
-    --color-background: #ffffff;
-    --color-foreground: #f8fafc;
+    --color-background: #f3f3f3;
+    --color-foreground: #000000;
     /* 主要颜色 */
     --color-primary: #00c75d;
     --color-secondary: #7b7e87;
@@ -38,6 +38,7 @@ html {
     font-family: "Quicksand", sans-serif;
     font-weight: 500;
     font-style: normal;
+    color: black;
 }
 
 b,
@@ -56,7 +57,7 @@ button,
 .container {
     width: 100%;
     @screen md {
-        width: 1228px !important;
+        width: 1440px !important;
         margin: 0 auto !important;
     }
 }

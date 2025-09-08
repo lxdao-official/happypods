@@ -89,11 +89,8 @@ const MarkdownRenderer = ({ content, className = '' }: MarkdownRendererProps) =>
           </ReactMarkdown>
         </div>
       ) : (
-        <div className="flex items-center justify-center h-full text-center text-gray-500">
-          <div>
-            <p className="mb-2 text-lg">📝</p>
-            <p>No content</p>
-          </div>
+        <div className="flex items-center justify-center h-full py-10 text-center0">
+         <p>📝 No content</p>
         </div>
       )}
     </div>
@@ -148,14 +145,14 @@ const MarkdownEditor = ({
             value={markdown}
             onChange={(e) => handleMarkdownChange(e.target.value)}
             placeholder={placeholder}
-            variant="bordered"
+            variant="faded"
             minRows={25}
             isRequired
             label="Description"
           />
         )}
         {activeTab === 'preview' && (
-          <MarkdownRenderer content={markdown} className='p-4 overflow-auto border-2 border-[#45454c] rounded-xl ' />
+          <MarkdownRenderer content={markdown} className='p-4 overflow-auto border-2 border-gray-200 rounded-xl ' />
         )}
       </div>
     </div>

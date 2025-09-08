@@ -388,7 +388,7 @@ export default function RefundWarning({ pod, shortage }: RefundWarningProps) {
     <div className="fadeIn">
       <Alert
         color="warning"
-        variant="bordered"
+        variant="faded"
         title="Pod Treasury Balance Exceeded!"
         className="mb-4"
         classNames={{ base: "bg-background" }}

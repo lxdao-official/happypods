@@ -34,7 +34,7 @@ const Guide = () => {
 
   return (
     <div className="p-4 md:p-0">
-      <CardBox title={<div className="text-2xl">How HappyPods Works</div>}>
+      <CardBox title={<div className="text-2xl">How HappyPods Works</div>} titleBg="var(--color-primary)">
         <div className="py-6">
           <p className="mb-20 text-center text-gray-600">
             Simple 4-step process for transparent grant management
@@ -46,7 +46,7 @@ const Guide = () => {
               <div key={step.id} className="items-center md:flex">
                 <div className="flex flex-col items-center p-4 transition-shadow border border-black rounded-lg hover:shadow-lg group">
                   {/* Step Number */}
-                  <div className="mt-[-38px] w-[50px] border border-black h-[40px] bg-[#fdeee2] text-black rounded-xl flex items-center justify-center text-xl font-bold mb-4">
+                  <div className="mt-[-38px] w-[50px] border border-black h-[40px] bg-[var(--color-pink)] text-black rounded-xl flex items-center justify-center text-xl font-bold mb-4">
                     {step.id}
                   </div>
                   

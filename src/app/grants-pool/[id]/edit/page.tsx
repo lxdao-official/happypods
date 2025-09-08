@@ -223,7 +223,7 @@ export default function EditGrantsPoolPage() {
 
               {/* Name */}
               <Input
-                variant="bordered"
+                variant="faded"
                 type="text"
                 label="Grants Pool Name"
                 value={formData.name}
@@ -235,7 +235,7 @@ export default function EditGrantsPoolPage() {
 
               {/* Description */}
               <Textarea
-                variant="bordered"
+                variant="faded"
                 label="Description"
                 value={formData.description}
                 onChange={(e) => handleInputChange("description", e.target.value)}
@@ -268,7 +268,7 @@ export default function EditGrantsPoolPage() {
             <h2 className="mb-6 text-xl">Administrator Information</h2>
             <div className="space-y-6">
               <Input
-                variant="bordered"
+                variant="faded"
                 type="text"
                 label="Administrator Name"
                 value={formData.modName}
@@ -279,7 +279,7 @@ export default function EditGrantsPoolPage() {
               />
 
               <Input
-                variant="bordered"
+                variant="faded"
                 type="email"
                 label="Administrator Email"
                 value={formData.modEmail}
@@ -290,7 +290,7 @@ export default function EditGrantsPoolPage() {
               />
 
               <Input
-                variant="bordered"
+                variant="faded"
                 type="text"
                 label="Administrator Telegram"
                 value={formData.modTelegram}

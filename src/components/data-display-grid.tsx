@@ -121,6 +121,9 @@ export const DataDisplayGrid = ({
               variant={type === 'gp' ? 'bordered' : 'faded'}
               color='primary'
               className="w-[120px] md:w-[300px]"
+              classNames={{
+                inputWrapper: 'bg-white'
+              }}
               onClear={() => setSearchInput('')}
             />
             <Select
@@ -128,8 +131,11 @@ export const DataDisplayGrid = ({
               selectedKeys={status ? new Set([status]) : new Set([''])}
               variant={type === 'gp' ? 'bordered' : 'faded'}
               color='primary'
+              classNames={{
+                trigger: 'bg-white',
+              }}
               renderValue={() => {
-                return <div className={`${type === 'gp' ? 'text-black' : 'text-white'}`}>
+                return <div className={`${type === 'gp' ? 'text-black' : 'text-black'}`}>
                   {statusOptions.find(opt => opt.value === status)?.label}
                 </div>
               }}
@@ -171,6 +177,11 @@ export const DataDisplayGrid = ({
             showControls
             page={currentPage}
             total={totalPages}
+            classNames={{
+              item: 'bg-white border hover:!bg-gray-100',
+              prev: 'bg-white border hover:!bg-gray-100',
+              next: 'bg-white border hover:!bg-gray-100',
+            }}
             onChange={handlePageChange}
           />
         </div>

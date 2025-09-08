@@ -23,7 +23,7 @@ export default function RootLayout({
   children,
 }: Readonly<{ children: React.ReactNode }>) {
   return (
-    <html lang="en" className={`${geist.variable} dark`}>
+    <html lang="en" className={`${geist.variable} light`}>
       <head>
         <title>HappyPods</title>
         <meta name="description" content="HappyPods" />
@@ -88,7 +88,7 @@ export default function RootLayout({
                 <AppLayout>
                   <AuthProvider>{children}</AuthProvider>
                 </AppLayout>
-                <Toaster position="top-center" richColors theme="dark" />
+                <Toaster position="top-center" richColors theme="light" />
                 <SafeTransactionModal />
               </ConfirmProvider>
             </TRPCReactProvider>

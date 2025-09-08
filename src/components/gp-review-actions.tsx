@@ -32,7 +32,7 @@ export default function GpReviewActions({ podDetail }: {podDetail: Pod}) {
       {/* Pod 审核提醒 */}
       {podStatus === PodStatus.REVIEWING && (
         <Alert
-          variant="bordered"
+          variant="faded"
           color="default"
           title="Pod applied, please review!"
           className="mb-4 bg-background shadow-medium"

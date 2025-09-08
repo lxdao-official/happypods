@@ -84,11 +84,11 @@ const RelatedLinksSection = ({ links, onLinksChange }: RelatedLinksSectionProps)
   // 渲染链接项
   const renderLinkItem = (item: LinkItem) => (
     <div key={item.key} className="flex items-center gap-2">
-      <span className="flex items-center w-24 gap-1 font-medium text-gray-500">
+      <span className="flex items-center w-24 gap-1 font-medium0">
         {item.icon || <i className="ri-link" />} {item.label}
       </span>
       <Input
-        variant="bordered"
+        variant="faded"
         type="url"
         value={item.url}
         onChange={e => updateLink(item.key, e.target.value)}

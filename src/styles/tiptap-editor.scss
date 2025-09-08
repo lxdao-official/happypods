@@ -4,24 +4,7 @@
 /* CSS 变量定义 */
 
 :root {
-    /* Dark 主题变量 (默认) */
-    --tiptap-text-primary: #ffffff;
-    --tiptap-text-secondary: #cccccc;
-    --tiptap-text-muted: #a8a8a8;
-    --tiptap-text-disabled: #888888;
-    --tiptap-bg-primary: #2a2a2a;
-    --tiptap-bg-secondary: #45454c;
-    --tiptap-border-primary: #444444;
-    --tiptap-code-bg: #2a2a2a;
-    --tiptap-blockquote-bg: rgba(255, 107, 107, 0.05);
-    --tiptap-table-header-bg: #2a2a2a;
-    --tiptap-selection-bg: rgba(255, 107, 107, 0.3);
-}
-
-
-/* Light 主题变量 */
-
-#tiptap-preview.light {
+    /* Light 主题变量 (默认) */
     --tiptap-text-primary: #1f2937;
     --tiptap-text-secondary: #374151;
     --tiptap-text-muted: #6b7280;
@@ -32,6 +15,23 @@
     --tiptap-code-bg: #f3f4f6;
     --tiptap-blockquote-bg: rgba(255, 107, 107, 0.1);
     --tiptap-table-header-bg: #f9fafb;
+    --tiptap-selection-bg: rgba(255, 107, 107, 0.3);
+}
+
+
+/* Dark 主题变量 */
+
+#tiptap-preview.light {
+    --tiptap-text-primary: #ffffff;
+    --tiptap-text-secondary: #cccccc;
+    --tiptap-text-muted: #a8a8a8;
+    --tiptap-text-disabled: #888888;
+    --tiptap-bg-primary: #2a2a2a;
+    --tiptap-bg-secondary: #45454c;
+    --tiptap-border-primary: #444444;
+    --tiptap-code-bg: #2a2a2a;
+    --tiptap-blockquote-bg: rgba(255, 107, 107, 0.05);
+    --tiptap-table-header-bg: #2a2a2a;
     --tiptap-selection-bg: rgba(255, 107, 107, 0.3);
 }
 

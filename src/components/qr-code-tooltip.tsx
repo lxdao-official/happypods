@@ -30,8 +30,8 @@ export const QRCodeTooltip = ({
             size={size}
             level="M"
             marginSize={4}
-            bgColor="#171719"
-            fgColor="#ffffff"
+            bgColor="#ffffff"
+            fgColor="#000000"
           />
           <div className='flex items-center gap-2 mb-4'>
             <div>{truncateString(content, 6, 6)}</div>

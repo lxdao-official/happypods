@@ -11,7 +11,7 @@ interface EdgeLineProps {
 
 const EdgeLine = ({
   direction = "horizontal",
-  color = "#fff",
+  color = "#000000",
   thickness = 1,
   nodeSize = 8,
   className = "",

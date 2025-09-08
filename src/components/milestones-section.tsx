@@ -79,12 +79,12 @@ export default function MilestonesSection({ milestones, podDetail }: MilestonesS
                   
               <div className="flex items-center justify-between mb-3">
                 <div className="flex items-center gap-3">
-                  <h3 className="font-semibold">{milestone.title}</h3>
+                  <h3 className="text-xl">{milestone.title}</h3>
                   {
                     milestone.status !== 'ACTIVE' && <StatusChip status={milestone.status as any} />
                   }
                   {remainingSubmissions<3 && milestone.status===MilestoneStatus.PENDING_DELIVERY && (
-                    <span className="text-xs text-gray-500">
+                    <span className="text-xs0">
                       ({remainingSubmissions} submissions left)
                     </span>
                   )}
@@ -111,10 +111,10 @@ export default function MilestonesSection({ milestones, podDetail }: MilestonesS
                 
                 <div className="flex items-center gap-1 text-primary">
                   <img src={`/tokens/${currency}.svg`} alt={currency} className="w-4 h-4" />
-                  <b className="font-bold">{formatToken(milestone.amount)} {currency}</b>
+                  <b className="text-xl font-bold">{formatToken(milestone.amount)} {currency}</b>
                 </div>
                 
-                <b>Deadline: {formatDate(milestone.deadline)}</b>
+                <b className="text-secondary">Deadline: {formatDate(milestone.deadline)}</b>
 
               </div>
 

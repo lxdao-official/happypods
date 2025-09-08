@@ -19,6 +19,7 @@ import { useUserInfo } from "~/hooks/useUserInfo";
 import useStore from "~/store";
 import { useMobile } from "~/hooks/useMobile";
 import { mainnet } from "viem/chains";
+import LazyImage from "./LazyImage";
 
 // 定义TypedData结构 - 需要与后端保持一致
 const domain = {
@@ -219,7 +220,7 @@ export function LoginModal() {
               if (!connected) {
                 return (
                   <Button
-                    variant="bordered"
+                    variant="faded"
                     size={isMobile ? "sm" : "md"}
                     onPress={openConnectModal}
                     className="flex items-center gap-2"
@@ -234,7 +235,7 @@ export function LoginModal() {
               if (chain.unsupported) {
                 return (
                   <Button
-                    variant="bordered"
+                    variant="faded"
                     color="danger"
                     size={isMobile ? "sm" : "md"}
                     onPress={openChainModal}
@@ -250,8 +251,7 @@ export function LoginModal() {
               if (!userInfo) {
                 return (
                   <Button
-                    variant="bordered"
-                    color={'warning'}
+                    variant="faded"
                     size={isMobile ? "sm" : "md"}
                     onPress={() => handleSignLogin(false)}
                     isLoading={isLoading}
@@ -269,11 +269,11 @@ export function LoginModal() {
 
               // 已登录状态：显示用户信息下拉菜单
               return (
-                <Dropdown className="text-black bg-foreground" placement="bottom-end">
+                <Dropdown className="text-black bg-background" placement="bottom-end">
                   <DropdownTrigger>
-                    <Button variant="bordered" className="flex items-center md:space-x-1" size={isMobile ? "sm" : "md"}>
+                    <Button variant="faded" className="flex items-center md:space-x-1" size={isMobile ? "sm" : "md"}>
                       {storeUserInfo?.avatar ? (
-                        <img
+                        <LazyImage
                           src={storeUserInfo.avatar}
                           alt="User Avatar"
                           className="object-contain w-5 h-5 rounded-full"

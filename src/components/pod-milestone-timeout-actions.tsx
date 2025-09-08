@@ -63,7 +63,7 @@ export default function PodMilestoneTimeoutActions({pod}: PodMilestoneTimeoutAct
     <>
       <Alert
         color="danger"
-        variant="bordered"
+        variant="faded"
         title="Milestone Delivery Timeout"
         className="mb-4"
         classNames={{base: 'bg-background'}}

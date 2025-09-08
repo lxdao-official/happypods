@@ -11,7 +11,7 @@ export default function PodsPage() {
       <div className="container">
 
         {/* breadcrumb */}
-        <CornerFrame> 
+        <CornerFrame style="border"> 
           <div className="flex flex-col items-center justify-center gap-6 text-2xl text-center md:py-8">
             <div className="text-xl md:text-2xl">Discover innovative projects and milestone-based funding opportunities</div>
             {/* <NextLink href="/pods/create">

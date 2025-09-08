@@ -35,7 +35,7 @@ const GrantspoolRFPItem = ({ proposal, onClick, className = "", gpId }: Grantspo
             {proposal.title}
           </h3>
           <button 
-            className="px-2 py-1 space-x-1 text-xs text-black border border-black rounded-md hover:bg-black hover:text-white"
+            className="px-2 py-1 space-x-1 text-xs border border-black rounded-md hover:bg-black hover:text-white"
             onClick={() => onOpen()}
           >
             <i className="ri-arrow-right-line"></i>
@@ -54,9 +54,7 @@ const GrantspoolRFPItem = ({ proposal, onClick, className = "", gpId }: Grantspo
           </ModalBody>
           <ModalFooter>
             <Button color="default" size="lg" variant="light" onPress={onClose}>Close</Button>
-            <NextLink href={`/pods/create?rfpId=${proposal.id}&gpId=${gpId}`}>
-              <Button color="primary" size="lg" className="text-black">Apply Now</Button>
-            </NextLink>
+            <Button color="primary" size="lg" className="text-black" as={NextLink} href={`/pods/create?rfpId=${proposal.id}&gpId=${gpId}`}>Apply Now</Button>
           </ModalFooter>
         </ModalContent>
       </Modal>

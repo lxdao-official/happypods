@@ -14,7 +14,7 @@ const StatusChip = ({ status }: { status: Status }) => {
     'APPROVED': 'default',
     'REVIEWING': 'default',
     'TERMINATED': "primary",
-    'PENDING_DELIVERY': "primary",
+    'PENDING_DELIVERY': 'warning',
     'ACTIVE': "primary",
     'INACTIVE': "default",
     'PENDING_PAYMENT': "warning"

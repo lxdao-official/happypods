@@ -23,12 +23,10 @@ const AppBtn = ({children, btnProps={color:"primary"},className=""}: {children: 
   const currentPadding = padding[size || "md"]
 
   return (
-    <div className={`p-[3px] bg-white rounded-md border-1 border-black fadeIn ${className}`}>
-        <button {...rest} onClick={onPress as ()=>void} disabled={isLoading} className={`${isLoading ? 'cursor-not-allowed' : ''} font-bold text-[14px] text-black border-black rounded-md flex items-center border-1 text-nowrap  ${colorMap[color || "primary"]} ${currentPadding}`}  >
-             {isLoading && <Spinner color="default" size="sm" className="mr-2"/>}
-             {children}
-        </button>
-    </div>
+    <button {...rest} onClick={onPress as ()=>void} disabled={isLoading} className={`${isLoading ? 'cursor-not-allowed' : ''} font-bold text-[14px] text-black border-black rounded-md flex items-center border-1 text-nowrap  ${colorMap[color || "primary"]} ${currentPadding}`}  >
+        {isLoading && <Spinner color="default" size="sm" className="mr-2 text-black"/>}
+        {children}
+    </button>
   );
 }
 

@@ -121,7 +121,7 @@ const MilestoneSection = ({ milestones, onMilestonesChange, info, minMilestoneCo
             <div className="space-y-6">
               {/* Title */}
               <Input
-                variant="bordered"
+                variant="faded"
                 type="text"
                 label="Milestone Title"
                 value={milestone.title}
@@ -141,7 +141,7 @@ const MilestoneSection = ({ milestones, onMilestonesChange, info, minMilestoneCo
                 />
                 {/* Amount */}
                 <Input
-                variant="bordered"
+                variant="faded"
                   type="number"
                   label="Amount"
                   value={milestone.amount}
@@ -158,7 +158,7 @@ const MilestoneSection = ({ milestones, onMilestonesChange, info, minMilestoneCo
                           key={amount}
                           type="button"
                           onClick={() => handlePresetAmount(milestone.id, amount)}
-                          className="px-2 py-1 text-sm text-gray-500 border-gray-500 rounded-md border-1 hover:border-gray-300 hover:text-white"
+                          className="px-2 py-1 border-gray-500 rounded-md text-sm0 border-1 hover:border-gray-300 hover:text-white"
                         >
                           {amount}
                         </button>
@@ -169,7 +169,7 @@ const MilestoneSection = ({ milestones, onMilestonesChange, info, minMilestoneCo
               </div>
               {/* Description */}
               <Textarea
-                variant="bordered"
+                variant="faded"
                 label="Milestone Description"
                 value={milestone.description}
                 onChange={e => updateMilestone(milestone.id, "description", e.target.value)}

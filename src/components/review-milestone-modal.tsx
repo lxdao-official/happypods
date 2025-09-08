@@ -342,7 +342,7 @@ export default function ReviewMilestoneModal({ milestone, podDetail, onReview }:
           <ModalBody>
             <div className="space-y-4">
               <Textarea
-                variant="bordered"
+                variant="faded"
                 label={isApproved ? 'Approve Review' : 'Reason for Rejection'}
                 placeholder={
                   isApproved
@@ -367,7 +367,7 @@ export default function ReviewMilestoneModal({ milestone, podDetail, onReview }:
           <ModalFooter>
             <Button
               color="default"
-              variant="bordered"
+              variant="faded"
               onPress={handleClose}
               isDisabled={isSubmitting}
             >

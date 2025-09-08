@@ -86,7 +86,7 @@ const RFPSection = ({ rfps, onRfpsChange, isEdit = false, grantsPoolId }: RFPSec
               {rfps.length > 1 && (
                 <Button
                   color="danger"
-                  variant="bordered"
+                  variant="faded"
                   size="sm"
                   onPress={() => removeRFP(rfp.id)}
                   isLoading={deletingRfpId === rfp.id}
@@ -99,7 +99,7 @@ const RFPSection = ({ rfps, onRfpsChange, isEdit = false, grantsPoolId }: RFPSec
             
             <div className="space-y-6">
               <Input
-                variant="bordered"
+                variant="faded"
                 type="text"
                 label="RFP Title"
                 value={rfp.title}

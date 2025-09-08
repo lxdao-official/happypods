@@ -8,13 +8,13 @@ interface CardBoxProps {
   shadowBg?: string
 }
 
-const CardBox = ({ title = "", children, className = "", titleBg='#ffffff', contentBg='var(--color-pink)',shadowBg }: CardBoxProps) => {
+const CardBox = ({ title = "", children, className = "", titleBg='var(--color-pink)', contentBg='#ffffff',shadowBg }: CardBoxProps) => {
   return (
-    <div className={`w-full mx-auto text-black overflow-hidden rounded-xl ${className}`}
+    <div className={`w-full mx-auto text-black shadow-medium overflow-hidden rounded-xl ${className}`}
         style={{
             backgroundColor: contentBg,
-            boxShadow: `5px 5px 0px ${shadowBg || 'black'}`,
-            border: `1px solid ${'black'}`
+            // boxShadow: `5px 5px 0px ${shadowBg || 'black'}`,
+            // border: `1px solid ${'black'}`
         }}
     >
       {/* 卡片容器 */}

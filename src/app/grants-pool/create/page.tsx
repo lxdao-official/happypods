@@ -175,7 +175,7 @@ export default function CreateGrantsPoolPage() {
 
         <form onSubmit={handleSubmit} className="space-y-6">
           {/* General Information */}
-          <CornerFrame backgroundColor="var(--color-background)" color="gray">
+          <CornerFrame backgroundColor="var(--color-background)" color="gray" >
             <h2 className="mb-6 text-xl">General Information</h2>
             <div className="space-y-6">
               {/* Avatar */}
@@ -188,7 +188,7 @@ export default function CreateGrantsPoolPage() {
 
               {/* Name */}
               <Input
-                variant="bordered"
+                variant="faded"
                 type="text"
                 label="Grants Pool Name"
                 value={formData.name}
@@ -200,7 +200,7 @@ export default function CreateGrantsPoolPage() {
 
               {/* Description */}
               <Textarea
-                variant="bordered"
+                variant="faded"
                 label="Description"
                 value={formData.description}
                 onChange={(e) => handleInputChange("description", e.target.value)}
@@ -212,7 +212,7 @@ export default function CreateGrantsPoolPage() {
 
               {/* Chain Type - Optimism Only */}
               <Select
-                variant="bordered"
+                variant="faded"
                 label="Treasury Chain Type"
                 value={formData.chainType}
                 defaultSelectedKeys={[formData.chainType]}
@@ -240,7 +240,7 @@ export default function CreateGrantsPoolPage() {
                   <Input
                     value={safeAddress}
                     readOnly
-                    variant="bordered"
+                    variant="faded"
                     className="mt-1"
                     description="Created Safe multi-sig wallet address"
                   />
@@ -260,7 +260,7 @@ export default function CreateGrantsPoolPage() {
             <h2 className="mb-6 text-xl">Moderator Information</h2>
             <div className="space-y-6">
               <Input
-                variant="bordered"
+                variant="faded"
                 type="text"
                 label="Moderator Name"
                 value={formData.modName}
@@ -271,7 +271,7 @@ export default function CreateGrantsPoolPage() {
               />
 
               <Input
-                variant="bordered"
+                variant="faded"
                 type="email"
                 label="Moderator Email"
                 value={formData.modEmail}
@@ -282,7 +282,7 @@ export default function CreateGrantsPoolPage() {
               />
 
               <Input
-                variant="bordered"
+                variant="faded"
                 type="text"
                 label="Moderator Telegram"
                 value={formData.modTelegram}

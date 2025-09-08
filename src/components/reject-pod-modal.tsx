@@ -94,7 +94,7 @@ export default function RejectPodModal({
                 isInvalid={!rejectReason.trim() && rejectReason !== ""}
                 errorMessage={!rejectReason.trim() && rejectReason !== "" ? "Reason for rejection cannot be empty" : ""}
               />
-              <p className="mt-1 text-xs text-gray-500">
+              <p className="mt-1 text-xs0">
                 {rejectReason.length}/1000 characters
               </p>
             </div>

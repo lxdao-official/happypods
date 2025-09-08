@@ -33,7 +33,7 @@ export default function AvatarInput({
 
   return (
     <Input
-      variant="bordered"
+      variant="faded"
       type="url"
       label={label}
       value={value}

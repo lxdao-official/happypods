@@ -209,7 +209,7 @@ export default function EditPodPage() {
                 
               {/* 项目标题 */}
               <Input
-                variant="bordered"
+                variant="faded"
                 type="text"
                 label="Project Title"
                 value={formData.title}
@@ -221,7 +221,7 @@ export default function EditPodPage() {
 
               {/* 详细描述 */}
               <Textarea
-                variant="bordered"
+                variant="faded"
                 label="Project Description"
                 value={formData.description}
                 onChange={(e) => handleInputChange("description", e.target.value)}

@@ -23,7 +23,7 @@ export default function TagsSelect({
     <div className="space-y-3">
       <Select
         label={label}
-        variant="bordered"
+        variant="faded"
         placeholder={'Select tags'}
         selectionMode="multiple"
         selectedKeys={new Set(selectedTags)}
