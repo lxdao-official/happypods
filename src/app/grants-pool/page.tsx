@@ -22,7 +22,7 @@ export default function GrantsPoolPage() {
 
   return (
     <div className="container !py-10">
-      <div className="mx-auto max-w-7xl">
+      <div className="mx-auto">
         {/* 顶部横幅 */}
         <CornerFrame className="mb-20" style="border"> 
           <div className="flex flex-col items-center justify-center gap-6 text-2xl text-center md:py-8">

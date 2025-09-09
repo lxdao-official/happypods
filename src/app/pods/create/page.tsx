@@ -336,7 +336,7 @@ export default function CreatePodPage() {
                 <AppBtn
                   btnProps={{
                     type: "submit",
-                    color: "primary",
+                    color: "success",
                     isLoading: isSubmitting,
                     className: "flex-1",
                     size: "lg",
