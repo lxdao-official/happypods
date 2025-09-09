@@ -202,7 +202,7 @@ export default function ProfilePage() {
             <AppBtn
               btnProps={{
                 type: "submit",
-                color: "primary",
+                color: "success",
                 isLoading: updateUser.isPending,
                 className: "flex-1",
                 size: "lg",

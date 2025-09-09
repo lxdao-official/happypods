@@ -56,11 +56,11 @@ button,
 
 .container {
     width: 100%;
-    padding: 15px;
+    padding: 30px 15px;
     @screen md {
         width: 1440px !important;
         margin: 0 auto !important;
-        padding: 0;
+        padding: 40px 0;
     }
 }
 
