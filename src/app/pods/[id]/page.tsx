@@ -96,7 +96,7 @@ export default function PodDetailPage() {
 
 
   if (isPodLoading || isMilestonesLoading || !podDetail) {
-    return <div className="container py-8 mx-auto">
+    return <div className="container !py-8 mx-auto">
       <LoadingSkeleton />
     </div>
   }
@@ -104,7 +104,7 @@ export default function PodDetailPage() {
   
   return (
     
-    <div className="container py-8 mx-auto fadeIn" key={podDetailRefreshKey}>
+    <div className="container !py-8 mx-auto fadeIn" key={podDetailRefreshKey}>
 
     {/* pod 交付超时 */}
     {
