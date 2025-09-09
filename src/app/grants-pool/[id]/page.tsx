@@ -27,20 +27,20 @@ const GrantsPoolDetailPage = () => {
   // 加载状态
   if (isLoading || error) {
     return (
-      <div className="container py-8"><LoadingSkeleton/></div>
+      <div className="container !py-8"><LoadingSkeleton/></div>
     );
   }
 
 
   // 数据不存在
   if (!grantsPool) {
-    return <div className="container py-8"><EmptyReplace/></div>;
+    return <div className="container !py-8"><EmptyReplace/></div>;
   }
 
 
 
   return (
-    <div className="container py-8">
+    <div className="container !py-8">
       <GrantspoolItem grantsPool={grantsPool} type="detail" className="fadeIn" />
       <div className="mt-10">
         <DataDisplayGrid title={`${isMobile ? "" : grantsPool.name+' '} Pods`} sortClassName="text-black" grantsPoolId={grantsPoolId}/>
