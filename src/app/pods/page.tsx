@@ -1,13 +1,12 @@
 "use client";
 
 import { useState } from "react";
-import AppBtn from "~/components/app-btn";
 import CornerFrame from "~/components/corner-frame";
 import { DataDisplayGrid } from "~/components/data-display-grid";
 
 export default function PodsPage() {
   return (
-    <div className="py-10">
+    <>
       <div className="container">
 
         {/* breadcrumb */}
@@ -23,6 +22,6 @@ export default function PodsPage() {
         {/* 数据展示网格 */}
         <DataDisplayGrid className="mt-20"/>
       </div>
-    </div>
+    </>
   );
 } 

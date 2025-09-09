@@ -96,7 +96,7 @@ export default function PodDetailPage() {
 
 
   if (isPodLoading || isMilestonesLoading || !podDetail) {
-    return <div className="container !py-8 mx-auto">
+    return <div className="container mx-auto">
       <LoadingSkeleton />
     </div>
   }
@@ -104,7 +104,7 @@ export default function PodDetailPage() {
   
   return (
     
-    <div className="container !py-8 mx-auto fadeIn" key={podDetailRefreshKey}>
+    <div className="container mx-auto fadeIn" key={podDetailRefreshKey}>
 
     {/* pod 交付超时 */}
     {
@@ -144,7 +144,7 @@ export default function PodDetailPage() {
         title={
         <div className="flex items-center justify-between">
           <div className="flex items-center">
-              <img src={podDetail.avatar || ''} alt="" className="object-contain w-10 h-10 bg-white rounded-full" />
+              <LazyImage src={podDetail.avatar || ''} alt="" className="object-contain w-10 h-10 bg-white rounded-full" />
               <span className="ml-2 text-xl font-bold md:text-2xl">{podDetail.title}</span>
             </div>
 

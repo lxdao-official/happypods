@@ -50,7 +50,7 @@ const GrantspoolItem = ({ grantsPool, className = "", children, type = "list" }:
   return (
     <CardBox 
     className={`${className}`} 
-    titleBg={`linear-gradient(to top, white 0%, ${getColorFromString(grantsPool.name , 0.3)})`}
+    titleBg={`linear-gradient(to top, white 0%, ${getColorFromString(grantsPool.name , 0.2)})`}
     title={
       <div className="flex items-center justify-between">
         <div className="flex items-center flex-1 gap-2 overflow-hidden text-2xl text-ellipsis whitespace-nowrap">

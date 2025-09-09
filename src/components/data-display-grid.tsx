@@ -27,7 +27,7 @@ export const DataDisplayGrid = ({
   type = 'all',
   grantsPoolId,
   className = '',
-  gridClassName = 'grid grid-cols-1 gap-6 mb-8 md:grid-cols-2 lg:grid-cols-3',
+  gridClassName = 'grid grid-cols-1 gap-9 mb-8 md:grid-cols-2 lg:grid-cols-3',
   itemsPerPage = 12,
   showPagination = true,
   title = 'Pods',

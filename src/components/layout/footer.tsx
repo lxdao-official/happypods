@@ -4,9 +4,9 @@ import { Link } from '@heroui/react';
 
 export function Footer() {
   return (
-    <footer className="py-8 border-t bg-background border-border text-foreground">
+    <footer className="py-8 border-t text-foreground">
       <div className="container px-4 mx-auto">
-        <div className="md:flex items-start justify-between gap-8">
+        <div className="items-start justify-between gap-8 md:flex">
           <div className="space-y-4">
             <img src="/logo.svg" alt="logo" className="h-[40px]" />
             <p className="text-sm text-muted-foreground">

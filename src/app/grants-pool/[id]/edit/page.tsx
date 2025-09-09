@@ -202,7 +202,7 @@ export default function EditGrantsPoolPage() {
 
   return (
     <div className="container px-4 py-8 mx-auto">
-      <div className="max-w-4xl mx-auto">
+      <div className="max-w-3xl mx-auto">
         <div className="mb-8">
           <h1 className="text-3xl font-bold text-foreground">Edit Grants Pool</h1>
           <p className="mt-2 text-default-500">Modify the following information to update your Grants Pool</p>
@@ -314,7 +314,7 @@ export default function EditGrantsPoolPage() {
           <div className="flex items-center justify-center gap-4">
             <AppBtn
               btnProps={{
-                color: "default",
+                color: "primary",
                 onClick: () => router.back(),
                 type: "button",
                 className: "flex-1",
@@ -326,7 +326,7 @@ export default function EditGrantsPoolPage() {
             <AppBtn
               btnProps={{
                 type: "submit",
-                color: "primary",
+                color: "success",
                 isLoading: isSubmitting,
                 className: "flex-1",
                 size: "lg",

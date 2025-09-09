@@ -236,8 +236,8 @@ export default function CreatePodPage() {
 
 
   return (
-    <div className="container px-4 py-8 mx-auto fadeIn">
-      <div className="max-w-4xl mx-auto">
+    <div className="container fadeIn">
+      <div className="max-w-3xl mx-auto">
         
         
         <div className="mb-8">

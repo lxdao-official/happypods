@@ -6,10 +6,24 @@ import { MobileMenu } from '~/components/layout/mobile-menu';
 import NextLink from 'next/link';
 import { usePathname } from 'next/navigation';
 import useStore from '~/store';
+import { useState, useEffect, useCallback, useRef } from 'react';
+import { useMobile } from '~/hooks/useMobile';
 
 export function Header() {
   const pathname = usePathname();
   const { userInfo } = useStore();
+  const [isHidden, setIsHidden] = useState(false);
+  const [lastScrollY, setLastScrollY] = useState(0);
+  const isMobile = useMobile();
+  const debounceTimerRef = useRef<NodeJS.Timeout | null>(null);
+
+  // 防抖函数
+  const debounceScroll = useCallback((callback: () => void, delay: number = 16) => {
+    if (debounceTimerRef.current) {
+      clearTimeout(debounceTimerRef.current);
+    }
+    debounceTimerRef.current = setTimeout(callback, delay);
+  }, []);
 
   const navs = [
     { href: '/', label: 'Home' },
@@ -18,8 +32,47 @@ export function Header() {
     { href: '/how-it-works', label: 'FAQs' },
   ];
 
+  useEffect(() => {
+    const handleScroll = () => {
+      const currentScrollY = window.scrollY;
+
+      // 当滚动回到顶部时，总是显示导航栏
+      if (currentScrollY <= 60) {
+        setIsHidden(false);
+        setLastScrollY(currentScrollY);
+        return;
+      }
+
+      // 只在PC端（屏幕宽度大于768px）应用滚动隐藏效果
+      if (!isMobile) {
+        if (currentScrollY > lastScrollY && currentScrollY > 60) {
+          // 向下滚动且滚动距离超过100px，隐藏导航栏
+          setIsHidden(true);
+        } else if (currentScrollY < lastScrollY) {
+          // 向上滚动，显示导航栏
+          setIsHidden(false);
+        }
+      } else {
+        // 移动端始终显示
+        setIsHidden(false);
+      }
+
+      setLastScrollY(currentScrollY);
+    };
+
+    window.addEventListener('scroll', handleScroll, { passive: true });
+
+    return () => {
+      window.removeEventListener('scroll', handleScroll);
+    };
+  }, [lastScrollY, isMobile]);
+
   return (
-    <header className="sticky top-0 z-30 p-4 border-b border-border backdrop-blur bg-[#ffffffd1]">
+    <header
+      className={`sticky top-0 z-30 p-4 border-b backdrop-blur bg-[#ffffffda] transition-transform duration-1000 ease-in-out ${
+        isHidden ? '-translate-y-full' : 'translate-y-0'
+      }`}
+    >
       <div className="flex items-center justify-between">
         {/* Logo */}
         <div className="flex items-center w-[150px] md:basis-1/5">

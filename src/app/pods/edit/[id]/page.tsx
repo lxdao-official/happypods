@@ -186,7 +186,7 @@ export default function EditPodPage() {
 
   return (
     <div className="container px-4 py-8 mx-auto fadeIn">
-      <div className="max-w-4xl mx-auto">
+      <div className="max-w-3xl mx-auto">
         
         <div className="mb-8">
           <h1 className="text-3xl font-bold text-foreground">Edit Pod Project</h1>
