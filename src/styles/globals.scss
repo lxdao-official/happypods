@@ -4,7 +4,7 @@
 @import url('https://fonts.googleapis.com/css2?family=Quicksand:wght@300..700&display=swap');
 :root {
     /* 主题色 */
-    --color-background: #f3f3f3;
+    --color-background: #fdfdfd;
     --color-foreground: #000000;
     /* 主要颜色 */
     --color-primary: #00c75d;
@@ -56,9 +56,11 @@ button,
 
 .container {
     width: 100%;
+    padding: 15px;
     @screen md {
         width: 1440px !important;
         margin: 0 auto !important;
+        padding: 0;
     }
 }
 

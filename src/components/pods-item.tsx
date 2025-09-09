@@ -50,7 +50,7 @@ const PodsItem = ({ pod, onClick, className = "", type = 'all' }: PodsItemProps)
       {/* 卡片头部 */}
       <div 
       className="flex items-center p-2 space-x-4 bg-white md:p-4" 
-      style={{background: `linear-gradient(to top, white 5%, ${getColorFromString(pod.title , 0.4)})`}}
+      style={{background: `linear-gradient(to top, white 5%, ${getColorFromString(pod.title , 0.3)})`}}
       >
         <LazyImage src={pod.avatar || ""} alt="" className="object-cover w-10 h-10 rounded-full" />
         <div className="text-xl font-bold text-gray-900"><ExpandableText text={pod.title} maxLines={1} /></div>

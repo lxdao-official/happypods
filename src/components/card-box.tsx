@@ -4,11 +4,10 @@ interface CardBoxProps {
   className?: string;
   titleBg?: string;
   titleEnd?: React.ReactNode;
-  contentBg?: string;
-  shadowBg?: string
+  contentBg?: string
 }
 
-const CardBox = ({ title = "", children, className = "", titleBg='var(--color-pink)', contentBg='#ffffff',shadowBg }: CardBoxProps) => {
+const CardBox = ({ title = "", children, className = "", titleBg='var(--color-pink)', contentBg='#ffffff' }: CardBoxProps) => {
   return (
     <div className={`w-full mx-auto text-black shadow-medium overflow-hidden rounded-xl ${className}`}
         style={{

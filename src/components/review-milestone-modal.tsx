@@ -367,7 +367,7 @@ export default function ReviewMilestoneModal({ milestone, podDetail, onReview }:
           <ModalFooter>
             <Button
               color="default"
-              variant="faded"
+              variant="light"
               onPress={handleClose}
               isDisabled={isSubmitting}
             >

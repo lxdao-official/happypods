@@ -31,15 +31,14 @@ export function NotificationDrawer() {
     <>
       {/* 通知图标按钮 */}
       <Badge
-        color="primary"
+        color="danger"
         content={noReadNotification ?? 0}
         isInvisible={noReadNotification <= 0}
         className="cursor-pointer"
       >
-        <i
-          className="text-2xl cursor-pointer ri-mail-send-fill hover:text-primary"
-          onClick={() => setIsOpen(!isOpen)}
-        ></i>
+        <Button variant="faded" size={isMobile ? "sm" : "md"} className="min-w-0" onPress={() => setIsOpen(!isOpen)}>
+          <i className="text-xl cursor-pointer md:text-2xl ri-mail-send-fill group-hover:text-primary"></i>
+        </Button>
       </Badge>
 
       {/* 通知抽屉 */}

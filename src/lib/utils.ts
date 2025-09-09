@@ -195,6 +195,12 @@ const hexToRgb = (hex: string): { r: number; g: number; b: number } | null => {
 };
 
 export const getColorFromString = (input: string, opacity: number = 1): string => {
+  console.log(input);
+  // 特殊预设
+  const specialPresets: Record<string, string> = {
+    'LXDAO': '#349bff'
+  };
+
   // 预设颜色数组 - 浅色系，避免灰色
   const colors: string[] = [
     '#00c75d', // 主色调绿色
@@ -224,7 +230,7 @@ export const getColorFromString = (input: string, opacity: number = 1): string =
 
   // 确保hash值为正数，并取模得到颜色索引
   const index = Math.abs(hash) % colors.length;
-  const selectedColor = colors[index]!;
+  const selectedColor = specialPresets[input] || colors[index]!;
 
   // 如果透明度为1，返回原始十六进制颜色
   if (opacity === 1) {
@@ -236,6 +242,7 @@ export const getColorFromString = (input: string, opacity: number = 1): string =
   if (!rgb) {
     return selectedColor; // 如果转换失败，返回原始颜色
   }
+
 
   return `rgba(${rgb.r}, ${rgb.g}, ${rgb.b}, ${opacity})`;
 };

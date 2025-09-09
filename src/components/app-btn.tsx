@@ -5,7 +5,7 @@ import {Spinner} from "@heroui/react";
 const AppBtn = ({children, btnProps={color:"primary"},className=""}: {children: React.ReactNode, btnProps?: ButtonProps, className?: string}) => {
   const {color, onPress, isLoading, size, ...rest} = btnProps;
   const colorMap: Record<string, string> = {
-    primary: "bg-purple-400 hover:bg-purple-500",
+    primary: "bg-white hover:bg-gray-100",
     success: "bg-green-400 hover:bg-green-500",
     warning: "bg-yellow-400 hover:bg-yellow-500",
     danger: "bg-red-400 hover:bg-red-500",
@@ -16,7 +16,7 @@ const AppBtn = ({children, btnProps={color:"primary"},className=""}: {children: 
 
   const padding = {
     md: "py-2 px-4",
-    sm: "py-1 px-4",
+    sm: "py-1 px-2",
     lg: "py-2 px-6"
   }
 

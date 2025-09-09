@@ -96,7 +96,7 @@ export default function PodDetailPage() {
 
 
   if (isPodLoading || isMilestonesLoading || !podDetail) {
-    return <div className="container px-4 py-8 mx-auto">
+    return <div className="container py-8 mx-auto">
       <LoadingSkeleton />
     </div>
   }
@@ -134,12 +134,11 @@ export default function PodDetailPage() {
         <GpReviewActions podDetail={podDetail as any}/>
       }
       
-    <div className="flex items-start gap-6">
+    <div className="items-start gap-6 space-y-6 md:space-y-0 md:flex">
       
 
       <CardBox
         titleBg={`linear-gradient(to top, white 0%, ${getColorFromString(podDetail.title , 0.4)})`}
-        shadowBg={'black'}
         contentBg="white"
         className="!border-none !shadow-medium"
         title={
@@ -195,7 +194,7 @@ export default function PodDetailPage() {
       </CardBox>
 
 
-      <div className="space-y-6 w-[500px]">
+      <div className="space-y-6 md:w-[500px]">
           <div className="p-4 bg-white shadow-medium rounded-xl">
             <div className="flex items-center justify-between mb-4">
               <div className="flex items-center gap-2">

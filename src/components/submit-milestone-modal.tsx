@@ -211,7 +211,7 @@ export default function SubmitMilestoneModal({ milestoneId, safeTransactionHash 
               </div>
 
               {/* Links */}
-              <div>
+              <div className="pb-6">
                 <RelatedLinksSection
                   links={links}
                   onLinksChange={setLinks}
@@ -222,7 +222,7 @@ export default function SubmitMilestoneModal({ milestoneId, safeTransactionHash 
           <ModalFooter>
             <Button 
               color="default" 
-              variant="faded" 
+              variant="light" 
               onPress={handleClose}
               isDisabled={isSubmitting}
             >

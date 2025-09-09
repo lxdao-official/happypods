@@ -51,10 +51,10 @@ export default function MilestoneSubmissionDisplay({ deliveryInfo, status }: Mil
           const isLatest = index === 0 && status === MilestoneStatus.REVIEWING;
 
           return (
-            <div key={index} className="p-4 border border-gray-200 rounded-lg" onClick={() => openSubmissionModal(index)}>
+            <div key={index} className="p-4 bg-gray-100 border rounded-lg cursor-pointer hover:border-black group" onClick={() => openSubmissionModal(index)}>
               {/* Header */}
               <div
-                className="flex items-center justify-between cursor-pointer select-none group"
+                className="flex items-center justify-between select-none"
               >
                 <div className="flex items-center gap-4">
                   {
@@ -69,7 +69,7 @@ export default function MilestoneSubmissionDisplay({ deliveryInfo, status }: Mil
                   </b>
                   <small>{isLatest && <span className="ml-1 text-xs text-blue-600">(Latest)</span>}</small>
                 </div>
-                <i className="text-lg transition-colors ri-eye-line group-hover:text-primary" />
+                <i className="text-lg transition-colors text-secondary ri-eye-line group-hover:text-primary" />
               </div>
             </div>
           );

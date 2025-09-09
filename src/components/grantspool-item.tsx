@@ -13,6 +13,8 @@ import ExpandableText from "./expandable-text";
 import { useMobile } from "~/hooks/useMobile";
 import Tag from "./tag";
 import LazyImage from "./LazyImage";
+import { getColorFromString } from "~/lib/utils";
+import { Button } from "@heroui/button";
 
 
 const GrantspoolItem = ({ grantsPool, className = "", children, type = "list" }: {
@@ -48,13 +50,13 @@ const GrantspoolItem = ({ grantsPool, className = "", children, type = "list" }:
   return (
     <CardBox 
     className={`${className}`} 
-    titleBg="#02BC59"
+    titleBg={`linear-gradient(to top, white 0%, ${getColorFromString(grantsPool.name , 0.3)})`}
     title={
       <div className="flex items-center justify-between">
         <div className="flex items-center flex-1 gap-2 overflow-hidden text-2xl text-ellipsis whitespace-nowrap">
           <LazyImage 
             src={avatarSrc} alt="avatar" 
-            className="w-10 h-10 bg-white border-black rounded-full border-1" 
+            className="w-10 h-10 rounded-full" 
           />
           
           <b className="overflow-hidden text-xl md:text-2xl text-ellipsis text-nowrap">{grantsPool.name}</b>
@@ -77,7 +79,7 @@ const GrantspoolItem = ({ grantsPool, className = "", children, type = "list" }:
           {
             type === "list" ?
             <NextLink href={`/grants-pool/${grantsPool.id}`}>
-              <AppBtn>View More</AppBtn>
+              <AppBtn btnProps={{size: isMobile ? "sm" : "md"}}>View More</AppBtn>
             </NextLink>:
             isOwner && (
               <NextLink href={`/grants-pool/${grantsPool.id}/edit`}>

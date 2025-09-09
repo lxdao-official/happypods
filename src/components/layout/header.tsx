@@ -24,7 +24,7 @@ export function Header() {
         {/* Logo */}
         <div className="flex items-center w-[150px] md:basis-1/5">
           <NextLink href="/" className="flex items-center transition-all duration-100 hover:scale-105">
-            <img src="/logo.svg" alt="HappyPods" className="h-8" />
+            <img src="/logo.svg" alt="HappyPods" className="h-6 md:h-8" />
           </NextLink>
         </div>
 
@@ -47,7 +47,7 @@ export function Header() {
         {/* <ConnectButton/> */}
 
         {/* 登录按钮和移动端菜单 */}
-        <div className="flex items-center justify-end gap-4 basis-1/5">
+        <div className="flex items-center justify-end gap-2 md:gap-4 md:basis-1/5">
           {
             userInfo?.id && 
             <NotificationDrawer />

@@ -205,7 +205,7 @@ const faqs: ReadonlyArray<FAQItem> = [
 
 export default function HowItWorksPage() {
   return (
-    <div className="min-h-screen p-6">
+    <div className="min-h-screen py-10">
       <div className="mx-auto max-w-7xl">
         {/* Top Banner */}
         <CornerFrame className="mb-10" style="border">

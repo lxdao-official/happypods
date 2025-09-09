@@ -58,7 +58,7 @@ export default function MilestonesSection({ milestones, podDetail }: MilestonesS
           const remainingSubmissions = Math.max(0, 3 - (milestone.deliveryInfo.length || 0));
           
           return (
-            <div key={milestone.id} className="p-4 bg-white border border-gray-200 rounded-xl">
+            <div key={milestone.id} className="p-4 bg-white border border-black rounded-xl">
 
               <div className="flex flex-col">
                   { new Date(milestone.deadline) < new Date() && !milestone.deliveryInfo.length && milestone.status === MilestoneStatus.PENDING_DELIVERY &&
@@ -109,16 +109,16 @@ export default function MilestonesSection({ milestones, podDetail }: MilestonesS
               </div>
               <div className="flex items-center gap-4 mb-4 text-xs text-gray-600">
                 
-                <div className="flex items-center gap-1 text-primary">
-                  <img src={`/tokens/${currency}.svg`} alt={currency} className="w-4 h-4" />
-                  <b className="text-xl font-bold">{formatToken(milestone.amount)} {currency}</b>
+                <div className="flex items-center gap-1 text-danger-500">
+                  <img src={`/tokens/${currency}.svg`} alt={currency} className="w-5 h-5" />
+                  <b className="text-base font-bold">{formatToken(milestone.amount)} {currency}</b>
                 </div>
                 
-                <b className="text-secondary">Deadline: {formatDate(milestone.deadline)}</b>
+                <span className="text-secondary">Deadline: {formatDate(milestone.deadline)}</span>
 
               </div>
 
-              <div className="text-xs text-gray-700 md:text-sm">
+              <div className="text-base text-gray-400 md:text-base">
                 <ExpandableText text={milestone.description} maxLines={3} showExpandButton={true} />
               </div>
               

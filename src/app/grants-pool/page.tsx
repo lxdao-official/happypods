@@ -21,7 +21,7 @@ export default function GrantsPoolPage() {
   const grantsPools = grantsPoolsData?.grantsPools || [];
 
   return (
-    <div className="p-6 mb-8">
+    <div className="container !py-10">
       <div className="mx-auto max-w-7xl">
         {/* 顶部横幅 */}
         <CornerFrame className="mb-20" style="border"> 

@@ -7,7 +7,7 @@ import { DataDisplayGrid } from "~/components/data-display-grid";
 
 export default function PodsPage() {
   return (
-    <div className="p-6 ">
+    <div className="py-10">
       <div className="container">
 
         {/* breadcrumb */}

@@ -36,24 +36,13 @@ export function MobileMenu({ navs }: MobileMenuProps) {
             {/* 汉堡菜单按钮 */}
             <Button
                 isIconOnly
-                variant="light"
+                variant="faded"
                 onPress={onOpen}
-                className="text-white"
+                size='sm'
+                className="text-black"
                 aria-label="Toggle menu"
             >
-                <svg
-                    className="w-6 h-6"
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
-                >
-                    <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth={2}
-                        d="M4 6h16M4 12h16M4 18h16"
-                    />
-                </svg>
+                <i className="text-base ri-menu-line"></i>
             </Button>
 
             {/* HeroUI Drawer */}
@@ -70,7 +59,7 @@ export function MobileMenu({ navs }: MobileMenuProps) {
                     className="p-4"
                     itemClasses={{
                         base: "px-4 py-3 rounded-none data-[hover=true]:bg-primary/10 data-[selected=true]:bg-primary/20",
-                        title: "text-white data-[hover=true]:text-primary data-[selected=true]:text-primary"
+                        title: "text-black data-[hover=true]:text-primary data-[selected=true]:text-primary"
                     }}
                 >
                     
