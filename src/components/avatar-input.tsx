@@ -1,4 +1,8 @@
-import { Input } from "@heroui/react";
+'use client';
+
+import { useState } from 'react';
+import { Input, Tabs, Tab } from "@heroui/react";
+import AvatarUpload from './avatar-upload';
 
 interface AvatarInputProps {
   value: string;
@@ -9,17 +13,25 @@ interface AvatarInputProps {
   isRequired?: boolean;
   size?: "sm" | "md" | "lg";
   previewSize?: "sm" | "md" | "lg";
+  maxFileSize?: number; // 最大文件大小，单位为MB
+  acceptedTypes?: string[]; // 接受的文件类型
 }
+
+type InputMode = 'url' | 'upload';
 
 export default function AvatarInput({
   value,
   onChange,
-  label = "Avatar URL",
   placeholder = "https://example.com/avatar.jpg",
+  description,
   isRequired = false,
   size = "md",
-  previewSize = "md"
+  previewSize = "md",
+  maxFileSize = 2,
+  acceptedTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/gif', 'image/webp']
 }: AvatarInputProps) {
+  const [activeTab, setActiveTab] = useState<InputMode>('url');
+
   const getPreviewSizeClass = () => {
     switch (previewSize) {
       case "sm":
@@ -31,31 +43,65 @@ export default function AvatarInput({
     }
   };
 
+  const handleUpload = (publicUrl: string) => {
+    // 当用户上传文件时，将 S3 公开URL 传递给父组件
+    onChange(publicUrl);
+  };
+
   return (
-    <Input
-      variant="faded"
-      type="url"
-      label={label}
-      value={value}
-      onChange={(e) => onChange(e.target.value)}
-      placeholder={placeholder}
-      isRequired={isRequired}
-      size={size}
-      endContent={
-        value && (
-          <img
-            src={value}
-            alt="Avatar Preview"
-            className={`object-cover rounded-full ${getPreviewSizeClass()}`}
-            onError={(e) => {
-              (e.target as HTMLImageElement).style.display = 'none';
-            }}
-            onLoad={(e) => {
-              (e.target as HTMLImageElement).style.display = 'block';
-            }}
+    <div className="space-y-4">
+
+      <Tabs
+        selectedKey={activeTab}
+        onSelectionChange={(key) => setActiveTab(key as InputMode)}
+        className="w-full"
+      >
+        <Tab key="url" title="Input URL" />
+        <Tab key="upload" title="Upload File" />
+      </Tabs>
+
+      <div className="mt-4">
+        {activeTab === 'url' && (
+          <Input
+            variant="faded"
+            type="url"
+            label="头像链接"
+            value={value}
+            onChange={(e) => onChange(e.target.value)}
+            placeholder={placeholder}
+            isRequired={isRequired}
+            size={size}
+            endContent={
+              value && (
+                <img
+                  src={value}
+                  alt="头像预览"
+                  className={`object-cover rounded-full ${getPreviewSizeClass()}`}
+                  onError={(e) => {
+                    (e.target as HTMLImageElement).style.display = 'none';
+                  }}
+                  onLoad={(e) => {
+                    (e.target as HTMLImageElement).style.display = 'block';
+                  }}
+                />
+              )
+            }
           />
-        )
-      }
-    />
+        )}
+
+        {activeTab === 'upload' && (
+          <AvatarUpload
+            onUpload={handleUpload}
+            previewSize={previewSize}
+            maxSize={maxFileSize}
+            acceptedTypes={acceptedTypes}
+          />
+        )}
+      </div>
+
+      {description && (
+        <p className="text-sm text-gray-500">{description}</p>
+      )}
+    </div>
   );
 } 

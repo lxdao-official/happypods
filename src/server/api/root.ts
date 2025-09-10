@@ -6,6 +6,7 @@ import { grantsPoolRouter } from "./routers/grants-pool/index";
 import { notificationRouter } from "./routers/notification/index";
 import { milestoneRouter } from "./routers/milestone/index";
 import { walletRouter } from "./routers/wallet/index";
+import { uploadRouter } from "./routers/upload";
 
 /**
  * This is the primary router for your server.
@@ -20,6 +21,7 @@ export const appRouter = createTRPCRouter({
   notification: notificationRouter,
   milestone: milestoneRouter,
   wallet: walletRouter,
+  upload: uploadRouter,
 });
 
 // 导入监控服务

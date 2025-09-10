@@ -11,6 +11,11 @@ export const env = createEnv({
         NODE_ENV: z
             .enum(["development", "test", "production"])
             .default("development"),
+        R2_ENDPOINT: z.string().url(),
+        R2_ACCESS_KEY_ID: z.string(),
+        R2_SECRET_ACCESS_KEY: z.string(),
+        R2_BUCKET: z.string(),
+        R2_PUBLIC_URL: z.string().url(),
     },
 
     /**
@@ -30,6 +35,11 @@ export const env = createEnv({
         DATABASE_URL: process.env.DATABASE_URL,
         NODE_ENV: process.env.NODE_ENV,
         NEXT_PUBLIC_WALLETCONNECT_PROJECT_ID: process.env.NEXT_PUBLIC_WALLETCONNECT_PROJECT_ID,
+        R2_ENDPOINT: process.env.R2_ENDPOINT,
+        R2_ACCESS_KEY_ID: process.env.R2_ACCESS_KEY_ID,
+        R2_SECRET_ACCESS_KEY: process.env.R2_SECRET_ACCESS_KEY,
+        R2_BUCKET: process.env.R2_BUCKET,
+        R2_PUBLIC_URL: process.env.R2_PUBLIC_URL,
     },
     /**
      * Run `build` or `dev` with `SKIP_ENV_VALIDATION` to skip env validation. This is especially
