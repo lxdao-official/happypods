@@ -65,7 +65,7 @@ export default function AvatarInput({
           <Input
             variant="faded"
             type="url"
-            label="头像链接"
+            label="Avatar"
             value={value}
             onChange={(e) => onChange(e.target.value)}
             placeholder={placeholder}
@@ -75,7 +75,7 @@ export default function AvatarInput({
               value && (
                 <img
                   src={value}
-                  alt="头像预览"
+                  alt="Avatar Preview"
                   className={`object-cover rounded-full ${getPreviewSizeClass()}`}
                   onError={(e) => {
                     (e.target as HTMLImageElement).style.display = 'none';
