@@ -92,6 +92,7 @@ export default function AvatarInput({
         {activeTab === 'upload' && (
           <AvatarUpload
             onUpload={handleUpload}
+            initialUrl={value}
             previewSize={previewSize}
             maxSize={maxFileSize}
             acceptedTypes={acceptedTypes}
@@ -99,9 +100,9 @@ export default function AvatarInput({
         )}
       </div>
 
-      {description && (
+      {/* {description && (
         <p className="text-sm text-gray-500">{description}</p>
-      )}
+      )} */}
     </div>
   );
 } 

@@ -112,7 +112,7 @@ export default function AvatarUpload({
   };
 
   return (
-    <div className="flex items-center space-x-3">
+    <div className="flex items-center p-4 border-2 border-[#e0e0e3] rounded-xl">
       <input
         ref={fileInputRef}
         type="file"
@@ -126,7 +126,7 @@ export default function AvatarUpload({
           "relative group cursor-pointer",
           "rounded-full border-2 border-dashed border-gray-300",
           "flex items-center justify-center bg-gray-50",
-          "transition-all hover:border-blue-400 hover:bg-blue-50",
+          "transition-all hover:border-primary hover:bg-blue-50",
           getPreviewSizeClass()
         )}
         onClick={triggerFileSelect}
@@ -142,29 +142,24 @@ export default function AvatarUpload({
         )}
 
         {isUploading && (
-          <div className="absolute inset-0 flex items-center justify-center bg-black rounded-full bg-opacity-40">
+          <div className="absolute inset-0 flex items-center justify-center rounded-full bg-[#00000066] bg-opacity-40">
             <Spinner size="md" color="white" />
           </div>
         )}
 
         {!isUploading && previewUrl && (
-          <>
-            <div className="absolute inset-0 flex items-center justify-center transition-all bg-black bg-opacity-0 rounded-full pointer-events-none group-hover:bg-opacity-30">
-              <i className="text-xl text-white opacity-0 ri-pencil-line group-hover:opacity-100"></i>
-            </div>
-            <button
-              type="button"
-              onClick={handleRemove}
-              className="absolute p-1 text-white transition-colors bg-red-500 rounded-full opacity-0 -top-1 -right-1 hover:bg-red-600 group-hover:opacity-100"
-              aria-label="Remove image"
-            >
-              <i className="text-sm ri-close-line"></i>
-            </button>
-          </>
+          <button
+            type="button"
+            onClick={handleRemove}
+            className="absolute w-6 h-6 text-white transition-colors bg-red-500 rounded-full -top-2 -right-2 hover:bg-red-600"
+            aria-label="Remove image"
+          >
+            <i className="text-sm ri-close-line"></i>
+          </button>
         )}
       </div>
 
-      <div className="text-xs text-left text-gray-500">
+      <div className="ml-6 text-xs text-left text-gray-500">
         <div>Click avatar to upload</div>
         <div>Max {maxSize}MB, supports {acceptedTypes.map(t => t.split('/')[1]).join(', ')}</div>
       </div>
