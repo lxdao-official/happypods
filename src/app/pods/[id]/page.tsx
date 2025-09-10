@@ -138,9 +138,8 @@ export default function PodDetailPage() {
       
 
       <CardBox
-        titleBg={`linear-gradient(to top, white 0%, ${getColorFromString(podDetail.title , 0.4)})`}
+        titleBg={`linear-gradient(to top, white 0%, ${getColorFromString(podDetail.title , 0.3)})`}
         contentBg="white"
-        className="!border-none !shadow-medium"
         title={
         <div className="flex items-center justify-between">
           <div className="flex items-center">
@@ -195,7 +194,7 @@ export default function PodDetailPage() {
 
 
       <div className="space-y-6 md:w-[500px]">
-          <div className="p-4 bg-white shadow-medium rounded-xl">
+          <div className="p-4 bg-white border border-gray-200 rounded-xl">
             <div className="flex items-center justify-between mb-4">
               <div className="flex items-center gap-2">
                 <span className="text-xl font-bold">Treasury</span>
@@ -241,7 +240,7 @@ export default function PodDetailPage() {
 
           {/* <EdgeLine color="var(--color-background)"/> */}
 
-          <div className="p-4 bg-white shadow-medium rounded-xl">
+          <div className="p-4 bg-white border border-gray-200 rounded-xl">
             <h2 className="mb-4 text-xl font-bold">Project Details</h2>
               <div className="space-y-4">
 

@@ -26,7 +26,7 @@ const GrantspoolRFPItem = ({ proposal, onClick, className = "", gpId }: Grantspo
   return (
     <>
       <div
-        className={`border border-black rounded-lg p-4 relative hover:shadow-md transition-shadow ${className}`}
+        className={`border border-black rounded-lg p-4 relative hover:shadow-medium transition-shadow ${className}`}
         onClick={onClick}
       >
         

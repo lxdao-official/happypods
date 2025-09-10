@@ -41,8 +41,8 @@ const PodsItem = ({ pod, onClick, className = "", type = 'all' }: PodsItemProps)
         text-black rounded-xl overflow-hidden cursor-pointer fadeIn
         transition-all duration-300
         bg-white
+        border border-gray-200
         hover:border-black
-        shadow-medium
         hover:scale-105
         ${className}`}
       onClick={onClick}

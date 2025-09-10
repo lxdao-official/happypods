@@ -27,7 +27,7 @@ const CornerFrame = ({
 
   if(style === "shadow") {
     return (
-      <div className={`relative ${className} shadow-medium bg-white rounded-xl p-6`}>
+      <div className={`relative ${className} border border-gray-200 bg-white rounded-xl p-6`}>
         {children}
       </div>
     );

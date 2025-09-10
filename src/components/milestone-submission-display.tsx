@@ -51,7 +51,7 @@ export default function MilestoneSubmissionDisplay({ deliveryInfo, status }: Mil
           const isLatest = index === 0 && status === MilestoneStatus.REVIEWING;
 
           return (
-            <div key={index} className="p-4 bg-gray-100 border rounded-lg cursor-pointer hover:border-black group" onClick={() => openSubmissionModal(index)}>
+            <div key={index} className="p-4 border border-gray-200 rounded-lg cursor-pointer hover:shadow-medium hover:border-black group" onClick={() => openSubmissionModal(index)}>
               {/* Header */}
               <div
                 className="flex items-center justify-between select-none"

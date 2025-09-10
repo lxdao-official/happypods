@@ -9,7 +9,7 @@ interface CardBoxProps {
 
 const CardBox = ({ title = "", children, className = "", titleBg='var(--color-pink)', contentBg='#ffffff' }: CardBoxProps) => {
   return (
-    <div className={`w-full mx-auto text-black shadow-medium overflow-hidden rounded-xl ${className}`}
+    <div className={`w-full mx-auto text-black border border-gray-200 overflow-hidden rounded-xl ${className}`}
         style={{
             backgroundColor: contentBg,
             // boxShadow: `5px 5px 0px ${shadowBg || 'black'}`,

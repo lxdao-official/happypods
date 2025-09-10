@@ -38,7 +38,6 @@ export function MobileMenu({ navs }: MobileMenuProps) {
                 isIconOnly
                 variant="faded"
                 onPress={onOpen}
-                size='sm'
                 className="text-black"
                 aria-label="Toggle menu"
             >

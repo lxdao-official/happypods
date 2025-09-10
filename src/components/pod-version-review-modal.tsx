@@ -84,7 +84,7 @@ export default function PodVersionReviewModal({
         <ModalBody>
           <div className="py-4 space-y-6">
             {/* 基本信息 */}
-            <div className="p-4 rounded-lg shadow-medium">
+            <div className="p-4 rounded-lg border border-gray-200">
               <h3 className="mb-4 text-lg font-medium">Basic Information</h3>
               <div className="space-y-6">
                 <div className="flex items-center gap-2">
@@ -117,7 +117,7 @@ export default function PodVersionReviewModal({
 
             {/* Milestones */}
             {versionData.milestones && versionData.milestones.length > 0 && (
-              <div className="p-4 rounded-lg shadow-medium">
+              <div className="p-4 rounded-lg border border-gray-200">
                 <h3 className="mb-4 text-lg font-medium">Milestones</h3>
                 <div className="space-y-4">
                   {versionData.milestones.map((milestone: any, index: number) => (

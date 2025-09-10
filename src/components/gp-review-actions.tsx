@@ -35,7 +35,7 @@ export default function GpReviewActions({ podDetail }: {podDetail: Pod}) {
           variant="faded"
           color="default"
           title="Pod applied, please review!"
-          className="mb-4 bg-background shadow-medium"
+          className="mb-4 bg-background border border-gray-200"
           endContent={
             <div className="flex items-center gap-4">
               <AppBtn
