@@ -4,7 +4,6 @@ import CornerFrame from "~/components/corner-frame";
 import SafeConfigForm from "~/components/safe-config-form";
 import useSafeWallet from "~/hooks/useSafeWallet";
 import { useAccount } from "wagmi";
-import { type Address } from "viem";
 import { toast } from "sonner";
 import useStore from "~/store";
 
@@ -14,6 +13,7 @@ interface CreateSafeModalProps {
   onConfirm: (safeAddress: string) => void;
   // 可选的预设参数，如果传入则不可更改
   predefinedOwners?: string[];
+  predefinedOwnersLabels?: Record<string, string>;
   predefinedThreshold?: number;
   description?: string;
 }
@@ -23,12 +23,15 @@ const CreateSafeModal = ({
   onClose, 
   onConfirm, 
   predefinedOwners, 
+  predefinedOwnersLabels,
   predefinedThreshold,
   description
 }: CreateSafeModalProps) => {
   const { address } = useAccount();
   const { deploySafe, status } = useSafeWallet();
   const { userInfo } = useStore();
+
+  console.log({predefinedOwnersLabels,predefinedOwners});
 
   // 状态管理
   const [owners, setOwners] = useState<string[]>([]);
@@ -118,6 +121,7 @@ const CreateSafeModal = ({
                   onThresholdChange={setThreshold}
                   isReadOnly={isUsingPredefined}
                   currentUserAddress={userInfo?.walletAddress}
+                  predefinedOwnersLabels={predefinedOwnersLabels}
                 />
 
                 {/* {safeAddress && (

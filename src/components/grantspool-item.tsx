@@ -53,10 +53,10 @@ const GrantspoolItem = ({ grantsPool, className = "", children, type = "list" }:
     titleBg={`linear-gradient(to top, white 0%, ${getColorFromString(grantsPool.name , 0.2)})`}
     title={
       <div className="flex items-center justify-between">
-        <div className="flex items-center flex-1 gap-2 overflow-hidden text-2xl text-ellipsis whitespace-nowrap">
+        <div className="flex items-center flex-1 gap-2 text-2xl text-ellipsis whitespace-nowrap">
           <LazyImage 
             src={avatarSrc} alt="avatar" 
-            className="w-10 h-10 rounded-full" 
+            className="w-10 h-10 overflow-hidden border border-white rounded-full shadow-medium" 
           />
           
           <b className="overflow-hidden text-xl md:text-2xl text-ellipsis text-nowrap">{grantsPool.name}</b>

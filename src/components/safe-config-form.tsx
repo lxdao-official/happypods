@@ -3,6 +3,8 @@ import { Button, Input, Select, SelectItem } from "@heroui/react";
 import { type Address } from "viem";
 import { isAddress } from "viem";
 import { toast } from "sonner";
+import { truncateString } from "~/lib/utils";
+import { useMobile } from "~/hooks/useMobile";
 
 interface SafeConfigFormProps {
   owners: string[];
@@ -11,6 +13,7 @@ interface SafeConfigFormProps {
   onThresholdChange: (threshold: number) => void;
   isReadOnly?: boolean;
   currentUserAddress?: string; // 当前用户地址，用于特殊保护
+  predefinedOwnersLabels?: Record<string, string>;
 }
 
 const SafeConfigForm = ({
@@ -20,8 +23,10 @@ const SafeConfigForm = ({
   onThresholdChange,
   isReadOnly = false,
   currentUserAddress,
+  predefinedOwnersLabels,
 }: SafeConfigFormProps) => {
   const [newOwnerInput, setNewOwnerInput] = useState("");
+  const isMobile = useMobile();
 
   // 添加新的owner
   const addOwner = () => {
@@ -94,10 +99,10 @@ const SafeConfigForm = ({
                 }`}
               >
                 <div className="flex justify-between flex-1">
-                  <span className="font-mono text-sm">{owner}</span>
-                  {isCurrentUserAddress && (
+                  <span className="font-mono text-sm">{isMobile ? truncateString(owner) : owner}</span>
+                  {predefinedOwnersLabels && (
                     <span className="px-2 py-1 ml-2 text-xs rounded-full text-primary-600 bg-primary-100">
-                      Creator
+                      {predefinedOwnersLabels?.[owner] || 'Signer'}
                     </span>
                   )}
                 </div>

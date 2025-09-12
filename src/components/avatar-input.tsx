@@ -71,6 +71,7 @@ export default function AvatarInput({
             placeholder={placeholder}
             isRequired={isRequired}
             size={size}
+            errorMessage={'Please enter a valid avatar URL'}
             endContent={
               value && (
                 <img

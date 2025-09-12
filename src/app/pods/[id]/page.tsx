@@ -143,7 +143,7 @@ export default function PodDetailPage() {
         title={
         <div className="flex items-center justify-between">
           <div className="flex items-center">
-              <LazyImage src={podDetail.avatar || ''} alt="" className="object-contain w-10 h-10 bg-white rounded-full" />
+              <LazyImage src={podDetail.avatar || ''} alt="" className="object-contain w-10 h-10 border border-white rounded-full shadow-medium" />
               <span className="ml-2 text-xl font-bold md:text-2xl">{podDetail.title}</span>
             </div>
 

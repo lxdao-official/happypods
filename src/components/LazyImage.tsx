@@ -72,7 +72,7 @@ const LazyImage = ({
         width={width}
         height={height}
         loading={loading}
-        className={`transition-opacity duration-300 object-cover ${
+        className={`transition-opacity duration-300 object-contain ${
           imageState === 'loaded' ? 'opacity-100' : 'opacity-0'
         } ${className}`}
         onLoad={handleLoad}

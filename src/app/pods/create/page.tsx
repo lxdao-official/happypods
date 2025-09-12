@@ -227,11 +227,17 @@ export default function CreatePodPage() {
   };
 
   const predefinedOwners = useMemo(() => {
-    return [
+    const owners = [
       userInfo?.walletAddress || "",
       grantsPoolDetails?.treasuryWallet || "",
       PLATFORM_MOD_ADDRESS
     ].filter(Boolean);
+    const labels = {  
+      [userInfo?.walletAddress || ""]: "Current User",
+      [grantsPoolDetails?.treasuryWallet || ""]: "GP Treasury",
+      [PLATFORM_MOD_ADDRESS]: "Platform Mod"
+    };
+    return { owners, labels };
   }, [userInfo?.walletAddress, grantsPoolDetails?.treasuryWallet]);
 
 
@@ -367,7 +373,8 @@ export default function CreatePodPage() {
           description="Pod funds will be jointly managed by Platform Mod + GP Creator + Current User!"
           onClose={() => setShowSafeModal(false)}
           onConfirm={handleSafeCreated}
-          predefinedOwners={predefinedOwners}
+          predefinedOwners={predefinedOwners.owners}
+          predefinedOwnersLabels={predefinedOwners.labels}
           predefinedThreshold={2}
         />
 
