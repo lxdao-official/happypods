@@ -54,7 +54,7 @@ export default function RootLayout({
         <meta name="HandheldFriendly" content="true" />
         
         {/* Default SEO Meta Tags */}
-        <title>HappyPods - Web3 Grant Management Platform</title>
+        {/* <title>HappyPods - Web3 Grant Management Platform</title> */}
         <meta name="description" content="HappyPods is a Web3 grant management platform that connects Grant Pools with project teams (Pods), providing milestone-based smart funding workflows for transparent and efficient project financing." />
         <meta name="keywords" content="Web3, Grant Management, DAO, Decentralized, Blockchain, Ethereum, Project Funding, Smart Contracts, DeFi, Milestone-based Funding" />
         

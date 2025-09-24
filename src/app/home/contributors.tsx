@@ -3,7 +3,7 @@ import CardBox from "~/components/card-box";
 interface GitHubContributor {
     login: string;
     avatar_url: string;
-    html_url: string;
+    url: string;
 }
 
 interface Contributor extends GitHubContributor {
@@ -15,25 +15,25 @@ const contributors: Contributor[] = [
     {
         login: "Keylen",
         avatar_url: "https://avatars.githubusercontent.com/u/17230944?v=4",
-        html_url: "https://github.com/BiscuitCoder",
+        url: "https://github.com/BiscuitCoder",
         type: "Development"
     },
     {
         login: "Bruce Xu",
         avatar_url: "https://avatars.githubusercontent.com/u/95468177?v=4",
-        html_url: "https://github.com/brucexu-eth",
+        url: "https://github.com/brucexu-eth",
         type: "Idea"
     },
     {
         login: "Marcus",
         avatar_url: "https://avatars.githubusercontent.com/u/69314554?v=4",
-        html_url: "https://github.com/MRzzz-cyber",
+        url: "https://github.com/MRzzz-cyber",
         type: "Idea"
     },
     {
         login: "JIWEN",
         avatar_url: "https://cdn.lxdao.io/9a8d84c8-17e6-4433-ae05-97e42bae42f2.jpg",
-        html_url: "",
+        url: "",
         type: "Design"
     }
 ];
@@ -64,10 +64,12 @@ const Contributors = () => {
                     </p>
                     <div className="grid grid-cols-2 gap-6 px-4 md:px-10 md:grid-cols-4">
                         {contributors.map((contributor) => (
-                            <div
+                            <a
                                 key={contributor.login}
                                 className="flex flex-col items-center p-4 transition-shadow border border-black rounded-lg cursor-pointer hover:shadow-lg group"
-                                onClick={() => window.open(contributor.html_url, '_blank')}
+                                href={contributor.url}
+                                target="_blank"
+                                rel="noopener noreferrer"
                             >
                                 <div className="relative mb-3">
                                     <img
@@ -82,7 +84,7 @@ const Contributors = () => {
                                 <span className={`px-2 py-1 rounded-full text-xs font-medium ${getTypeColor(contributor.type)}`}>
                                     {contributor.type}
                                 </span>
-                            </div>
+                            </a>
                         ))}
                     </div>
                     <div className="mt-8 text-center">
