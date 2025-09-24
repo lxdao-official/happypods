@@ -4,13 +4,14 @@ import { generatePageMetadata } from "~/lib/metadata";
 import { markdownToText } from "~/lib/utils";
 
 type Props = {
-  params: { id: string };
+  params: Promise<{ id: string }>;
   children: React.ReactNode;
 };
 
-export async function generateMetadata({ params }: { params: { id: string } }) {
+export async function generateMetadata({ params }: { params: Promise<{ id: string }> }) {
   try {
-    const grantsPool = await api.grantsPool.getById({ id: parseInt(params.id) });
+    const { id } = await params;
+    const grantsPool = await api.grantsPool.getById({ id: parseInt(id) });
     return generatePageMetadata("grants-pool", {
       title: `${grantsPool.name} - HappyPods`,
       description: grantsPool.name,
