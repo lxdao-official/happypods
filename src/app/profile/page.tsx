@@ -2,9 +2,9 @@
 
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { 
-  Input, 
-  Textarea, 
+import {
+  Input,
+  Textarea,
 } from "@heroui/react";
 import CornerFrame from "~/components/corner-frame";
 import AppBtn from "~/components/app-btn";
@@ -15,6 +15,7 @@ import { getUser } from "~/lib/auth-storage";
 import { toast } from "sonner";
 import LoadingSkeleton from "~/components/loading-skeleton";
 import { useUserInfo } from "../../hooks/useUserInfo";
+import { useSEO } from "~/hooks/useSeo";
 
 interface FormData {
   avatar: string;
@@ -25,6 +26,8 @@ interface FormData {
 }
 
 export default function ProfilePage() {
+  useSEO("profile");
+
   const { fetchAndStoreUserInfo } = useUserInfo();
 
   const router = useRouter();

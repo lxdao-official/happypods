@@ -3,10 +3,10 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
-import { 
-  Input, 
-  Textarea, 
-  Select, 
+import {
+  Input,
+  Textarea,
+  Select,
   SelectItem
 } from "@heroui/react";
 import CornerFrame from "~/components/corner-frame";
@@ -19,6 +19,7 @@ import { api } from "~/trpc/react";
 import { toast } from "sonner";
 import AvatarInput from "~/components/avatar-input";
 import { MarkdownEditor } from "~/components/Tiptap";
+import { useSEO } from "~/hooks/useSeo";
 
 interface RFP {
   id: string;
@@ -34,6 +35,8 @@ interface RelatedLinks {
 }
 
 export default function CreateGrantsPoolPage() {
+  useSEO("grants-pool/create");
+
   const router = useRouter();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [showSafeModal, setShowSafeModal] = useState(false);

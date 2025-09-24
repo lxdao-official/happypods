@@ -3,8 +3,11 @@
 import { useState } from "react";
 import CornerFrame from "~/components/corner-frame";
 import { DataDisplayGrid } from "~/components/data-display-grid";
+import { useSEO } from "~/hooks/useSeo";
 
 export default function PodsPage() {
+  useSEO("pods");
+
   return (
     <>
       <div className="container">

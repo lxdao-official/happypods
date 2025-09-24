@@ -1,69 +1,69 @@
 ---
 alwaysApply: false
 ---
-# Happy Pods 项目 Cursor 规则
+# Happy Pods Project Cursor Rules
 
-记住：整个项目是英文项目，你生成的注释需要用中文，但是显示给用户的界面上的文案都需要是英文的！
+Remember: This is an English project. Generated comments should be in Chinese, but all user-facing interface text must be in English!
 
-## 项目结构
-- 入口：Next.js 15 (App Router)
-- 主要目录：
-  - `src/app/` 页面与路由
-  - `src/components/` 组件
-  - `src/server/api/routers/` tRPC 路由
-  - `src/lib/` 工具库（如 wagmi 配置）
-  - `prisma/` 数据库 schema
+## Project Structure
+- Entry: Next.js 15 (App Router)
+- Main directories:
+  - `src/app/` Pages and routes
+  - `src/components/` Components
+  - `src/server/api/routers/` tRPC routes
+  - `src/lib/` Utility libraries (e.g., wagmi config)
+  - `prisma/` Database schema
 
-## 技术栈
-- TypeScript（严格模式）
+## Tech Stack
+- TypeScript (strict mode)
 - tRPC + Prisma + PostgreSQL
 - Tailwind CSS 4 + heroui
-- RainbowKit + wagmi + viem（Web3）
-- TanStack Query（React Query）
+- RainbowKit + wagmi + viem (Web3)
+- TanStack Query (React Query)
 - ESLint + Prettier
 
-## 命名规范
-- 组件：PascalCase
-- 文件：kebab-case
-- 变量/函数：camelCase
-- 常量：UPPER_SNAKE_CASE
-- 类型/接口：PascalCase
+## Naming Conventions
+- Components: PascalCase
+- Files: kebab-case
+- Variables/functions: camelCase
+- Constants: UPPER_SNAKE_CASE
+- Types/interfaces: PascalCase
 
-## 代码规范
-- 类型导入用 `import type { ... }`
-- Props 类型用 `Readonly<T>`
-- 避免 `any`，优先 `unknown` 或具体类型
-- 运行时校验用 zod
-- 组件用函数式，props 用 `Readonly<{ children: React.ReactNode }>`
-- 客户端组件加 'use client'
-- Web3 配置在 `src/lib/wagmi.ts`
-- 环境变量用 `@t3-oss/env-nextjs` + zod 校验
+## Code Standards
+- Use `import type { ... }` for type imports
+- Use `Readonly<T>` for props types
+- Avoid `any`, prefer `unknown` or specific types
+- Use zod for runtime validation
+- Use functional components, props with `Readonly<{ children: React.ReactNode }>`
+- Add 'use client' for client components
+- Web3 config in `src/lib/wagmi.ts`
+- Use `@t3-oss/env-nextjs` + zod for environment variables
 
-## 数据库
-- Prisma schema 定义在 `prisma/schema.prisma`
-- 时间戳用 `@default(now())` 和 `@updatedAt`
-- 频繁查询字段加索引
-- 仅服务端操作数据库
+## Database
+- Prisma schema defined in `prisma/schema.prisma`
+- Use `@default(now())` and `@updatedAt` for timestamps
+- Add indexes for frequently queried fields
+- Database operations only on server side
 
 ## Web3
-- RainbowKit 负责钱包连接 UI
-- wagmi hooks 获取账户、余额等
-- 钱包连接状态需优雅处理
-- 支持多链，WalletConnect ID 用环境变量
+- RainbowKit handles wallet connection UI
+- wagmi hooks for account, balance, etc.
+- Handle wallet connection states gracefully
+- Support multiple chains, use environment variables for WalletConnect ID
 
-## 开发流程
-1. 包管理用 pnpm
-2. `pnpm dev` 启动开发（端口 3016）
-3. `pnpm db:studio` 查看数据库
-4. `pnpm format:write` 格式化
-5. `pnpm lint` 代码检查
-6. `pnpm typecheck` 类型检查
+## Development Workflow
+1. Use pnpm for package management
+2. `pnpm dev` to start development (port 3016)
+3. `pnpm db:studio` to view database
+4. `pnpm format:write` for formatting
+5. `pnpm lint` for code checking
+6. `pnpm typecheck` for type checking
 
-## 其他
-- 遵循 T3 Stack 最佳实践
-- 保持代码简洁、可维护
-- Web3 多网络测试，钱包断开需处理
-- 重要变更需测试数据库迁移
+## Others
+- Follow T3 Stack best practices
+- Keep code simple and maintainable
+- Test Web3 on multiple networks, handle wallet disconnection
+- Test database migrations for important changes
 description:
 globs:
 alwaysApply: false

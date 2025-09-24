@@ -4,6 +4,7 @@ import CornerFrame from "~/components/corner-frame";
 import CardBox from "~/components/card-box";
 import type { ReactNode } from "react";
 import {Accordion, AccordionItem} from "@heroui/react";
+import { useSEO } from "~/hooks/useSeo";
 
 // 页面内容数据
 type ContentItem = Readonly<{
@@ -204,6 +205,8 @@ const faqs: ReadonlyArray<FAQItem> = [
 ];
 
 export default function HowItWorksPage() {
+  useSEO("how-it-works");
+
   return (
     <div className="container min-h-screen">
       <div className="mx-auto">

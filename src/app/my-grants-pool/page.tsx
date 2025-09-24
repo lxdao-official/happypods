@@ -8,8 +8,11 @@ import NextLink from 'next/link';
 import { api } from "~/trpc/react";
 import LoadingSkeleton from "~/components/loading-skeleton";
 import EmptyReplace from "~/components/empty-replace";
+import { useSEO } from "~/hooks/useSeo";
 
 export default function MyGrantsPoolPage() {
+  useSEO("my-grants-pool");
+
   // 获取当前用户创建的 grants pools 数据
   const { data: grantsPoolsData, isLoading, error } = api.grantsPool.getMyGrantsPools.useQuery();
 

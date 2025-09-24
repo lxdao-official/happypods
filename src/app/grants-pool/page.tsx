@@ -9,8 +9,11 @@ import { api } from "~/trpc/react";
 import EmptyReplace from "~/components/empty-replace";
 import LoadingSkeleton from "~/components/loading-skeleton";
 import RequireLogin from "~/components/require-login";
+import { useSEO } from "~/hooks/useSeo";
 
 export default function GrantsPoolPage() {
+  useSEO("grants-pool");
+
   // 获取所有 grants pools 数据（不使用分页，获取全部）
   const { data: grantsPoolsData, isLoading } = api.grantsPool.getAll.useQuery({
     limit: 100, // 设置一个较大的限制值来获取所有数据
