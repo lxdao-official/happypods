@@ -49,7 +49,7 @@ const MdTextPreviewModal: React.FC<MdTextPreviewModalProps> = ({
         </div>
 
         {showButton && (
-          <div className="absolute bottom-[0px] right-0 text-xs text-primary">
+          <div className="absolute bottom-[0px] right-0 text-xs text-primary hover:text-sm transition-all">
             <button 
               onClick={handleToggleModal}
               className='flex items-center gap-1'

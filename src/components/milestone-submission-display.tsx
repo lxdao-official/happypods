@@ -104,11 +104,6 @@ export default function MilestoneSubmissionDisplay({ deliveryInfo, status }: Mil
           <ModalBody className="py-6 space-y-4">
             {selectedSubmission && (
               <>
-                {/* Links */}
-                {Object.keys(selectedSubmission.links).length > 0 && (
-                  <LinkDisplay links={selectedSubmission.links} theme="light" />
-                )}
-
                 {/* Review info */}
                 {selectedSubmission.reviewComment && (
                   <div className="space-y-2">
@@ -141,10 +136,15 @@ export default function MilestoneSubmissionDisplay({ deliveryInfo, status }: Mil
                   </div>
                 )}
 
-                {/* Description */}
-                <div className="py-4 border-t-2 border-gray-200">
-                  <MarkdownRenderer content={selectedSubmission.content}/>
-                </div>
+
+                <div className="border-t-2 border-gray-200"></div>
+
+                 {/* Links */}
+                 {Object.keys(selectedSubmission.links).length > 0 && (
+                  <LinkDisplay links={selectedSubmission.links} theme="light" />
+                )}
+
+                <MarkdownRenderer content={selectedSubmission.content} contentClassName="p-0"/>
               </>
             )}
           </ModalBody>

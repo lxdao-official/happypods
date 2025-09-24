@@ -119,7 +119,7 @@ export default function FundInjectionWarning({ pod, shortage }: FundInjectionWar
       });
 
     } catch (error) {
-      console.error('资金注入操作失败:', error);
+      console.error('fund injection failed:', error);
       toast.error('Fund injection failed, please retry');
     } finally {
       setIsProcessing(false);

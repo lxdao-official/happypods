@@ -68,7 +68,7 @@ export default function SubmitMilestoneModal({ milestoneId, safeTransactionHash 
       return;
     }
 
-    // setIsSubmitting(true);
+    setIsSubmitting(true);
 
     try {
       const transfersData = buildTransfersData();
@@ -165,6 +165,7 @@ export default function SubmitMilestoneModal({ milestoneId, safeTransactionHash 
     } catch (error) {
       console.error("Submission failed:", error);  
       toast.error(`Submission failed, please check and try again!`);
+    } finally {
       setIsSubmitting(false);
     }
   };

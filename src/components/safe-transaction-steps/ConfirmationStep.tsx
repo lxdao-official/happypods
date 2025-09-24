@@ -5,6 +5,7 @@ import { Button, Chip } from '@heroui/react';
 import { toast } from 'sonner';
 import { useAccount } from 'wagmi';
 import useStore, { SafeTransactionStep, SafeStepStatus } from '~/store';
+import useSafeWallet from '~/hooks/useSafeWallet';
 
 interface ConfirmationStepProps {
   transactionHash: string;
@@ -23,6 +24,7 @@ export function ConfirmationStep({
   const [loading, setLoading] = useState(false);
   const { address } = useAccount();
   const { safeTransactionHandler } = useStore();
+  const { initSafeInstance, apiKit } = useSafeWallet();
 
   // 检查当前钱包是否在多签 owners 中
   const isOwner = useMemo(() => {
@@ -73,13 +75,20 @@ export function ConfirmationStep({
     try {
       toast.info('Signing confirmation...');
       
-      // 这里需要调用具体的签名方法
-      // ! 多签阈值的方法需要补齐
-      await new Promise(resolve => setTimeout(resolve, 2000));
+      // Initialize Safe instance
+      const safeInstance = await initSafeInstance(walletInfo.safeAddress);
       
-      toast.success('Signature confirmed successfully!');
+      // Sign the transaction hash
+      const signature = await safeInstance.signHash(transactionHash);
       
-      // 获取更新后的确认状态
+      // Confirm the Safe transaction
+      const signatureResponse = await apiKit.confirmTransaction(transactionHash, signature.data);
+      
+      if (signatureResponse) {
+        toast.success('Signature confirmed successfully!');
+      }
+      
+      // Get updated confirmation status
       const currentConfirmations = (transactionDetail?.confirmations?.length || 0) + 1;
       const requiredConfirmations = walletInfo?.threshold || 0;
       
@@ -89,10 +98,10 @@ export function ConfirmationStep({
         confirmationsRequired: requiredConfirmations
       });
       
-      onComplete(); // 触发父组件刷新
+      onComplete(); // Trigger parent component refresh
       
     } catch (error) {
-      console.error('签名确认失败:', error);
+      console.error('Signature confirmation failed:', error);
       const errorObj = error instanceof Error ? error : new Error('Signature confirmation failed');
       toast.error(errorObj.message);
       safeTransactionHandler?.onStepChange?.(SafeTransactionStep.CONFIRMATION, SafeStepStatus.ERROR, null, errorObj);
@@ -133,7 +142,7 @@ export function ConfirmationStep({
         </div>
         <div className="text-tiny text-default-500">
           Waiting for multi-sig wallet members to confirm transaction
-          {transactionDetail && ` (${currentConfirmations}/${requiredConfirmations})`}
+          <b className='text-red-500'>{transactionDetail && ` (${currentConfirmations}/${requiredConfirmations})`}</b>
         </div>
       </div>
       
@@ -159,7 +168,7 @@ export function ConfirmationStep({
         
         {shouldShow && (
           <Button
-            color="warning"
+            color="primary"
             variant="shadow"
             size="sm"
             isLoading={loading}

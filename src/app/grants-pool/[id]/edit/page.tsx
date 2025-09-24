@@ -172,7 +172,7 @@ export default function EditGrantsPoolPage() {
         tags: selectedTags.length > 0 ? selectedTags.join(',') : undefined,
         treasuryWallet: formData.treasuryWallet,
         chainType: formData.chainType,
-        links: Object.keys(links).length > 0 ? links : undefined,
+        links: Object.keys(links).length > 0 ? links : {},
         rfps: processedRfps,
         modInfo,
       });

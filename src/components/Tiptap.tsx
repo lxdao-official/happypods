@@ -16,14 +16,15 @@ interface MarkdownEditorProps {
 interface MarkdownRendererProps {
   content: string;
   className?: string;
+  contentClassName?: string;
 }
 
 // Markdown 渲染组件
-const MarkdownRenderer = ({ content, className = '' }: MarkdownRendererProps) => {
+const MarkdownRenderer = ({ content, className = '', contentClassName = '' }: MarkdownRendererProps) => {
   return (
     <div id="tiptap-preview" className={`${className}`}>
       {content ? (
-        <div className="p-4 prose-sm prose sm:prose lg:prose-lg xl:prose-2xl prose-invert max-w-none">
+        <div className={`${contentClassName} prose-sm prose sm:prose lg:prose-lg xl:prose-2xl prose-invert max-w-none`}>
           <ReactMarkdown
             remarkPlugins={[remarkGfm]}
             components={{

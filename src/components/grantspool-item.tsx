@@ -105,7 +105,7 @@ const GrantspoolItem = ({ grantsPool, className = "", children, type = "list" }:
 
         {/* 描述 */}
         <div className="md:col-span-2">
-          <MdTextPreviewModal markdown={grantsPool.description} showButton={type === "detail"}>
+          <MdTextPreviewModal markdown={grantsPool.description}>
             <ExpandableText  text={markdownToText(grantsPool.description)} maxLines={2} />
           </MdTextPreviewModal>
         </div>

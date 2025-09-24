@@ -27,6 +27,7 @@ interface RelatedLinksSectionProps {
 
 const RelatedLinksSection = ({ links, onLinksChange }: RelatedLinksSectionProps) => {
   // 初始化链接项
+  links = links || {};
   const [items, setItems] = useState<LinkItem[]>(() => {
     const presetItems = PRESET_LINKS
       .filter(preset => links[preset.key])

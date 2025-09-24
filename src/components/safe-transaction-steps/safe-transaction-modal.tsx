@@ -278,7 +278,9 @@ export function SafeTransactionModal() {
 
                   <div className='flex flex-col gap-2 md:flex-row '>
                     <span className="text-default-500 min-w-[80px]">Safe Wallet: </span>
-                    <Tag color="error">{truncateString(safeTransactionHandler.safeAddress)}</Tag>
+                    <Tag color="primary" url={`https://app.safe.global/home?safe=oeth:${safeTransactionHandler.safeAddress}`}>
+                      {truncateString(safeTransactionHandler.safeAddress)}
+                    </Tag>
                   </div>
 
                   {

@@ -1,8 +1,9 @@
 export type TagColor = 'primary' | 'success' | 'warning' | 'error' | 'info' | 'default' | 'inactive' | 'red' | 'yellow' | 'green' | 'blue' | 'purple' | 'orange' | 'pink' | 'brown' | 'gray'
-const Tag = ({children,className,color}:{
+const Tag = ({children,className,color,url}:{
   children:React.ReactNode,
   className?:string,
   color?:TagColor
+  url?:string
 }) => {
     const colorMap:Record<string,string> = {
         primary: 'text-primary border-primary bg-green-400/10',
@@ -25,6 +26,11 @@ const Tag = ({children,className,color}:{
   return (
     <div className={`inline-block px-2 py-[2px] text-[8px] md:text-[11px] text-black border border-black rounded-md ${className} ${colorMap[color||'default']}`}>
       {children}
+      {url && (
+        <a href={url} target='_blank' className='ml-1 text-inherit hover:text-black'>
+          <i className="text-sm cursor-pointer ri-external-link-line hover:text-black"></i>
+        </a>
+      )}
     </div>
   );
 };

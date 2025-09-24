@@ -85,13 +85,15 @@ export default function MilestonesSection({ milestones, podDetail }: MilestonesS
                   {
                     milestone.status !== 'ACTIVE' && <StatusChip status={milestone.status as any} />
                   }
-                  {remainingSubmissions<3 && milestone.status===MilestoneStatus.PENDING_DELIVERY && (
-                    <span className="text-xs0">
-                      ({remainingSubmissions} submissions left)
-                    </span>
-                  )}
                 </div>
                 <div className="flex items-center gap-2">
+
+                {remainingSubmissions<3 && milestone.status===MilestoneStatus.PENDING_DELIVERY && (
+                    <span className="text-xs text-warning-500">
+                      <i className="text-sm ri-alarm-warning-fill"></i> {remainingSubmissions} submissions left
+                    </span>
+                  )}
+                  
                   {/* 只有PENDING_DELIVERY状态才显示提交按钮 */}
                   {milestone.status === 'PENDING_DELIVERY' && remainingSubmissions > 0 && isPodOwner && !waitPodTreasuryRecharge && (
                      <SubmitMilestoneModal 
@@ -99,6 +101,7 @@ export default function MilestonesSection({ milestones, podDetail }: MilestonesS
                         safeTransactionHash={milestone.safeTransactionHash}
                       /> 
                   )}
+                  
                   {/* 审核中状态显示审核按钮 */}
                   {milestone.status === 'REVIEWING' && isGpOwner && (
                     <ReviewMilestoneModal 
