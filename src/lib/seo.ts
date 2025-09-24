@@ -9,7 +9,7 @@ export interface PageSEO {
 export const seoConfig: Record<string, PageSEO> = {
   home: {
     title: "HappyPods - Web3 Grant Management Platform",
-    description: "HappyPods is a Web3 grant management platform that connects Grant Pools with project teams (Pods), providing milestone-based smart funding workflows for transparent and efficient project financing.",
+    description: "HappyPods is a Web3 grant management platform that connects Grant Pools with Pods, providing milestone-based smart funding workflows for transparent and efficient project financing.",
     keywords: ["Web3", "Grant Management", "DAO", "Decentralized", "Blockchain", "Ethereum", "Project Funding", "Smart Contracts", "DeFi", "Milestone-based Funding"]
   },
   "grants-pool": {
@@ -27,7 +27,7 @@ export const seoConfig: Record<string, PageSEO> = {
     description: "Manage all your created grant pools, track application status, funding progress, and milestone completion for funded projects.",
     keywords: ["Grant Pool Management", "Project Management", "Funding Tracking", "Milestone Management", "DAO Operations", "Grant Oversight"]
   },
-  pods: {
+  'pods': {
     title: "Pods - HappyPods",
     description: "Discover talented Web3 Pods, view their project proposals, team backgrounds, and funding application status.",
     keywords: ["Pods", "Web3 Projects", "Blockchain Startups", "Project Proposals", "Team Collaboration", "Project Discovery", "Pod Teams"]
@@ -54,13 +54,13 @@ export const seoConfig: Record<string, PageSEO> = {
   },
   "pods/edit": {
     title: "Edit Pod - HappyPods",
-    description: "Edit your Pod project information",
+    description: "Edit your Pod project information, update project details and team information.",
     keywords: ["Edit Pod", "Pod Management", "Project Information", "Pod Details", "Web3 Projects"]
   },
   "grants-pool/edit": {
-    title: "Edit Grants Pool - HappyPods",
-    description: "Edit your Grants Pool project information",
-    keywords: ["Edit Grants Pool", "Grants Pool Management", "Project Information", "Grants Pool Details", "Web3 Projects"]
+    title: "Edit Grant Pool - HappyPods",
+    description: "Edit your Grant Pool information, update funding criteria and project requirements.",
+    keywords: ["Edit Grant Pool", "Grant Pool Management", "Project Information", "Grant Pool Details", "Web3 Projects"]
   }
 };
 

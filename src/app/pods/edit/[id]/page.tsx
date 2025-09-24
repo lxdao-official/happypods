@@ -15,7 +15,6 @@ import { api } from "~/trpc/react";
 import { toast } from "sonner";
 import LoadingSkeleton from "~/components/loading-skeleton";
 import { MarkdownEditor } from "~/components/Tiptap";
-import { useSEO } from "~/hooks/useSeo";
 
 interface Milestone {
   id: string;
@@ -27,8 +26,6 @@ interface Milestone {
 
 export default function EditPodPage() {
   const router = useRouter();
-  
-  useSEO("pods/edit");
 
   const params = useParams();
   const podId = parseInt(params.id as string);

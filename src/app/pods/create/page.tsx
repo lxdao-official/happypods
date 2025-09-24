@@ -23,8 +23,6 @@ import useStore from "~/store";
 import { DEFAULT_MILESTONE_AMOUNTS, PLATFORM_MOD_ADDRESS } from "~/lib/config";
 import { delay_s } from "~/lib/utils";
 import { MarkdownEditor } from "~/components/Tiptap";
-import { useSEO } from "~/hooks/useSeo";
-
 interface RelatedLinks {
   website: string;
   github: string;
@@ -41,8 +39,6 @@ interface Milestone {
 }
 
 export default function CreatePodPage() {
-  useSEO("pods/create");
-
   const router = useRouter();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [showSafeModal, setShowSafeModal] = useState(false);

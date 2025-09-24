@@ -29,7 +29,6 @@ import Decimal from "decimal.js";
 import LazyImage from "~/components/LazyImage";
 import MdTextPreviewModal from "~/components/md-text-preview-modal";
 import ExpandableText from "~/components/expandable-text";
-import { useSEO } from "~/hooks/useSeo";
 
 
 export default function PodDetailPage() {
@@ -53,13 +52,6 @@ export default function PodDetailPage() {
     refetchPodDetail();
     refetchMilestones();
   },[podDetailRefreshKey]);
-
-  // 设置动态 TDK
-  useSEO("pods", podDetail ? {
-    title: `${podDetail.title} - HappyPods`,
-    description: markdownToText(podDetail.title).substring(0, 160),
-    keywords: ['Pod', podDetail.title, podDetail.grantsPool.name, 'Web3', 'Blockchain Projects', ...(podDetail.tags?.split(',') || [])]
-  } : undefined);
 
    // 我是GP owner
    const isGPOwner = useMemo(()=>{

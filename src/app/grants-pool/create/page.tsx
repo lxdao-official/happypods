@@ -19,8 +19,6 @@ import { api } from "~/trpc/react";
 import { toast } from "sonner";
 import AvatarInput from "~/components/avatar-input";
 import { MarkdownEditor } from "~/components/Tiptap";
-import { useSEO } from "~/hooks/useSeo";
-
 interface RFP {
   id: string;
   title: string;
@@ -35,8 +33,6 @@ interface RelatedLinks {
 }
 
 export default function CreateGrantsPoolPage() {
-  useSEO("grants-pool/create");
-
   const router = useRouter();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [showSafeModal, setShowSafeModal] = useState(false);

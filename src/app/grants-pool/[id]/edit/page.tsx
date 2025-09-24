@@ -16,7 +16,6 @@ import { toast } from "sonner";
 import LoadingSkeleton from "~/components/loading-skeleton";
 import EmptyReplace from "~/components/empty-replace";
 import { MarkdownEditor } from "~/components/Tiptap";
-import { useSEO } from "~/hooks/useSeo";
 
 interface RFP {
   id: string;
@@ -28,8 +27,6 @@ export default function EditGrantsPoolPage() {
   const router = useRouter();
   const params = useParams();
   const gpId = parseInt(params.id as string);
-  
-  useSEO("grants-pool/edit");
 
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isLoading, setIsLoading] = useState(true);

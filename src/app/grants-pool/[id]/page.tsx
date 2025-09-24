@@ -8,8 +8,6 @@ import { useAccount } from "wagmi";
 import LoadingSkeleton from "~/components/loading-skeleton";
 import EmptyReplace from "~/components/empty-replace";
 import { useMobile } from "~/hooks/useMobile";
-import { useSEO } from "~/hooks/useSeo";
-import { markdownToText } from "~/lib/utils";
 
 const GrantsPoolDetailPage = () => {
   const params = useParams();
@@ -25,13 +23,6 @@ const GrantsPoolDetailPage = () => {
 
 
   const isMobile = useMobile();
-
-  // 设置动态 TDK
-  useSEO("grants-pool", grantsPool ? {
-    title: `${grantsPool.name} - HappyPods`,
-    description: markdownToText(grantsPool.description).substring(0, 160),
-    keywords: ['Grant Pool', grantsPool.name, 'Web3', 'DAO', ...(grantsPool.tags?.split(',') || [])]
-  } : undefined);
 
   // 加载状态
   if (isLoading || error) {

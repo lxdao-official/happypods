@@ -15,8 +15,6 @@ import { getUser } from "~/lib/auth-storage";
 import { toast } from "sonner";
 import LoadingSkeleton from "~/components/loading-skeleton";
 import { useUserInfo } from "../../hooks/useUserInfo";
-import { useSEO } from "~/hooks/useSeo";
-
 interface FormData {
   avatar: string;
   name: string;
@@ -26,8 +24,6 @@ interface FormData {
 }
 
 export default function ProfilePage() {
-  useSEO("profile");
-
   const { fetchAndStoreUserInfo } = useUserInfo();
 
   const router = useRouter();

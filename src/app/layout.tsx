@@ -25,9 +25,6 @@ export default function RootLayout({
   return (
     <html lang="en" className={`${geist.variable} light`}>
       <head>
-        <title>HappyPods</title>
-        <meta name="description" content="HappyPods" />
-        <meta name="keywords" content="HappyPods" />
         <link rel="icon" href="/favicon.ico" />
         <meta
           name="viewport"
@@ -55,6 +52,23 @@ export default function RootLayout({
         />
         <meta name="mobile-web-app-capable" content="yes" />
         <meta name="HandheldFriendly" content="true" />
+        
+        {/* Default SEO Meta Tags */}
+        <title>HappyPods - Web3 Grant Management Platform</title>
+        <meta name="description" content="HappyPods is a Web3 grant management platform that connects Grant Pools with project teams (Pods), providing milestone-based smart funding workflows for transparent and efficient project financing." />
+        <meta name="keywords" content="Web3, Grant Management, DAO, Decentralized, Blockchain, Ethereum, Project Funding, Smart Contracts, DeFi, Milestone-based Funding" />
+        
+        {/* Open Graph Meta Tags */}
+        <meta property="og:title" content="HappyPods - Web3 Grant Management Platform" />
+        <meta property="og:description" content="HappyPods is a Web3 grant management platform that connects Grant Pools with project teams (Pods), providing milestone-based smart funding workflows for transparent and efficient project financing." />
+        <meta property="og:type" content="website" />
+        <meta property="og:locale" content="en_US" />
+        <meta property="og:site_name" content="HappyPods" />
+        
+        {/* Twitter Card Meta Tags */}
+        <meta name="twitter:card" content="summary_large_image" />
+        <meta name="twitter:title" content="HappyPods - Web3 Grant Management Platform" />
+        <meta name="twitter:description" content="HappyPods is a Web3 grant management platform that connects Grant Pools with project teams (Pods), providing milestone-based smart funding workflows for transparent and efficient project financing." />
         <style
           dangerouslySetInnerHTML={{
             __html: `
