@@ -23,7 +23,7 @@ const MarkdownRenderer = ({ content, className = '' }: MarkdownRendererProps) =>
   return (
     <div id="tiptap-preview" className={`${className}`}>
       {content ? (
-        <div className="prose-sm prose sm:prose lg:prose-lg xl:prose-2xl prose-invert max-w-none">
+        <div className="p-4 prose-sm prose sm:prose lg:prose-lg xl:prose-2xl prose-invert max-w-none">
           <ReactMarkdown
             remarkPlugins={[remarkGfm]}
             components={{
@@ -33,7 +33,6 @@ const MarkdownRenderer = ({ content, className = '' }: MarkdownRendererProps) =>
                   href={href}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="text-red-500 underline hover:text-red-400"
                   {...props}
                 >
                   {children}
@@ -44,23 +43,22 @@ const MarkdownRenderer = ({ content, className = '' }: MarkdownRendererProps) =>
                 <img
                   src={src}
                   alt={alt}
-                  className="h-auto max-w-full rounded-lg"
                   {...props}
                 />
               ),
               // 自定义表格组件
               table: ({ children, ...props }) => (
-                <table className="w-full border border-collapse border-gray-600 table-auto" {...props}>
+                <table {...props}>
                   {children}
                 </table>
               ),
               th: ({ children, ...props }) => (
-                <th className="px-4 py-2 font-semibold text-left bg-gray-700 border border-gray-600" {...props}>
+                <th {...props}>
                   {children}
                 </th>
               ),
               td: ({ children, ...props }) => (
-                <td className="px-4 py-2 border border-gray-600" {...props}>
+                <td {...props}>
                   {children}
                 </td>
               ),
@@ -68,18 +66,18 @@ const MarkdownRenderer = ({ content, className = '' }: MarkdownRendererProps) =>
               code: ({ children, ...props }) => {
                 const isInline = !props.className?.includes('language-');
                 return isInline ? (
-                  <code className="px-2 py-1 font-mono text-sm text-red-400 bg-gray-700 rounded" {...props}>
+                  <code {...props}>
                     {children}
                   </code>
                 ) : (
-                  <code className="block p-4 overflow-x-auto font-mono text-sm text-white bg-gray-700 rounded-lg" {...props}>
+                  <code {...props}>
                     {children}
                   </code>
                 );
               },
               // 自定义引用块
               blockquote: ({ children, ...props }) => (
-                <blockquote className="pl-4 italic text-gray-300 border-l-4 border-red-500" {...props}>
+                <blockquote {...props}>
                   {children}
                 </blockquote>
               ),
@@ -149,6 +147,8 @@ const MarkdownEditor = ({
             minRows={25}
             isRequired
             label="Description"
+            max={10000}
+            errorMessage="Please enter a valid description"
           />
         )}
         {activeTab === 'preview' && (

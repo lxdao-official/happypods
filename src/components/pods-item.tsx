@@ -1,7 +1,7 @@
 import NextLink from 'next/link';
 import ProgressMilestoneBar from './progress-milestone-bar';
 import StatusChip from './status-chip';
-import { formatDate, formatRelativeTime, formatToken, getColorFromString } from '~/lib/utils';
+import { formatDate, formatRelativeTime, formatToken, getColorFromString, markdownToText } from '~/lib/utils';
 import { MilestoneStatus, type Milestone, type Pod } from '@prisma/client';
 import Decimal from "decimal.js"
 import ExpandableText from './expandable-text';
@@ -42,7 +42,7 @@ const PodsItem = ({ pod, onClick, className = "", type = 'all' }: PodsItemProps)
         transition-all duration-300
         bg-white
         border border-gray-200
-        hover:border-black
+        hover:border-gray-300
         hover:scale-105
         ${className}`}
       onClick={onClick}
@@ -61,7 +61,7 @@ const PodsItem = ({ pod, onClick, className = "", type = 'all' }: PodsItemProps)
        
         {/* 描述 */}
         <p className="mb-4 text-xs leading-relaxed md:text-sm h-[40px]">
-          <ExpandableText text={pod.description} maxLines={2} className='text-secondary' />
+          <ExpandableText text={markdownToText(pod.description)} maxLines={2} className='text-sm leading-relaxed text-secondary' />
         </p>
 
         {/* 资金进度 */}

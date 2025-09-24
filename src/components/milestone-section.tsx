@@ -3,6 +3,7 @@ import { parseDate, type DateValue, getLocalTimeZone, today, type CalendarDate }
 import CornerFrame from "~/components/corner-frame";
 import EdgeLine from "./edge-line";
 import { DEFAULT_MILESTONE_AMOUNTS } from "~/lib/config";
+import { MarkdownEditor } from "./Tiptap";
 
 interface Milestone {
   id: string;
@@ -150,7 +151,7 @@ const MilestoneSection = ({ milestones, onMilestonesChange, info, minMilestoneCo
                   min="0"
                   max="500"
                   step="0.0001"
-                  errorMessage="Please enter a valid amount"
+                  errorMessage="Please enter a valid amount(10~500U)"
                   endContent={
                     <div className="flex gap-2">
                       {DEFAULT_MILESTONE_AMOUNTS.OPTIONS.map(amount => (
@@ -168,13 +169,10 @@ const MilestoneSection = ({ milestones, onMilestonesChange, info, minMilestoneCo
                 />
               </div>
               {/* Description */}
-              <Textarea
-                variant="faded"
-                label="Milestone Description"
-                value={milestone.description}
-                onChange={e => updateMilestone(milestone.id, "description", e.target.value)}
+              <MarkdownEditor
+                content={milestone.description}
+                onChange={value => updateMilestone(milestone.id, "description", value)}
                 placeholder="Describe the specific goals and deliverables for this milestone"
-                minRows={3}
               />
             </div>
             {index < milestones.length - 1 && <EdgeLine className="mt-6" />}

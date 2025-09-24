@@ -44,7 +44,7 @@ const GrantspoolRFPItem = ({ proposal, onClick, className = "", gpId }: Grantspo
 
       </div>
       
-      <Modal isOpen={isOpen} onOpenChange={onClose} size="3xl" isDismissable={false}>
+      <Modal isOpen={isOpen} onOpenChange={onClose} size="5xl" isDismissable={false}>
         <ModalContent>
           <ModalHeader className="text-xl font-bold">{proposal.title}</ModalHeader>
           <ModalBody className="max-h-[80vh] overflow-y-auto">

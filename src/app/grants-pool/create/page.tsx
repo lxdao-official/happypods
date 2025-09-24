@@ -18,6 +18,7 @@ import TagsSelect from "~/components/tags-select";
 import { api } from "~/trpc/react";
 import { toast } from "sonner";
 import AvatarInput from "~/components/avatar-input";
+import { MarkdownEditor } from "~/components/Tiptap";
 
 interface RFP {
   id: string;
@@ -199,15 +200,10 @@ export default function CreateGrantsPoolPage() {
               />
 
               {/* Description */}
-              <Textarea
-                variant="faded"
-                label="Description"
-                value={formData.description}
-                onChange={(e) => handleInputChange("description", e.target.value)}
+              <MarkdownEditor
+                content={formData.description}
+                onChange={(value) => handleInputChange("description", value)}
                 placeholder="Describe the goals, vision, and funding direction of your Grants Pool"
-                isRequired
-                errorMessage="Please enter a description"
-                minRows={4}
               />
 
               {/* Chain Type - Optimism Only */}

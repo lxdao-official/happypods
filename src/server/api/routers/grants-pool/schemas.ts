@@ -1,15 +1,15 @@
 import { z } from "zod";
 
 export const rfpSchema = z.object({
-  title: z.string().min(1, "RFP title is required").max(100),
-  description: z.string().min(1, "RFP description is required").max(1000),
+  title: z.string().min(1, "RFP title is required").max(200),
+  description: z.string().min(1, "RFP description is required").max(8000),
   metadata: z.any().optional(),
 });
 
 export const createGrantsPoolSchema = z.object({
   avatar: z.string().url().max(255).optional(),
-  name: z.string().min(1, "GP name is required").max(100),
-  description: z.string().min(1, "GP description is required").max(1000),
+  name: z.string().min(1, "GP name is required").max(200),
+  description: z.string().min(1, "GP description is required").max(8000),
   links: z.record(z.string()).optional(),
   tags: z.string().optional(),
   rfps: z.array(rfpSchema),
@@ -21,15 +21,15 @@ export const createGrantsPoolSchema = z.object({
 // 更新时的 RFP schema，支持现有和新增的 RFP
 export const updateRfpSchema = z.object({
   id: z.number().optional(), // 现有 RFP 有 ID，新增的没有
-  title: z.string().min(1, "RFP title is required").max(100),
-  description: z.string().min(1, "RFP description is required").max(1000),
+  title: z.string().min(1, "RFP title is required").max(200),
+  description: z.string().min(1, "RFP description is required").max(8000),
 });
 
 export const updateGrantsPoolSchema = z.object({
   id: z.number(),
   avatar: z.string().url().max(255).optional(),
-  name: z.string().min(1, "GP name is required").max(100).optional(),
-  description: z.string().min(1, "GP description is required").max(1000).optional(),
+  name: z.string().min(1, "GP name is required").max(200).optional(),
+  description: z.string().min(1, "GP description is required").max(8000).optional(),
   links: z.record(z.string()).optional(),
   tags: z.string().optional(),
   rfps: z.array(updateRfpSchema).optional(),
@@ -40,7 +40,7 @@ export const updateGrantsPoolSchema = z.object({
 });
 
 export const getAllSchema = z.object({
-  limit: z.number().min(1).max(100).default(50),
+  limit: z.number().min(1).max(200).default(50),
   cursor: z.number().nullish(),
   search: z.string().optional(),
   status: z.enum(["ACTIVE", "INACTIVE", "ARCHIVED"]).optional(),

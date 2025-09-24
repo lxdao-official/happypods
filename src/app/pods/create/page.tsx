@@ -22,6 +22,7 @@ import { zeroAddress, type Address } from "viem";
 import useStore from "~/store";
 import { DEFAULT_MILESTONE_AMOUNTS, PLATFORM_MOD_ADDRESS } from "~/lib/config";
 import { delay_s } from "~/lib/utils";
+import { MarkdownEditor } from "~/components/Tiptap";
 
 interface RelatedLinks {
   website: string;
@@ -290,15 +291,10 @@ export default function CreatePodPage() {
               />
 
               {/* 详细描述 */}
-              <Textarea
-                variant="faded"
-                label="Project Description"
-                value={formData.description}
-                onChange={(e) => handleInputChange("description", e.target.value)}
+              <MarkdownEditor
+                content={formData.description}
+                onChange={(value) => handleInputChange("description", value)}
                 placeholder="Describe your project in detail, including goals, implementation plan, expected outcomes, etc."
-                isRequired
-                errorMessage="Please enter a project description"
-                minRows={8}
               />
 
               {/* Tags选择 */}

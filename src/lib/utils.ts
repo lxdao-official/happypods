@@ -4,7 +4,9 @@ import { formatUnits } from "viem";
 import { clsx, type ClassValue } from "clsx"
 import { twMerge } from "tailwind-merge"
 import { toast } from "sonner";
- /**
+import { marked } from 'marked';
+
+/**
  * 字符串省略方法
  * 默认显示前6个字符与后6个字符，中间显示省略号
  * 如果总字符不超过两个之和则完全显示
@@ -246,3 +248,22 @@ export const getColorFromString = (input: string, opacity: number = 1): string =
 
   return `rgba(${rgb.r}, ${rgb.g}, ${rgb.b}, ${opacity})`;
 };
+
+
+/**
+ * 将 Markdown 文本转换为纯文本，过滤掉所有 Markdown 语法标签
+ * @param markdown 包含 Markdown 语法的文本
+ * @returns 过滤后的纯文本内容
+ */
+export function markdownToText(markdown: string): string {
+  if (!markdown || typeof markdown !== 'string') {
+    return '';
+  }
+
+  // 使用 marked 库将 Markdown 转换为 HTML
+  const html = String(marked(markdown));
+
+  // 使用 DOMParser 将 HTML 转换为纯文本
+  const doc = new DOMParser().parseFromString(html, 'text/html');
+  return doc.body.textContent?.replace(/\n/g, ' ') || '';
+}

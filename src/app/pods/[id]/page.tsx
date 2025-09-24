@@ -2,7 +2,7 @@
 
 import { useParams } from "next/navigation";
 import NextLink from 'next/link';
-import { formatDate, formatRelativeTime, formatToken, getColorFromString } from "~/lib/utils";
+import { formatDate, formatRelativeTime, formatToken, getColorFromString, markdownToText } from "~/lib/utils";
 import { QRCodeTooltip } from "~/components/qr-code-tooltip";
 import MilestonesSection from "~/components/milestones-section";
 import CardBox from "~/components/card-box";
@@ -22,12 +22,13 @@ import { useEffect, useMemo, useState } from "react";
 import useStore from "~/store";
 import Tag from "~/components/tag";
 import PodMilestoneTimeoutActions from "~/components/pod-milestone-timeout-actions";
-import ExpandableText from "~/components/expandable-text";
 import { FEE_CONFIG } from "~/lib/config";
 import { getSafeWalletOwners } from "~/lib/safeUtils";
 import TooltipWrap from "~/components/TooltipInfo";
 import Decimal from "decimal.js";
 import LazyImage from "~/components/LazyImage";
+import MdTextPreviewModal from "~/components/md-text-preview-modal";
+import ExpandableText from "~/components/expandable-text";
 
 
 export default function PodDetailPage() {
@@ -143,7 +144,7 @@ export default function PodDetailPage() {
         title={
         <div className="flex items-center justify-between">
           <div className="flex items-center">
-              <LazyImage src={podDetail.avatar || ''} alt="" className="object-contain w-10 h-10 border border-white rounded-full shadow-medium" />
+              <LazyImage src={podDetail.avatar || ''} alt="" className="object-contain w-10 h-10 bg-white border border-white rounded-full shadow-medium" />
               <span className="ml-2 text-xl font-bold md:text-2xl">{podDetail.title}</span>
             </div>
 
@@ -162,6 +163,7 @@ export default function PodDetailPage() {
         <div className="space-y-8 lg:col-span-2">
           <div>
             {/* 标签 */}
+            
             <div className="flex flex-wrap gap-2 mb-3">
               {
                 isPodOwner && <Tag color="primary">Pod Owner</Tag>
@@ -172,13 +174,10 @@ export default function PodDetailPage() {
               {podDetail.tags?.split(',').map((tag:string, index:number) => <Tag key={index}>{tag}</Tag>)}
             </div>
             
-            <div className="space-y-6">
-              <div>
-                <p className="leading-relaxed">
-                  <ExpandableText className="text-sm md:text-base" text={podDetail.description} maxLines={3} showExpandButton={true} />
-                </p>
-              </div>
-            </div>
+            <MdTextPreviewModal className="text-sm md:text-base" markdown={podDetail.description} title="Pod Description">
+              <ExpandableText className="text-xs md:text-base" text={markdownToText(podDetail.description)} maxLines={2} />
+            </MdTextPreviewModal>
+
           </div>
 
           {/* <EdgeLine color="var(--color-background)"/> */}
@@ -238,7 +237,6 @@ export default function PodDetailPage() {
             </div>
           </div>
 
-          {/* <EdgeLine color="var(--color-background)"/> */}
 
           <div className="p-4 bg-white border border-gray-200 rounded-xl">
             <h2 className="mb-4 text-xl font-bold">Project Details</h2>

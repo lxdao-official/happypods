@@ -77,7 +77,7 @@ export default function AvatarInput({
                 <img
                   src={value}
                   alt="Avatar Preview"
-                  className={`object-cover rounded-full ${getPreviewSizeClass()}`}
+                  className={`object-contain rounded-full ${getPreviewSizeClass()}`}
                   onError={(e) => {
                     (e.target as HTMLImageElement).style.display = 'none';
                   }}

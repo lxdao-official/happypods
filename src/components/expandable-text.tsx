@@ -76,7 +76,7 @@ export default function ExpandableText({
     <div className={`space-y-2 ${className}`}>
       <div
         ref={textRef}
-        className={`whitespace-pre-wrap break-words ${textClassName}`}
+        className={`whitespace-pre-wrap break-words leading-[1.7em] ${textClassName}`}
         style={getTextStyle()}
       >
         {text}

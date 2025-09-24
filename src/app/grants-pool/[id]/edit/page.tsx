@@ -18,6 +18,7 @@ import { api } from "~/trpc/react";
 import { toast } from "sonner";
 import LoadingSkeleton from "~/components/loading-skeleton";
 import EmptyReplace from "~/components/empty-replace";
+import { MarkdownEditor } from "~/components/Tiptap";
 
 interface RFP {
   id: string;
@@ -234,15 +235,10 @@ export default function EditGrantsPoolPage() {
               />
 
               {/* Description */}
-              <Textarea
-                variant="faded"
-                label="Description"
-                value={formData.description}
-                onChange={(e) => handleInputChange("description", e.target.value)}
+              <MarkdownEditor
+                content={formData.description}
+                onChange={(value) => handleInputChange("description", value)}
                 placeholder="Describe the goals, vision, and funding direction of your Grants Pool"
-                isRequired
-                errorMessage="Please enter a description"
-                minRows={4}
               />
 
               {/* Tags */}

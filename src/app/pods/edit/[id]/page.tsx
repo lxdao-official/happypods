@@ -1,10 +1,9 @@
 "use client";
 
-import { useState, useEffect, useMemo } from "react";
+import { useState, useEffect } from "react";
 import { useRouter, useParams } from "next/navigation";
 import { 
   Input, 
-  Textarea,
 } from "@heroui/react";
 import CornerFrame from "~/components/corner-frame";
 import AppBtn from "~/components/app-btn";
@@ -15,7 +14,7 @@ import TagsSelect from "~/components/tags-select";
 import { api } from "~/trpc/react";
 import { toast } from "sonner";
 import LoadingSkeleton from "~/components/loading-skeleton";
-import { DEFAULT_MILESTONE_AMOUNTS } from "~/lib/config";
+import { MarkdownEditor } from "~/components/Tiptap";
 
 
 interface Milestone {
@@ -220,15 +219,10 @@ export default function EditPodPage() {
               />
 
               {/* 详细描述 */}
-              <Textarea
-                variant="faded"
-                label="Project Description"
-                value={formData.description}
-                onChange={(e) => handleInputChange("description", e.target.value)}
+              <MarkdownEditor
+                content={formData.description}
+                onChange={(value) => handleInputChange("description", value)}
                 placeholder="Describe your project in detail, including goals, implementation plan, expected outcomes, etc."
-                isRequired
-                errorMessage="Please enter a project description"
-                minRows={8}
               />
 
               {/* Tags选择 */}

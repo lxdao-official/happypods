@@ -13,8 +13,10 @@ import ExpandableText from "./expandable-text";
 import { useMobile } from "~/hooks/useMobile";
 import Tag from "./tag";
 import LazyImage from "./LazyImage";
-import { getColorFromString } from "~/lib/utils";
+import { getColorFromString, markdownToText } from "~/lib/utils";
 import { Button } from "@heroui/button";
+import { MarkdownRenderer } from "./Tiptap";
+import MdTextPreviewModal from "./md-text-preview-modal";
 
 
 const GrantspoolItem = ({ grantsPool, className = "", children, type = "list" }: {
@@ -93,16 +95,21 @@ const GrantspoolItem = ({ grantsPool, className = "", children, type = "list" }:
     >
       {/* 主内容区域 */}
       <div className="p-4 space-y-6 md:p-0">
+
         {/* 导航标签 */}
         <div className="flex space-x-2">
           {tags.map((category) => (
             <Tag key={category}>{category}</Tag>
           ))}
         </div>
+
         {/* 描述 */}
         <div className="md:col-span-2">
-        <ExpandableText text={grantsPool.description} maxLines={3} showExpandButton={type === "detail"} />
+          <MdTextPreviewModal markdown={grantsPool.description} showButton={type === "detail"}>
+            <ExpandableText  text={markdownToText(grantsPool.description)} maxLines={2} />
+          </MdTextPreviewModal>
         </div>
+
         {/* 资金池余额 */}
         {type==='detail' && (
           grantsPool.tokens.map(token => 
@@ -113,6 +120,7 @@ const GrantspoolItem = ({ grantsPool, className = "", children, type = "list" }:
             token={token}
           />)
         )}
+        
         {/* Request-For-Proposal 部分 */}
         <div>
           <h2 className="flex items-center gap-2 mb-4 text-xl font-bold md:text-xl">

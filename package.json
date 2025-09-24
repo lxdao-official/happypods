@@ -45,6 +45,7 @@
         "decimal.js": "^10.6.0",
         "framer-motion": "^12.23.6",
         "jsonwebtoken": "^9.0.2",
+        "marked": "^16.3.0",
         "next": "^15.2.3",
         "qrcode": "^1.5.4",
         "qrcode.react": "^4.2.0",

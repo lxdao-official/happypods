@@ -74,7 +74,7 @@ export function ConfirmationStep({
       toast.info('Signing confirmation...');
       
       // 这里需要调用具体的签名方法
-      // 暂时模拟
+      // ! 多签阈值的方法需要补齐
       await new Promise(resolve => setTimeout(resolve, 2000));
       
       toast.success('Signature confirmed successfully!');

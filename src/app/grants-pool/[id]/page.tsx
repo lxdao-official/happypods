@@ -43,7 +43,7 @@ const GrantsPoolDetailPage = () => {
     <div className="container">
       <GrantspoolItem grantsPool={grantsPool} type="detail" className="fadeIn" />
       <div className="mt-10">
-        <DataDisplayGrid title={`${isMobile ? "" : grantsPool.name+' '} Pods`} sortClassName="text-black" grantsPoolId={grantsPoolId}/>
+        <DataDisplayGrid title={`${isMobile ? "" : grantsPool.name+' '} Pods`} type="gp" sortClassName="text-black" grantsPoolId={grantsPoolId}/>
       </div>
     </div>
   );

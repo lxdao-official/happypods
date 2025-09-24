@@ -132,7 +132,7 @@ export default function ProgressMilestoneBar({ milestones = [], children }: Prog
   const currentPosition = getCurrentTimePosition();
 
   return (
-    <div className={`space-y-2 ${isDetail ? 'mb-6' : 'p-2 bg-white border border-black rounded-md mb-4'}`}>
+    <div className={`space-y-2 ${isDetail ? 'mb-6' : 'p-2 bg-white border border-gray-200 rounded-md mb-4'}`}>
 
       {children && children}
       

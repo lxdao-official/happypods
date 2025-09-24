@@ -4,11 +4,13 @@ import MilestoneSubmissionDisplay from "./milestone-submission-display";
 import ReviewMilestoneModal from "./review-milestone-modal";
 import ProgressMilestoneBar from "./progress-milestone-bar";
 import StatusChip from "./status-chip";
-import { formatDate, formatToken } from "~/lib/utils";
+import { formatDate, formatToken, markdownToText } from "~/lib/utils";
 import { MilestoneStatus, type GrantsPool, type Milestone, type Pod } from "@prisma/client";
 import { useEffect, useMemo } from "react";
 import useStore from "~/store";
 import ExpandableText from "./expandable-text";
+import { MarkdownRenderer } from "./Tiptap";
+import MdTextPreviewModal from "./md-text-preview-modal";
 
 interface MilestonesSectionProps {
   milestones: Milestone[];
@@ -118,8 +120,10 @@ export default function MilestonesSection({ milestones, podDetail }: MilestonesS
 
               </div>
 
-              <div className="text-base text-gray-400 md:text-base">
-                <ExpandableText text={milestone.description} maxLines={3} showExpandButton={true} />
+              <div className="text-sm text-gray-400">
+                <MdTextPreviewModal className="text-sm md:text-base" markdown={milestone.description} title="Milestone Description">
+                  <ExpandableText text={markdownToText(milestone.description)} maxLines={2} className="text-xs md:text-sm" />
+                </MdTextPreviewModal>
               </div>
               
               {/* Display multiple submissions */}
