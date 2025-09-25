@@ -144,7 +144,7 @@ const MilestoneSection = ({ milestones, onMilestonesChange, info, minMilestoneCo
                 <Input
                 variant="faded"
                   type="number"
-                  label="Amount"
+                  label="Amount(USDT)"
                   value={milestone.amount}
                   onChange={e => handleAmountChange(milestone.id, e.target.value)}
                   placeholder="Enter amount"
@@ -158,8 +158,8 @@ const MilestoneSection = ({ milestones, onMilestonesChange, info, minMilestoneCo
                         <button
                           key={amount}
                           type="button"
-                          onClick={() => handlePresetAmount(milestone.id, amount)}
-                          className="px-2 py-1 border-gray-500 rounded-md text-sm0 border-1 hover:border-gray-300 hover:text-white"
+                          onClick={() => handlePresetAmount(milestone.id, Number(amount))}
+                          className="px-2 py-1 border-gray-500 rounded-md text-sm0 border-1 hover:text-primary hover:border-primary"
                         >
                           {amount}
                         </button>

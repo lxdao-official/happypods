@@ -7,13 +7,6 @@ import { mainnet, optimism, type Chain } from "viem/chains";
 import { ChainType } from "@prisma/client";
 import SafeApiKit from "@safe-global/api-kit";
 
-// 手续费相关配置
-export const FEE_CONFIG = {
-  // 手续费率 (10%)
-  TRANSACTION_FEE_RATE: 0.01,
-  // 最小手续费 (以防总额太小)
-  MIN_TRANSACTION_FEE: 0,
-} as const;
 
 export type Status =
   | "IN_PROGRESS"
@@ -52,10 +45,27 @@ export const APP_CONFIG = {
 } as const;
 
 // 平台国库地址
-export const PLATFORM_TREASURY_ADDRESS = "0x115a788c09f204ffde5a0f95eb53b2711f0a64fd";
+export const PLATFORM_TREASURY_ADDRESS = process.env.NEXT_PUBLIC_PLATFORM_TREASURY_ADDRESS as Address;
 
 // 平台管理员地址
-export const PLATFORM_MOD_ADDRESS = "0x2627b9f8f75dbc2870232715520ffaa24248bc76";
+export const PLATFORM_MOD_ADDRESS = process.env.NEXT_PUBLIC_PLATFORM_MOD_ADDRESS as Address;
+
+// 手续费相关配置
+export const FEE_CONFIG = {
+  // 手续费率
+  TRANSACTION_FEE_RATE: Number(process.env.NEXT_PUBLIC_TRANSACTION_FEE_RATE),
+  // 最小手续费 (以防总额太小)
+  MIN_TRANSACTION_FEE: 0,
+} as const;
+
+
+// milestone 的默认金额数组配置与对应的金额
+const amountArr = process.env.NEXT_PUBLIC_MILESTONE_AMOUNTS?.split(',') as string[];
+export const DEFAULT_MILESTONE_AMOUNTS = {
+  OPTIONS: amountArr,
+  DEFAULT: amountArr[0] as string,
+}
+
 
 export type Token = {
   address: Address;
@@ -119,8 +129,3 @@ export const DEFAULT_TAGS = [
   "Environment", "Governance", "Security", "Analytics"
 ];
 
-// milestone 的默认金额数组配置与对应的金额
-export const DEFAULT_MILESTONE_AMOUNTS = {
-  OPTIONS: [100,300,500],
-  DEFAULT: '0.0001'
-}
