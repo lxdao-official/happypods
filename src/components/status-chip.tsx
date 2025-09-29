@@ -7,10 +7,10 @@ import Tag, { type TagColor } from "./tag";
 const StatusChip = ({ status }: { status: Status }) => {
   const colorMap:Record<Status,TagColor> = {
     'IN_PROGRESS': 'primary',
-    'COMPLETED': 'purple',
+    'COMPLETED': 'blue',
     'REJECTED': 'red',
     'WAITLISTED': 'error',
-    'SUBMITTED': 'blue',
+    'SUBMITTED': 'purple',
     'APPROVED': 'green',
     'REVIEWING': 'yellow',
     'TERMINATED': "red",

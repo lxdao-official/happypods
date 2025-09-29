@@ -50,9 +50,9 @@ const MilestoneSection = ({ milestones, onMilestonesChange, info, minMilestoneCo
 
   const handleAmountChange = (id: string, amount: string) => {
     const numAmount = parseFloat(amount);
-    if (isNaN(numAmount) || numAmount < 0 || numAmount > 500) {
-      return;
-    }
+    // if (isNaN(numAmount) || numAmount < 0 || numAmount > 500) {
+    //   return;
+    // }
     updateMilestone(id, "amount", amount);
   };
 
@@ -128,47 +128,50 @@ const MilestoneSection = ({ milestones, onMilestonesChange, info, minMilestoneCo
                 value={milestone.title}
                 onChange={e => updateMilestone(milestone.id, "title", e.target.value)}
                 placeholder="Enter milestone title"
+                isRequired
+                errorMessage="Please enter a milestone title"
               />
               
-              {/* Deadline & Amount in one row */}
-              <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
-                {/* Deadline */}
-                <DatePicker
-                  label="Deadline"
-                  minValue={minDate(index)}
-                  value={getDateValue(milestone.deadline)}
-                  onChange={date => handleDateChange(milestone.id, date)}
-                  showMonthAndYearPickers
-                />
-                {/* Amount */}
-                <Input
+              <DatePicker
+                label="Deadline"
+                minValue={minDate(index)}
+                value={getDateValue(milestone.deadline)}
+                onChange={date => handleDateChange(milestone.id, date)}
+                showMonthAndYearPickers
+                isRequired
+                errorMessage="Please select a deadline"
+              />
+
+              <Input
                 variant="faded"
-                  type="number"
-                  label="Amount(USDT)"
-                  value={milestone.amount}
-                  onChange={e => handleAmountChange(milestone.id, e.target.value)}
-                  placeholder="Enter amount"
-                  min="0"
-                  max="500"
-                  step="0.0001"
-                  errorMessage="Please enter a valid amount(10~500U)"
-                  endContent={
-                    <div className="flex gap-2">
-                      {DEFAULT_MILESTONE_AMOUNTS.OPTIONS.map(amount => (
-                        <button
-                          key={amount}
-                          type="button"
-                          onClick={() => handlePresetAmount(milestone.id, Number(amount))}
-                          className="px-2 py-1 border-gray-500 rounded-md text-sm0 border-1 hover:text-primary hover:border-primary"
-                        >
-                          {amount}
-                        </button>
-                      ))}
-                    </div>
-                  }
-                />
-              </div>
-              {/* Description */}
+                type="number"
+                label="Amount(USDT)"
+                value={milestone.amount}
+                onChange={e => handleAmountChange(milestone.id, e.target.value)}
+                placeholder="Enter amount"
+                min="0"
+                step="0.0001"
+                isRequired
+                isInvalid={milestone.amount === '' || Number(milestone.amount) <= 0 || isNaN(Number(milestone.amount))}
+                errorMessage="Please enter a valid amount ( eg: 100 ~ 500U )"
+                endContent={
+                  <div className="flex gap-2">
+                    {DEFAULT_MILESTONE_AMOUNTS.OPTIONS.map(amount => (
+                      <Button
+                        key={amount}
+                        variant="bordered"
+                        color="default"
+                        size="sm"
+                        onPress={() => handlePresetAmount(milestone.id, Number(amount))}
+                      >
+                        {amount}
+                      </Button>
+                    ))}
+                  </div>
+                }
+              />
+              
+              
               <MarkdownEditor
                 content={milestone.description}
                 onChange={value => updateMilestone(milestone.id, "description", value)}

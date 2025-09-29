@@ -4,7 +4,7 @@ export const milestoneSchema = z.object({
   id: z.number().optional(),
   title: z.string().min(1, "milestone title is required").max(200),
   description: z.string().min(1, "milestone description is required").max(8000),
-  amount: z.number().min(0, "milestone amount is required"),
+  amount: z.number().gt(0, "milestone amount must be greater than 0"),
   deadline: z.string().min(1, "milestone deadline is required"),
 });
 

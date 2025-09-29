@@ -7,7 +7,8 @@ import {
   Input,
   Textarea,
   Select,
-  SelectItem
+  SelectItem,
+  Button
 } from "@heroui/react";
 import CornerFrame from "~/components/corner-frame";
 import AppBtn from "~/components/app-btn";
@@ -19,6 +20,8 @@ import { api } from "~/trpc/react";
 import { toast } from "sonner";
 import AvatarInput from "~/components/avatar-input";
 import { MarkdownEditor } from "~/components/Tiptap";
+import FeeRateInput from "~/components/fee-rate-input";
+import Decimal from "decimal.js";
 interface RFP {
   id: string;
   title: string;
@@ -47,6 +50,7 @@ export default function CreateGrantsPoolPage() {
     modName: "",
     modEmail: "",
     modTelegram: "",
+    feeRate: 0, // Added feeRate field
   });
 
   // Tags 数据
@@ -153,6 +157,7 @@ export default function CreateGrantsPoolPage() {
         links: Object.keys(links).length > 0 ? links : undefined,
         rfps, // 传递所有RFP
         modInfo,
+        feeRate: formData.feeRate ? Decimal(formData.feeRate).div(100).toNumber() : 0, // 将百分比转换为小数
       });
 
       toast.success("Grants Pool created successfully!");
@@ -218,6 +223,12 @@ export default function CreateGrantsPoolPage() {
                 <SelectItem key="OPTIMISM">Optimism Network</SelectItem>
                 <SelectItem key="ETHEREUM" isDisabled>Ethereum Mainnet (Not Available)</SelectItem>
               </Select>
+
+              {/* Fee Rate */}
+              <FeeRateInput
+                value={formData.feeRate}
+                onChange={(value) => handleInputChange("feeRate", value.toString())}
+              />
 
               {/* Tags */}
               <TagsSelect

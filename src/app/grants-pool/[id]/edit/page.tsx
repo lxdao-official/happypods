@@ -16,6 +16,8 @@ import { toast } from "sonner";
 import LoadingSkeleton from "~/components/loading-skeleton";
 import EmptyReplace from "~/components/empty-replace";
 import { MarkdownEditor } from "~/components/Tiptap";
+import FeeRateInput from "~/components/fee-rate-input";
+import Decimal from "decimal.js";
 
 interface RFP {
   id: string;
@@ -41,6 +43,7 @@ export default function EditGrantsPoolPage() {
     modName: "",
     modEmail: "",
     modTelegram: "",
+    feeRate: 0,
   });
 
   // Tags 数据
@@ -75,6 +78,7 @@ export default function EditGrantsPoolPage() {
         modName: (grantsPoolData.modInfo as any)?.name || "",
         modEmail: (grantsPoolData.modInfo as any)?.email || "",
         modTelegram: (grantsPoolData.modInfo as any)?.telegram || "",
+        feeRate: Decimal(grantsPoolData.feeRate).mul(100).toNumber() || 0,
       });
 
       // 设置标签数据
@@ -172,6 +176,7 @@ export default function EditGrantsPoolPage() {
         links: Object.keys(links).length > 0 ? links : {},
         rfps: processedRfps,
         modInfo,
+        feeRate: Decimal(formData.feeRate).div(100).toNumber(),
       });
 
       toast.success("Grants Pool updated successfully!");
@@ -236,6 +241,12 @@ export default function EditGrantsPoolPage() {
                 content={formData.description}
                 onChange={(value) => handleInputChange("description", value)}
                 placeholder="Describe the goals, vision, and funding direction of your Grants Pool"
+              />
+
+              {/* Fee Rate */}
+              <FeeRateInput
+                value={formData.feeRate}
+                onChange={(value) => handleInputChange("feeRate", value.toString())}
               />
 
               {/* Tags */}

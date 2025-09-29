@@ -3,7 +3,7 @@ import { submitMilestoneDeliverySchema, reviewMilestoneDeliverySchema, initiateP
 import { NotificationService } from "../notification/notification-service";
 import { GrantsPoolTokens, MilestoneStatus, NotificationType, PodStatus } from "@prisma/client";
 import { optimism } from "viem/chains";
-import { FEE_CONFIG, PLATFORM_CHAINS, PLATFORM_TREASURY_ADDRESS } from "~/lib/config";
+import { PLATFORM_TREASURY_ADDRESS } from "~/lib/config";
 import { handlePodTermited } from "../pod/mutations";
 import { getBalance } from "../wallet/queries";
 import { buildErc20SafeTransactionAndHash, getSafeTransactionWithRetry } from "~/lib/safeUtils";
@@ -54,13 +54,13 @@ export const milestoneMutations = {
         throw new Error("Grants Pool does not exist");
       }
 
-      // 校验提交之前需要检查国库余额是否充足
+      // 校验提交之前需要检查国库余额是否足够支付 里程碑金额+手续费
       const balance = await getBalance({
         address: milestone.pod.grantsPool.treasuryWallet,
         chainType: milestone.pod.grantsPool.chainType,
         tokenType: "USDT",
       });
-      if(Number(balance.rawBalance) < Number(milestone.amount)){
+      if( Number(balance.rawBalance) < Decimal(milestone.amount).mul(1+Number(milestone.pod.grantsPool.feeRate)).toNumber() ){
         throw new Error("Grants Pool Insufficient balance");
       }
 
@@ -87,7 +87,7 @@ export const milestoneMutations = {
         {
           token: milestone.pod.currency as GrantsPoolTokens,
           to: PLATFORM_TREASURY_ADDRESS,
-          amount: Decimal(milestone.amount).mul(FEE_CONFIG.TRANSACTION_FEE_RATE).toString(),
+          amount: Decimal(milestone.amount).mul(milestone.pod.grantsPool.feeRate).toString(),
         },
         {
           token: milestone.pod.currency as GrantsPoolTokens,
@@ -201,7 +201,7 @@ export const milestoneMutations = {
           {
             token: milestone.pod.currency as GrantsPoolTokens,
             to: PLATFORM_TREASURY_ADDRESS,
-            amount: Decimal(milestone.amount).mul(FEE_CONFIG.TRANSACTION_FEE_RATE).toString(),
+            amount: Decimal(milestone.amount).mul(milestone.pod.grantsPool.feeRate).toString(),
           },
           {
             token: milestone.pod.currency as GrantsPoolTokens,

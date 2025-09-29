@@ -167,7 +167,7 @@ export default function ReviewMilestoneModal({ milestone, podDetail, onReview }:
             <h4 className="mb-2 font-medium text-primary">GP Wallet Approval Details</h4>
            <SafeDescription/>
           </div>
-          <div className="flex items-center gap-2 text-tiny text-primary">
+          <div className="flex items-center gap-2 text-red-500 text-tiny">
             <i className="ri-shield-check-line"></i>
             <span>Step 1: GP multi-sig approves Pod payment transaction</span>
           </div>
@@ -241,7 +241,7 @@ export default function ReviewMilestoneModal({ milestone, podDetail, onReview }:
           <h4 className="mb-2 font-medium text-success">Milestone Payment Execution</h4>
           <SafeDescription/>
         </div>
-        <div className="flex items-center gap-2 text-tiny text-success">
+        <div className="flex items-center gap-2 text-red-500 text-tiny">
           <i className="ri-money-dollar-circle-line"></i>
           <span>Step 2: Pod wallet executes payment transaction</span>
         </div>

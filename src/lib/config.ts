@@ -50,15 +50,6 @@ export const PLATFORM_TREASURY_ADDRESS = process.env.NEXT_PUBLIC_PLATFORM_TREASU
 // 平台管理员地址
 export const PLATFORM_MOD_ADDRESS = process.env.NEXT_PUBLIC_PLATFORM_MOD_ADDRESS as Address;
 
-// 手续费相关配置
-export const FEE_CONFIG = {
-  // 手续费率
-  TRANSACTION_FEE_RATE: Number(process.env.NEXT_PUBLIC_TRANSACTION_FEE_RATE),
-  // 最小手续费 (以防总额太小)
-  MIN_TRANSACTION_FEE: 0,
-} as const;
-
-
 // milestone 的默认金额数组配置与对应的金额
 const amountArr = process.env.NEXT_PUBLIC_MILESTONE_AMOUNTS?.split(',') as string[];
 export const DEFAULT_MILESTONE_AMOUNTS = {

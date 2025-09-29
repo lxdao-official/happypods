@@ -3,7 +3,6 @@ import { protectedProcedure, publicProcedure } from "~/server/api/trpc";
 import { getListSchema, validateMilestonesSchema } from "./schemas";
 import { db } from "~/server/db";
 import { MilestoneStatus } from "@prisma/client";
-import { FEE_CONFIG } from "~/lib/config";
 
 // 获取 pod 的余额相关数据
 export const getPodAssets = async (podId: number) => {
@@ -11,6 +10,11 @@ export const getPodAssets = async (podId: number) => {
     where: { id: podId },
     include: {
       milestones: true,
+      grantsPool: {
+        select: {
+          feeRate: true,
+        },
+      },
     },
   });
   const milestones = pod?.milestones;
@@ -18,9 +22,9 @@ export const getPodAssets = async (podId: number) => {
   const totalActiveAmount = milestones?.filter((milestone) => milestone.status === MilestoneStatus.ACTIVE).reduce((sum, milestone) => sum + Number(milestone.amount), 0);
   return { 
     totalAmount,
-    totalAmountWithFee: totalAmount ? totalAmount * (1 + FEE_CONFIG.TRANSACTION_FEE_RATE) : 0,
+    totalAmountWithFee: totalAmount ? totalAmount * (1 + Number(pod?.grantsPool?.feeRate)) : 0,
     totalActiveAmount,
-    totalActiveAmountWithFee: totalActiveAmount ? totalActiveAmount * (1 + FEE_CONFIG.TRANSACTION_FEE_RATE) : 0,
+    totalActiveAmountWithFee: totalActiveAmount ? totalActiveAmount * (1 + Number(pod?.grantsPool?.feeRate)) : 0,
   };
 };
 

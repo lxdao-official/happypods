@@ -6,18 +6,18 @@ import ProgressMilestoneBar from "./progress-milestone-bar";
 import StatusChip from "./status-chip";
 import { formatDate, formatToken, markdownToText } from "~/lib/utils";
 import { MilestoneStatus, type GrantsPool, type Milestone, type Pod } from "@prisma/client";
-import { useEffect, useMemo } from "react";
+import { useMemo } from "react";
 import useStore from "~/store";
 import ExpandableText from "./expandable-text";
-import { MarkdownRenderer } from "./Tiptap";
 import MdTextPreviewModal from "./md-text-preview-modal";
 
 interface MilestonesSectionProps {
   milestones: Milestone[];
   podDetail: Pod & {grantsPool: {treasuryWallet:string},podTreasuryBalances:bigint};
+  shortage: number;
 }
 
-export default function MilestonesSection({ milestones, podDetail }: MilestonesSectionProps) {
+export default function MilestonesSection({ milestones, podDetail, shortage }: MilestonesSectionProps) {
   const { userInfo } = useStore();
   const { grantsPool:{ownerId:gpOwnerId}, applicant:{id:podOwnerId}, currency, walletAddress:safeAddress } = podDetail as any;
   // 转换里程碑数据格式以适配 ProgressMilestoneBar 组件
@@ -41,12 +41,8 @@ export default function MilestonesSection({ milestones, podDetail }: MilestonesS
 
   // 当前的milestone 的所需总额大于了国库金额，需要等待国库充入
   const waitPodTreasuryRecharge = useMemo(()=>{
-    if(!podDetail || !milestones) return true;
-    const totalAmount = milestones
-    .filter(v=>[MilestoneStatus.ACTIVE, MilestoneStatus.PENDING_DELIVERY, MilestoneStatus.REVIEWING].includes(v.status as any))
-    .reduce((acc, milestone) => acc + Number(milestone.amount), 0);
-    return totalAmount > Number(podDetail.podTreasuryBalances);
-  },[milestones, podDetail])
+    return shortage > 0;
+  },[shortage])
 
 
   return (
@@ -70,13 +66,6 @@ export default function MilestonesSection({ milestones, podDetail }: MilestonesS
                     </div>
                   }
 
-                  {
-                     milestone.status === 'PENDING_DELIVERY' && waitPodTreasuryRecharge &&
-                      <div className="flex items-center gap-1 px-1 mb-4 text-xs text-red-600 border border-red-500 rounded-md bg-red-400/10">
-                        <i className="text-xl ri-error-warning-fill"></i>
-                        <span>Pod treasury balance is insufficient. Please ask the GP Moderator to transfer funds before submitting the delivery!</span>
-                      </div>
-                  }
               </div>
                   
               <div className="flex items-center justify-between mb-3">
@@ -101,13 +90,23 @@ export default function MilestonesSection({ milestones, podDetail }: MilestonesS
                         safeTransactionHash={milestone.safeTransactionHash}
                       /> 
                   )}
+
+                  {
+                     milestone.status === 'PENDING_DELIVERY' && waitPodTreasuryRecharge &&
+                      <div className="text-xs text-red-500">
+                        <i className="text-sm ri-alarm-warning-fill"></i>
+                        <span>Wait for GP to fix funding gap before submitting delivery!</span>
+                      </div>
+                  }
                   
                   {/* 审核中状态显示审核按钮 */}
                   {milestone.status === 'REVIEWING' && isGpOwner && (
+                    shortage <= 0 ? 
                     <ReviewMilestoneModal 
                       podDetail={podDetail as any}
                       milestone={milestone as any}
-                    />
+                    /> :
+                    <div className="text-xs text-red-500"> <i className="text-sm ri-alarm-warning-fill"></i> Wait for GP to fix funding gap before reviewing !</div>
                   )}
                   
                 </div>

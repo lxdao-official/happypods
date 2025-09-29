@@ -44,6 +44,7 @@ export const grantsPoolMutations = {
           links: poolData.links,
           modInfo: poolData.modInfo as Prisma.InputJsonValue,
           ownerId: ctx.user.id!,
+          feeRate: poolData.feeRate,
         },
       });
       // 批量插入RFPs
@@ -98,6 +99,7 @@ export const grantsPoolMutations = {
           tags: updateData.tags,
           links: updateData.links,
           modInfo: updateData.modInfo as Prisma.InputJsonValue,
+          feeRate: updateData.feeRate,
         },
       });
 

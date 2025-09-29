@@ -47,6 +47,7 @@ model GrantsPool {
   owner            User             @relation("UserGrantsPools", fields: [ownerId], references: [id])
   pods             Pod[]            @relation("GrantsPoolPods")
   rfps             Rfps[]
+  feeRate              Decimal          @default(0)
 
   @@index([name])
   @@index([chainType])

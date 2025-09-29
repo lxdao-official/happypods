@@ -1,7 +1,7 @@
 import { MilestoneStatus, PodStatus, type GrantsPoolTokens } from "@prisma/client";
 import { z } from "zod";
 import { publicProcedure } from "~/server/api/trpc";
-import { FEE_CONFIG, PLATFORM_TREASURY_ADDRESS, PLATFORM_CHAINS, CHAIN_MAP } from "~/lib/config";
+import { PLATFORM_TREASURY_ADDRESS } from "~/lib/config";
 import Decimal from "decimal.js";
 
 export const milestoneQueries = {
@@ -68,6 +68,7 @@ export const milestoneQueries = {
                 select: {
                   treasuryWallet: true,
                   chainType: true,
+                  feeRate: true,
                 }
               }
             }
@@ -83,7 +84,7 @@ export const milestoneQueries = {
       const milestoneAmount = new Decimal(milestone.amount.toString())//.mul(10**6);
       
       // 计算手续费
-      const fee = milestoneAmount.mul(FEE_CONFIG.TRANSACTION_FEE_RATE);
+      const fee = milestoneAmount.mul(pod.grantsPool.feeRate);
 
       // 构建两个交易的数据结构
       const transactions = [

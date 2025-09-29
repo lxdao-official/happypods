@@ -2,7 +2,6 @@
 
 import { Alert } from "@heroui/react";
 import AppBtn from "~/components/app-btn";
-import { FEE_CONFIG } from "~/lib/config";
 import Decimal from "decimal.js";
 import { type GrantsPoolTokens, MilestoneStatus, type GrantsPool, type Milestone, type Pod } from "@prisma/client";
 import useSafeWallet from "~/hooks/useSafeWallet";

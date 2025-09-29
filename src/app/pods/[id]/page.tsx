@@ -22,7 +22,6 @@ import { useEffect, useMemo, useState } from "react";
 import useStore from "~/store";
 import Tag from "~/components/tag";
 import PodMilestoneTimeoutActions from "~/components/pod-milestone-timeout-actions";
-import { FEE_CONFIG } from "~/lib/config";
 import { getSafeWalletOwners } from "~/lib/safeUtils";
 import TooltipWrap from "~/components/TooltipInfo";
 import Decimal from "decimal.js";
@@ -81,7 +80,7 @@ export default function PodDetailPage() {
     checkIsSafeWalletOwner();
   },[podDetail,userInfo]);
 
-  // 计算资金缺口
+  // 计算资金缺口 >0 则需要充入资金，<0 则需要退款，=0 则为正常状态
   const shortage = useMemo(()=>{
     // 计算需要的资金总额（包含手续费）
     const requiredAmount = podDetail?.milestones
@@ -89,10 +88,12 @@ export default function PodDetailPage() {
     .reduce((acc, milestone) => Decimal(acc).plus(milestone.amount).toNumber(), 0);
     
     return Decimal(requiredAmount || 0)
-    .mul(FEE_CONFIG.TRANSACTION_FEE_RATE + 1)
+    .mul(Number(podDetail?.grantsPool?.feeRate) + 1)
     .minus(podDetail?.podTreasuryBalances || 0)
     .toNumber();
   },[podDetail?.milestones,podDetail?.podTreasuryBalances]);
+
+  console.log('shortage==>',shortage);
 
 
 
@@ -183,8 +184,7 @@ export default function PodDetailPage() {
           {/* <EdgeLine color="var(--color-background)"/> */}
 
           <div>
-            {milestones && 
-            <MilestonesSection milestones={milestones} podDetail={podDetail as any}/>}
+            {milestones && <MilestonesSection milestones={milestones} podDetail={podDetail as any} shortage={shortage}/>}
           </div>
         </div>
       </div>
@@ -219,7 +219,7 @@ export default function PodDetailPage() {
                     <span>Locked</span>
                     <TooltipWrap  className="mt-[-6px] h-[20px]" content={
                       <div className="w-[200px]">
-                        Includes platform fees {FEE_CONFIG.TRANSACTION_FEE_RATE * 100}%, which will be deducted when each Milestone is delivered
+                        Includes platform fees {Number(podDetail?.grantsPool?.feeRate) * 100}%, which will be deducted when each Milestone is delivered
                       </div>
                     }/>
                 </div>
@@ -279,6 +279,15 @@ export default function PodDetailPage() {
                   <span className="text-sm">
                     {podDetail.rfp.title}
                   </span>
+                </div>
+
+                <div className="flex items-center justify-between space-x-2">
+                  <div className="mb-1 text-sm text-secondary shrink-0">Fee Rate</div>
+
+                  <span className="text-sm">
+                    {Number(podDetail.grantsPool.feeRate) * 100}%
+                  </span>
+                  
                 </div>
 
                 <div className="flex items-center justify-between space-x-2">

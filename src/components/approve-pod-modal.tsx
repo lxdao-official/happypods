@@ -3,7 +3,6 @@
 import { useState, useMemo } from "react";
 import { Button, Modal, ModalBody, ModalContent, ModalFooter, ModalHeader, Card, CardBody, Divider } from "@heroui/react";
 import { api } from "~/trpc/react";
-import { FEE_CONFIG } from "~/lib/config";
 import Decimal from "decimal.js";
 import { toast } from "sonner";
 import useSafeWallet from "~/hooks/useSafeWallet";
@@ -16,7 +15,7 @@ import useStore from "~/store";
 interface ApprovePodModalProps {
   isOpen: boolean;
   onClose: () => void;
-  podDetail: Pod;
+  podDetail: Pod & { grantsPool: { feeRate: string } };
   onSuccess?: () => void;
 }
 
@@ -25,8 +24,6 @@ export default function ApprovePodModal({
   onClose,
   podDetail
 }: ApprovePodModalProps) {
-  const {setPodDetailRefreshKey} = useStore();
-  
   const [isTransferring, setIsTransferring] = useState(false);
   const [isApproving, setIsApproving] = useState(false);
   const {mutateAsync:approvePod} = api.pod.approve.useMutation();
@@ -34,13 +31,13 @@ export default function ApprovePodModal({
 
   // 计算总金额和手续费
   const financialInfo = useMemo(() => {
-    const fee = Decimal(appliedAmount).mul(FEE_CONFIG.TRANSACTION_FEE_RATE).toNumber();
+    const fee = Decimal(appliedAmount).mul(Number(podDetail?.grantsPool?.feeRate)).toNumber();
     const totalWithFee = Decimal(appliedAmount).plus(fee).toNumber(); 
     return {
       appliedAmount,
       fee,
       totalWithFee,
-      feeRate: FEE_CONFIG.TRANSACTION_FEE_RATE * 100, // 转换为百分比
+      feeRate: Number(podDetail?.grantsPool?.feeRate) * 100, // 转换为百分比
     };
   }, [appliedAmount]);
 

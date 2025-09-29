@@ -31,6 +31,7 @@ export const podDetailQueries = {
               ownerId: true,
               chainType: true,
               treasuryWallet: true,  
+              feeRate: true,
             },
           },
           rfp: {
