@@ -35,7 +35,7 @@ export default function GpReviewActions({ podDetail }: {podDetail: Pod}) {
           variant="faded"
           color="default"
           title="Pod applied, please review!"
-          className="mb-4 bg-background border border-gray-200"
+          className="mb-4 border border-gray-200 bg-background"
           endContent={
             <div className="flex items-center gap-4">
               <AppBtn
@@ -67,7 +67,7 @@ export default function GpReviewActions({ podDetail }: {podDetail: Pod}) {
       <ApprovePodModal
         isOpen={isApproveModalOpen}
         onClose={() => setIsApproveModalOpen(false)}
-        podDetail={podDetail}
+        podDetail={podDetail as any}
       />
     </>
   );
