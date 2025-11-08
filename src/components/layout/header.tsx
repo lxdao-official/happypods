@@ -69,7 +69,7 @@ export function Header() {
 
   return (
     <header
-      className={`sticky top-0 z-30 p-4 border-b backdrop-blur bg-[#ffffffda] transition-transform duration-1000 ease-in-out ${
+      className={`sticky top-0 z-30 p-4 border-b backdrop-blur transition-transform duration-1000 ease-in-out ${
         isHidden ? '-translate-y-full' : 'translate-y-0'
       }`}
     >

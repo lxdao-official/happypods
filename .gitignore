@@ -51,3 +51,4 @@ AIResource
 prisma/migrations
 .kiro
 src/components/test
+.pnpm-store
