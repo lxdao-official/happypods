@@ -51,10 +51,12 @@ export const PLATFORM_TREASURY_ADDRESS = process.env.NEXT_PUBLIC_PLATFORM_TREASU
 export const PLATFORM_MOD_ADDRESS = process.env.NEXT_PUBLIC_PLATFORM_MOD_ADDRESS as Address;
 
 // milestone 的默认金额数组配置与对应的金额
-const amountArr = process.env.NEXT_PUBLIC_MILESTONE_AMOUNTS?.split(',') as string[];
+const milestoneAmounts = process.env.NODE_ENV === 'development' 
+  ? [0.0001,100,300,500]
+  : [100,300,500];
 export const DEFAULT_MILESTONE_AMOUNTS = {
-  OPTIONS: amountArr,
-  DEFAULT: amountArr[0] as string,
+  OPTIONS: milestoneAmounts,
+  DEFAULT: `${milestoneAmounts[0]}`,
 }
 
 
