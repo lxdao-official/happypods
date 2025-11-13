@@ -11,7 +11,7 @@ export interface JWTPayload {
 
 export function generateToken(payload: Omit<JWTPayload, 'iat' | 'exp'>): string {
   return jwt.sign(payload, JWT_SECRET, {
-    expiresIn: '7d', // Token 7天后过期
+    expiresIn: '180d', // Token 6个月后过期
   });
 }
 
