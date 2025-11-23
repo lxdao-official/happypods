@@ -1,29 +1,68 @@
-# Create T3 App
+# HappyPods
 
-This is a [T3 Stack](https://create.t3.gg/) project bootstrapped with `create-t3-app`.
+HappyPods is a Web3-enabled grants management platform that helps Grants Pools (GPs) co-manage applications from Pods (builders) with milestone-based payouts. The project is incubated by [LXDAO](https://lxdao.io/), an R&D-focused DAO that backs public-good tooling for the Web3 ecosystem.
 
-## What's next? How do I make an app with this?
+## Feature Highlights
 
-We try to keep this project as simple as possible, so you can start with just the scaffolding we set up for you, and add additional things later when they become necessary.
+- Grant lifecycle: submission, review, milestone approval, payout/refund tracking.
+- Wallet-first auth with RainbowKit + wagmi; tailored for Ethereum mainnet/Sepolia.
+- Real-time Safe (Gnosis) treasury insights and warnings for insufficient balances.
+- Prisma-backed API layer through tRPC for type-safe server/client contracts.
 
-If you are not familiar with the different technologies used in this project, please refer to the respective docs. If you still are in the wind, please join our [Discord](https://t3.gg/discord) and ask for help.
+## Tech Stack
 
-- [Next.js](https://nextjs.org)
-- [NextAuth.js](https://next-auth.js.org)
-- [Prisma](https://prisma.io)
-- [Drizzle](https://orm.drizzle.team)
-- [Tailwind CSS](https://tailwindcss.com)
-- [tRPC](https://trpc.io)
+- **Framework**: Next.js 15 (App Router) + React 19.
+- **Language/Tooling**: TypeScript, Tailwind CSS, HeroUI.
+- **Database**: PostgreSQL with Prisma ORM.
+- **Web3**: RainbowKit, wagmi, viem, Safe SDKs.
+- **State/API**: tRPC 11 + TanStack Query 5.
 
-## Learn More
+## Getting Started
 
-To learn more about the [T3 Stack](https://create.t3.gg/), take a look at the following resources:
+### Requirements
 
-- [Documentation](https://create.t3.gg/)
-- [Learn the T3 Stack](https://create.t3.gg/en/faq#what-learning-resources-are-currently-available) — Check out these awesome tutorials
+1. Node.js 20+, pnpm 9+.
+2. Docker/Podman for local PostgreSQL or access to a managed instance.
+3. WalletConnect Project ID (free at [cloud.walletconnect.com](https://cloud.walletconnect.com/)).
 
-You can check out the [create-t3-app GitHub repository](https://github.com/t3-oss/create-t3-app) — your feedback and contributions are welcome!
+### Environment
 
-## How do I deploy this?
+Create `.env` (or `.env.local`) with:
 
-Follow our deployment guides for [Vercel](https://create.t3.gg/en/deployment/vercel), [Netlify](https://create.t3.gg/en/deployment/netlify) and [Docker](https://create.t3.gg/en/deployment/docker) for more information.
+```env
+DATABASE_URL="postgresql://username:password@localhost:5432/happy_pods"
+NEXT_PUBLIC_WALLETCONNECT_PROJECT_ID="your_project_id"
+```
+
+### Install & Run
+
+```bash
+pnpm install
+./start-database.sh        # optional helper for local Postgres
+pnpm db:migrate            # apply dev migrations
+pnpm dev                   # http://localhost:3016
+```
+
+### Database Operations
+
+- `pnpm db:gen` / `pnpm db:migrate` – develop new migrations.
+- `pnpm db:dev` – deploy migrations on staging/production DB.
+- `pnpm db:prod` – production-safe alias for `prisma migrate deploy`.
+- `pnpm db:push` – sync schema without migrations (use cautiously).
+- `pnpm db:studio` – open Prisma Studio for inspection.
+
+### Production Deploy
+
+```bash
+pnpm deploy:prod  # run migrations, build, and start Next.js
+```
+
+## Testing Checklist
+
+- Navigate major flows (GP list, Pod detail, milestone submission).
+- Connect wallet on supported chains and simulate Safe treasury actions.
+- Monitor logs for Prisma connection health after deployments.
+
+## About LXDAO
+
+LXDAO researches and builds public-good infrastructure for Web3. Learn more or get involved at [lxdao.io](https://lxdao.io/) and follow the latest initiatives at [twitter.com/LXDAO_Official](https://x.com/LXDAO_Official).
