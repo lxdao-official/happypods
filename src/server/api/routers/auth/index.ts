@@ -1,3 +1,4 @@
+import { randomUUID } from "crypto";
 import { verifyTypedData } from "viem";
 import { createTRPCRouter, publicProcedure } from "~/server/api/trpc";
 import { verifySignatureSchema, validateTokenSchema } from "./schemas";
@@ -19,7 +20,47 @@ const types = {
   ],
 } as const;
 
+// 简单的内存 nonce 存储，包含过期时间
+const NONCE_TTL_MS = 10 * 60 * 1000; // 10 分钟
+const CLEANUP_INTERVAL_MS = 10 * 60 * 1000; // 10 分钟清理一次
+const nonceStore = new Map<string, number>(); // nonce -> expiresAt
+
+function createNonce() {
+  const nonce = randomUUID();
+  const expiresAt = Date.now() + NONCE_TTL_MS;
+  nonceStore.set(nonce, expiresAt);
+  return { nonce, expiresAt };
+}
+
+function consumeNonce(nonce: string) {
+  const expiresAt = nonceStore.get(nonce);
+  if (!expiresAt) {
+    throw new Error("Nonce not found or expired, please request a new one");
+  }
+  if (Date.now() > expiresAt) {
+    nonceStore.delete(nonce);
+    throw new Error("Nonce expired, please request a new one");
+  }
+  nonceStore.delete(nonce);
+  return true;
+}
+
+// 周期性清理过期 nonce，避免内存堆积
+setInterval(() => {
+  const now = Date.now();
+  for (const [nonce, expiresAt] of nonceStore.entries()) {
+    if (expiresAt <= now) {
+      nonceStore.delete(nonce);
+    }
+  }
+}, CLEANUP_INTERVAL_MS).unref();
+
 export const authRouter = createTRPCRouter({
+  // 请求登录 nonce
+  getNonce: publicProcedure.query(() => {
+    return createNonce();
+  }),
+
   // 验证签名并生成JWT token
   verifySignature: publicProcedure
     .input(verifySignatureSchema)
@@ -32,6 +73,9 @@ export const authRouter = createTRPCRouter({
           throw new Error("Signature expired, please sign again");
         }
 
+        // 确认 nonce 存在且未过期，并在使用后移除，防止重放
+        consumeNonce(input.nonce);
+
         // 构造TypedData
         const typedData = {
           domain,
@@ -39,7 +83,7 @@ export const authRouter = createTRPCRouter({
           primaryType: 'LoginMessage' as const,
           message: {
             message: input.message,
-            nonce: input.timestamp.toString(),
+            nonce: input.nonce,
             timestamp: BigInt(input.timestamp),
           },
         };

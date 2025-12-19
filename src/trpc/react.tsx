@@ -47,9 +47,11 @@ export function TRPCReactProvider(props: { children: React.ReactNode }) {
     api.createClient({
       links: [
         loggerLink({
-          enabled: (op) =>
-            process.env.NODE_ENV === "development" ||
-            (op.direction === "down" && op.result instanceof Error),
+          enabled: (op) => {
+            const isDev = process.env.NODE_ENV === "development";
+            const explicitlyEnabled = process.env.NEXT_PUBLIC_ENABLE_TRPC_LOGGER === "true";
+            return isDev || explicitlyEnabled;
+          },
         }),
         httpBatchStreamLink({
           transformer: SuperJSON,

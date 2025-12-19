@@ -51,13 +51,14 @@ export function LoginModal() {
 
   const { address, isConnected } = useAccount();
   const { signTypedDataAsync } = useSignTypedData();
+  const nonceQuery = api.auth.getNonce.useQuery(undefined, { enabled: false });
 
   // 验证签名
   const verifySignature = api.auth.verifySignature.useMutation({
     onSuccess: async (result) => {
       // 只存储token
       storeToken(result.token);
-      toast.success("logged in");
+      toast.success("Logged success");
 
       // 登录成功后获取用户信息
       try {
@@ -97,6 +98,12 @@ export function LoginModal() {
       const timestamp = Math.floor(Date.now() / 1000);
       const message = `welcome to HappyPods! please sign this message to verify your identity. Timestamp: ${timestamp}`;
 
+      // 2. 请求一次性 nonce
+      const { data: nonceResponse } = await nonceQuery.refetch();
+      if (!nonceResponse?.nonce) {
+        throw new Error("Failed to obtain nonce, please try again");
+      }
+
       // 2. 请求用户签名
       const typedData = {
         domain,
@@ -104,7 +111,7 @@ export function LoginModal() {
         primaryType: "LoginMessage" as const,
         message: {
           message,
-          nonce: timestamp.toString(),
+          nonce: nonceResponse.nonce,
           timestamp: BigInt(timestamp),
         },
       };
@@ -116,6 +123,7 @@ export function LoginModal() {
         address,
         signature,
         message,
+        nonce: nonceResponse.nonce,
         timestamp,
       });
       

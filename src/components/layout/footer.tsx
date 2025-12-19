@@ -30,7 +30,7 @@ export function Footer() {
             </div>
             
             <div>
-              <img src="/buildin.png" alt="buildin" className="h-10 rounded-full shadow-medium" />
+              <img src="/buildin.png" alt="buildin" className="hidden md:block h-10 rounded-full shadow-medium" />
             </div>
           </div>
         </div>

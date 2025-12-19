@@ -5,6 +5,7 @@ export const verifySignatureSchema = z.object({
   address: z.string().regex(/^0x[a-fA-F0-9]{40}$/, "invalid ethereum address"),
   signature: z.string(),
   message: z.string(),
+  nonce: z.string(),
   timestamp: z.number(),
 });
 
