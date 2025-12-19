@@ -84,12 +84,12 @@ export function NotificationDrawer() {
                           {/* 内容区域 */}
                           <div className="flex-1 min-w-0">
                             <div className="flex items-start justify-between gap-2 mb-2">
-                              <div className="text-sm font-medium break-all line-clamp-1 text-foreground">
+                              <div className="text-sm font-medium break-all text-foreground">
                                 {notification.title}
                               </div>
                             </div>
 
-                            <div className="pr-2 mb-2 text-xs leading-5 break-all line-clamp-2 text-secondary">
+                            <div className="pr-2 mb-2 text-xs leading-5 break-all text-secondary">
                               {notification.content}
                             </div>
 

@@ -13,14 +13,5 @@ export const userMutations = {
         where: { id: ctx.user.id },
         data: updateData,
       });
-    }),
-
-  // 删除用户
-  delete: publicProcedure
-    .input(z.object({ id: z.number() }))
-    .mutation(async ({ ctx, input }) => {
-      return ctx.db.user.delete({
-        where: { id: input.id },
-      });
-    }),
+    })
 }; 

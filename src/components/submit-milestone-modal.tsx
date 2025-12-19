@@ -83,7 +83,6 @@ export default function SubmitMilestoneModal({ milestoneId, safeTransactionHash 
           milestoneId: Number(milestoneId),
           content: description.trim(),
           links: links,
-          transactionHash: safeTransactionHash
         });
         return;
       }
@@ -128,8 +127,7 @@ export default function SubmitMilestoneModal({ milestoneId, safeTransactionHash 
           // 只有当提案步骤成功完成时才调用提交接口
           if (step === SafeTransactionStep.CONFIRMATION && status === SafeStepStatus.SUCCESS) {
             try {
-              const transactionHash = data?.transactionHash;
-              if (!transactionHash) {
+              if (!data?.transactionHash) {
                 throw new Error('Transaction hash not found');
               }
 
@@ -143,7 +141,6 @@ export default function SubmitMilestoneModal({ milestoneId, safeTransactionHash 
                 milestoneId: Number(milestoneId),
                 content: description.trim(),
                 links: links,
-                transactionHash: transactionHash
               });
               
             } catch (submitError) {

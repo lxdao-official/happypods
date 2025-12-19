@@ -1,6 +1,6 @@
 import { z } from "zod";
 import { protectedProcedure, publicProcedure } from "~/server/api/trpc";
-import { getAllSchema, checkEmailExistsSchema } from "./schemas";
+import { checkEmailExistsSchema } from "./schemas";
 
 export const userQueries = {  // 检查用户信息是否完善
   checkUserProfile: protectedProcedure
@@ -54,39 +54,6 @@ export const userQueries = {  // 检查用户信息是否完善
         where: { email: input.email },
       });
       return user;
-    }),
-
-  // 获取所有用户（分页）
-  getAll: publicProcedure
-    .input(getAllSchema)
-    .query(async ({ ctx, input }) => {
-      const skip = (input.page - 1) * input.limit;
-      
-      const where = {
-        ...(input.search && {
-          OR: [
-            { name: { contains: input.search, mode: "insensitive" as const } },
-            { email: { contains: input.search, mode: "insensitive" as const } },
-          ],
-        }),
-      };
-
-      const [users, total] = await Promise.all([
-        ctx.db.user.findMany({
-          where,
-          skip,
-          take: input.limit,
-          orderBy: { createdAt: "desc" },
-        }),
-        ctx.db.user.count({ where }),
-      ]);
-
-      return {
-        users,
-        total,
-        pages: Math.ceil(total / input.limit),
-        currentPage: input.page,
-      };
     }),
 
   // 检查邮箱是否已存在

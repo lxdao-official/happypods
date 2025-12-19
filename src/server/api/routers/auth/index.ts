@@ -34,9 +34,7 @@ function createNonce() {
 
 function consumeNonce(nonce: string) {
   const expiresAt = nonceStore.get(nonce);
-  if (!expiresAt) {
-    throw new Error("Nonce not found or expired, please request a new one");
-  }
+  if (!expiresAt) throw new Error("Nonce not found or expired, please request a new one");
   if (Date.now() > expiresAt) {
     nonceStore.delete(nonce);
     throw new Error("Nonce expired, please request a new one");
@@ -69,9 +67,7 @@ export const authRouter = createTRPCRouter({
         const currentTime = Math.floor(Date.now() / 1000);
         
         // 检查签名是否过期（5分钟内有效）
-        if (currentTime - input.timestamp > 300) {
-          throw new Error("Signature expired, please sign again");
-        }
+        if (currentTime - input.timestamp > 300) throw new Error("Signature expired, please sign again");
 
         // 确认 nonce 存在且未过期，并在使用后移除，防止重放
         consumeNonce(input.nonce);
@@ -99,9 +95,7 @@ export const authRouter = createTRPCRouter({
 
         console.log('Signature verification result:', isValid);
 
-        if (!isValid) {
-          throw new Error("Signature verification failed");
-        }
+        if (!isValid) throw new Error("Signature verification failed");
 
         // 查找或创建用户（通过email，因为email包含钱包地址）
         let user = await ctx.db.user.findFirst({
@@ -146,9 +140,7 @@ export const authRouter = createTRPCRouter({
     .input(validateTokenSchema)
     .query(async ({ ctx, input }) => {
       const payload = verifyToken(input.token);
-      if (!payload) {
-        throw new Error("Invalid token");
-      }
+      if (!payload) throw new Error("Invalid token");
 
       const user = await ctx.db.user.findUnique({
         where: { id: payload.userId },

@@ -114,7 +114,6 @@ export default function RejectPodModal({
             onPress={handleSubmit}
             isLoading={isSubmitting}
             isDisabled={!rejectReason.trim()}
-            className="text-black"
           >
             Confirm Rejection
           </Button>

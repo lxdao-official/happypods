@@ -40,9 +40,7 @@ export const notificationMutations = {
   markAsRead: publicProcedure
     .input(markNotificationReadSchema)
     .mutation(async ({ ctx, input }) => {
-      if (!ctx.user) {
-        throw new Error("Unauthorized");
-      }
+      if (!ctx.user) throw new Error("Unauthorized");
       const notification = await ctx.db.notification.update({
         where: { id: input.notificationId, receiverId: ctx.user.id },
         data: { read: true }
@@ -55,9 +53,7 @@ export const notificationMutations = {
   markAllAsRead: publicProcedure
     .input(markAllNotificationsReadSchema)
     .mutation(async ({ ctx, input }) => {
-      if (!ctx.user) {
-        throw new Error("Unauthorized");
-      }
+      if (!ctx.user) throw new Error("Unauthorized");
       const result = await ctx.db.notification.updateMany({
         where: {
           receiverId: ctx.user.id,
@@ -69,19 +65,5 @@ export const notificationMutations = {
       return {
         updatedCount: result.count,
       };
-    }),
-
-  // 删除通知
-  deleteNotification: publicProcedure
-    .input(deleteNotificationSchema)
-    .mutation(async ({ ctx, input }) => {
-      if (!ctx.user) {
-        throw new Error("Unauthorized");
-      }
-      const notification = await ctx.db.notification.delete({
-        where: { id: input.notificationId, receiverId: ctx.user.id },
-      });
-
-      return notification;
-    }),
+    })
 }; 

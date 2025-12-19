@@ -118,7 +118,7 @@ export default function PodVersionReviewModal({
             {/* Milestones */}
             {versionData.milestones && versionData.milestones.length > 0 && (
               <div className="p-4 rounded-lg border border-gray-200">
-                <h3 className="mb-4 text-lg font-medium">Milestones</h3>
+                <h3 className="mb-4 text-lg font-medium">Effective Milestone</h3>
                 <div className="space-y-4">
                   {versionData.milestones.map((milestone: any, index: number) => (
                     <div key={index} className="p-4 border rounded-lg border-secondary">
@@ -147,7 +147,7 @@ export default function PodVersionReviewModal({
         isPodOwner && <ModalFooter>
           <Button 
             color="danger" 
-            variant="faded" 
+            variant="light" 
             onPress={handleReject}
             isLoading={isSubmitting && rejectMutation.isPending}
             isDisabled={isSubmitting}

@@ -12,7 +12,7 @@ const StatusChip = ({ status }: { status: Status }) => {
     'WAITLISTED': 'error',
     'SUBMITTED': 'purple',
     'APPROVED': 'green',
-    'REVIEWING': 'yellow',
+    'REVIEWING': 'warning',
     'TERMINATED': "red",
     'PENDING_DELIVERY': 'warning',
     'ACTIVE': "primary",

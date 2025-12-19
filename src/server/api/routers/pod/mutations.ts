@@ -32,19 +32,13 @@ export const handlePodTermited = async (
     },
   });
 
-  if (!pod) {
-    throw new Error("Pod does not exist");
-  }
+  if (!pod) throw new Error("Pod does not exist");
 
   // 检查当前用户是否是 Grants Pool 的拥有者
-  if (pod.grantsPool.ownerId !== ctx.user!.id) {
-    throw new Error("You do not have permission to terminate this Pod");
-  }
+  if (pod.grantsPool.ownerId !== ctx.user!.id) throw new Error("You do not have permission to terminate this Pod");
 
   // 检查Pod状态是否允许终止
-  if (pod.status === PodStatus.TERMINATED) {
-    throw new Error("Pod has already been terminated and cannot be terminated again");
-  }
+  if (pod.status === PodStatus.TERMINATED) throw new Error("Pod has already been terminated and cannot be terminated again");
 
   // 更新Pod状态为TERMINATED
   const updatedPod = await db.pod.update({
@@ -91,7 +85,6 @@ export const podMutations = {
   create: protectedProcedure
     .input(createPodSchema)
     .mutation(async ({ ctx, input }) => {
-      console.log('创建进入===》');
       // 检查24小时内创建的pod数量限制，最多不超过 3 个
       const twentyFourHoursAgo = new Date(Date.now() - 24 * 60 * 60 * 1000);
       const recentPodsCount = await ctx.db.pod.count({
@@ -103,9 +96,7 @@ export const podMutations = {
         }
       });
 
-      if (recentPodsCount >= 3) {
-        throw new Error("You can only create up to 3 pods within 24 hours");
-      }
+      if (recentPodsCount >= 3) throw new Error("You can only create up to 3 pods within 24 hours");
 
       // 验证用户信息是否完善
       const user = await ctx.db.user.findUnique({
@@ -113,9 +104,7 @@ export const podMutations = {
         select: { name: true, email: true, description: true, walletAddress: true },
       });
 
-      if (!user?.name || !user?.email || !user?.description) {
-        throw new Error("Please complete your personal information first");
-      }
+      if (!user?.name || !user?.email || !user?.description) throw new Error("Please complete your personal information first");
 
       // 验证Grants Pool和RFP
       const grantsPool = await ctx.db.grantsPool.findUnique({
@@ -123,38 +112,41 @@ export const podMutations = {
         include: { rfps: true, owner: true },
       });
 
-      if (!grantsPool) {
-        throw new Error("Grants Pool does not exist");
-      }
-      
+      if (!grantsPool) throw new Error("Grants Pool does not exist");
+
+      // GP 创建者不能申请自己的 Pod
+      if (grantsPool.ownerId === ctx.user.id) throw new Error("You cannot apply for your own Grants Pool");
+
       // 当前milestone的总额是否超过可用总额
-      const totalMilestoneAmount = input.milestones.reduce((sum, milestone) => sum + Number(milestone.amount), 0);
-      const { rawBalance } = await getBalance({
+      const totalMilestoneAmount = input.milestones.reduce(
+        (sum, milestone) => sum.plus(new Decimal(milestone.amount)),
+        new Decimal(0)
+      );
+      const { formattedBalance } = await getBalance({
         address: grantsPool.treasuryWallet,
         chainType: grantsPool.chainType,
         tokenType: input.currency,
       });
-      if(totalMilestoneAmount > Number(rawBalance)) {
-        throw new Error(`grants pool insufficient balance`);
-      }
+      
+      if(totalMilestoneAmount.div(10**6).gt(formattedBalance)) throw new Error(`grants pool insufficient balance`);
+     
       const { milestones, isCheck, ...podData } = input;
-
       // 创建前检查参数是否正确，正确才弹窗多签钱包创建
       if(isCheck) return true;
 
       // 检查当前钱包地址是否是多签钱包的签名者
-      await delay_s(3000); //延迟 3s，等待确认
+      await delay_s(3000); //默认延迟 3s，等待钱包创建确认
       const isMultiSigWallet = await isUserInMultiSigWallet(
         input.walletAddress, 
         [user?.walletAddress, PLATFORM_MOD_ADDRESS, grantsPool.treasuryWallet],
         2,
         true
       );
-      if(!isMultiSigWallet){
-        throw new Error("safe wallet is not a valid wallet");
-      }
 
+      if(!isMultiSigWallet) throw new Error("safe wallet is not a valid wallet");
       if(!ctx.user.id) throw new Error("User does not exist");
+      if(!milestones || !milestones.length) throw new Error("Milestones are required");
+
       // 创建Pod
       const pod = await ctx.db.pod.create({
         data: {
@@ -176,21 +168,16 @@ export const podMutations = {
         },
       });
 
-      // 创建milestones
-      if (milestones && milestones.length > 0) {
-        const milestonePromises = milestones.map(milestone => 
-          ctx.db.milestone.create({
-            data: {
-              podId: pod.id,
-              title: milestone.title,
-              description: milestone.description,
-              amount: milestone.amount,
-              deadline: new Date(milestone.deadline),
-            },
-          })
-        );
-        await Promise.all(milestonePromises);
-      }
+      // 创建milestones（使用 createMany 批量创建，比 Promise.all 更高效）
+      await ctx.db.milestone.createMany({
+        data: milestones.map(milestone => ({
+          podId: pod.id,
+          title: milestone.title,
+          description: milestone.description,
+          amount: milestone.amount,
+          deadline: new Date(milestone.deadline),
+        })),
+      });
 
       await NotificationService.createNotification({
         type: NotificationType.POD_REVIEW,
@@ -215,19 +202,13 @@ export const podMutations = {
         include: { grantsPool: true },
       });
 
-      if (!existingPod) {
-        throw new Error("Pod does not exist");
-      }
+      if (!existingPod) throw new Error("Pod does not exist");
 
       // 检查当前用户是否是 Grants Pool 的拥有者
-      if (existingPod.grantsPool.ownerId !== ctx.user.id) {
-        throw new Error("You do not have permission to reject this Pod");
-      }
+      if (existingPod.grantsPool.ownerId !== ctx.user.id) throw new Error("You do not have permission to reject this Pod");
 
       // 检查Pod状态是否为REVIEWING
-      if (existingPod.status !== "REVIEWING") {
-        throw new Error("Only Pods in the reviewing state can be rejected");
-      }
+      if (existingPod.status !== "REVIEWING") throw new Error("Only Pods in the reviewing state can be rejected");
 
       // 更新Pod状态为REJECTED，并设置拒绝理由
       const updatedPod = await ctx.db.pod.update({
@@ -237,11 +218,6 @@ export const podMutations = {
           metadata: {
             rejectReason: input.rejectReason,
           },
-        },
-        include: {
-          applicant: true,
-          grantsPool: true,
-          milestones: true,
         },
       });
 
@@ -261,19 +237,13 @@ export const podMutations = {
         },
       });
 
-      if (!pod) {
-        throw new Error("Pod does not exist");
-      }
+      if (!pod) throw new Error("Pod does not exist");
 
       // 检查当前用户是否是 Grants Pool 的拥有者
-      if (pod.grantsPool.ownerId !== ctx.user.id) {
-        throw new Error("You do not have permission to approve this Pod");
-      }
+      if (pod.grantsPool.ownerId !== ctx.user.id) throw new Error("You do not have permission to approve this Pod");
 
       // 检查Pod状态是否为REVIEWING
-      if (pod.status !== PodStatus.REVIEWING) {
-        throw new Error("Only Pods in the reviewing state can be approved");
-      }
+      if (pod.status !== PodStatus.REVIEWING) throw new Error("Only Pods in the reviewing state can be approved");
 
       // 直接完成状态更改，在前端余额更新中处理金额的注入与退还
       /*
@@ -305,7 +275,7 @@ export const podMutations = {
       // !
       */
 
-      // 更新Pod状态为IN_PROGRESS
+      // 更新Pod状态直接更改为IN_PROGRESS，支付解耦到资金判断去操作
       const updatedPod = await ctx.db.pod.update({
         where: { id: input.id },
         data: {
@@ -338,27 +308,16 @@ export const podMutations = {
       podId: z.number()
     }))
     .mutation(async ({ ctx, input }) => {
-      const { podId } = input;
-      const data = await ctx.db.pod.findUnique({
-        where: { id: podId },
-        select: { versions: true },
-      });
-      return await PodEditService.reviewVersion(ctx as any, podId, data?.versions[0], true);
+      return PodEditService.reviewLatestVersion(ctx as any, input.podId, true);
     }),
 
   // 驳回版本
   rejectVersion: protectedProcedure
     .input(z.object({
       podId: z.number(),
-      versionData: z.any(),
     }))
     .mutation(async ({ ctx, input }) => {
-      const { podId } = input;
-      const data = await ctx.db.pod.findUnique({
-        where: { id: podId },
-        select: { versions: true },
-      });
-      return await PodEditService.reviewVersion(ctx as any, podId, data?.versions[0], false);
+      return PodEditService.reviewLatestVersion(ctx as any, input.podId, false);
     }),
 
 }; 

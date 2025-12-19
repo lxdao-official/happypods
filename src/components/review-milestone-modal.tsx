@@ -378,6 +378,7 @@ export default function ReviewMilestoneModal({ milestone, podDetail, onReview }:
               onPress={handleSubmit}
               isLoading={isSubmitting}
               isDisabled={!safeWalletReady || !safeTransactionData || !comment.trim()}
+              className="!text-black"
             >
               {isSubmitting
                 ? 'Submitting...'

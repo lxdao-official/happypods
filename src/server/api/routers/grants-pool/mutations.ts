@@ -15,9 +15,7 @@ export const grantsPoolMutations = {
         where: { ownerId: ctx.user.id }
       });
 
-      if (existingGrantsPool) {
-        throw new Error("You have already created a GrantsPool and cannot create another one.");
-      }
+      if (existingGrantsPool) throw new Error("You have already created a GrantsPool and cannot create another one.");
 
       // 获取当前用户的钱包地址
       const user = await ctx.db.user.findUnique({
@@ -28,9 +26,7 @@ export const grantsPoolMutations = {
 
       // 判断国库钱包是否是多签钱包
       const isMultiSigWallet = await isUserInMultiSigWallet(input.treasuryWallet, [user.walletAddress]);
-      if(!isMultiSigWallet){
-        throw new Error("You are not the owner of the treasury wallet.");
-      }
+      if(!isMultiSigWallet) throw new Error("wallet is not a valid safe multi-signature wallet");
 
       const { rfps, ...poolData } = input;
       const grantsPool = await ctx.db.grantsPool.create({
@@ -81,13 +77,9 @@ export const grantsPoolMutations = {
         },
       });
 
-      if (!existingGrantsPool) {
-        throw new Error("GrantsPool does not exist");
-      }
+      if (!existingGrantsPool) throw new Error("GrantsPool does not exist");
 
-      if (existingGrantsPool.ownerId !== ctx.user.id) {
-        throw new Error("You do not have permission to modify this GrantsPool");
-      }
+      if (existingGrantsPool.ownerId !== ctx.user.id) throw new Error("You do not have permission to modify this GrantsPool");
 
       // 更新 GrantsPool 基本信息
       await ctx.db.grantsPool.update({
@@ -149,42 +141,6 @@ export const grantsPoolMutations = {
       }
     }),
 
-  // 删除GrantsPool
-  delete: protectedProcedure
-    .input(z.object({ id: z.number() }))
-    .mutation(async ({ ctx, input }) => {
-      const existingGrantsPool = await ctx.db.grantsPool.findUnique({
-        where: { id: input.id },
-        include: {
-          _count: {
-            select: {
-              pods: true,
-            },
-          },
-        },
-      });
-
-      if (!existingGrantsPool) {
-        throw new Error("GrantsPool does not exist");
-      }
-
-      if (
-        existingGrantsPool.ownerId !== ctx.user.id
-      ) {
-        throw new Error("You do not have permission to delete this GrantsPool");
-      }
-
-      if (existingGrantsPool._count.pods > 0) {
-        throw new Error("There are still Pods under this GrantsPool, so it cannot be deleted");
-      }
-
-      await ctx.db.grantsPool.delete({
-        where: { id: input.id },
-      });
-
-      return { success: true };
-    }),
-
   // 逻辑删除 RFP
   deleteRfp: protectedProcedure
     .input(z.object({ 
@@ -197,15 +153,9 @@ export const grantsPoolMutations = {
         where: { id: input.grantsPoolId },
       });
 
-      if (!grantsPool) {
-        throw new Error("GrantsPool does not exist");
-      }
+      if (!grantsPool) throw new Error("GrantsPool does not exist");
 
-      if (
-        grantsPool.ownerId !== ctx.user.id
-      ) {
-        throw new Error("You do not have permission to delete this RFP");
-      }
+      if (grantsPool.ownerId !== ctx.user.id) throw new Error("You do not have permission to delete this RFP");
 
       // 检查 RFP 是否存在且属于指定的 GrantsPool
       const rfp = await ctx.db.rfps.findFirst({
@@ -216,9 +166,7 @@ export const grantsPoolMutations = {
         },
       });
 
-      if (!rfp) {
-        throw new Error("RFP does not exist or has been deleted");
-      }
+      if (!rfp) throw new Error("RFP does not exist or has been deleted");
 
       // 逻辑删除 RFP
       await ctx.db.rfps.update({
