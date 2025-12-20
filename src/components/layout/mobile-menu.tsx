@@ -13,6 +13,7 @@ import {
     Listbox,
     ListboxItem
 } from '@heroui/react';
+import { useMobile } from '~/hooks/useMobile';
 
 interface NavItem {
     href: string;
@@ -26,7 +27,7 @@ interface MobileMenuProps {
 export function MobileMenu({ navs }: MobileMenuProps) {
     const { isOpen, onOpen, onClose } = useDisclosure();
     const pathname = usePathname();
-
+    const isMobile = useMobile();
     const handleNavClick = () => {
         onClose();
     };
@@ -40,6 +41,7 @@ export function MobileMenu({ navs }: MobileMenuProps) {
                 onPress={onOpen}
                 className="text-black"
                 aria-label="Toggle menu"
+                size={isMobile ? "sm" : "md"}
             >
                 <i className="text-base ri-menu-line"></i>
             </Button>
