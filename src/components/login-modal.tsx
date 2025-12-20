@@ -8,10 +8,9 @@ import {
   DropdownSection,
 } from "@heroui/react";
 import { useState, useEffect, useCallback, useMemo } from "react";
-import { createConfig, http, useAccount, useEnsName, useSignTypedData } from "wagmi";
+import { createConfig, http, useAccount, useDisconnect, useEnsName, useSignTypedData } from "wagmi";
 import Link from "next/link";
 import { api } from "~/trpc/react";
-import { storeToken, logout } from "~/lib/auth-storage";
 import { ConnectButton } from "@rainbow-me/rainbowkit";
 import { toast } from "sonner";
 import { delay_s, truncateString } from "~/lib/utils";
@@ -50,14 +49,13 @@ export function LoginModal() {
   const { userInfo: storeUserInfo } = useStore();
 
   const { address, isConnected } = useAccount();
+  const { disconnect } = useDisconnect();
   const { signTypedDataAsync } = useSignTypedData();
   const nonceQuery = api.auth.getNonce.useQuery(undefined, { enabled: false });
 
   // 验证签名
   const verifySignature = api.auth.verifySignature.useMutation({
-    onSuccess: async (result) => {
-      // 只存储token
-      storeToken(result.token);
+    onSuccess: async () => {
       toast.success("Logged success");
 
       // 登录成功后获取用户信息
@@ -67,7 +65,6 @@ export function LoginModal() {
 
         await delay_s(1000);
         window.location.reload();
-        
       } catch (error) {
         console.error("Failed to fetch user info:", error);
         toast.error("Failed to fetch user info");
@@ -76,9 +73,10 @@ export function LoginModal() {
     },
     onError: (error) => {
       setIsLoading(false);
-      toast.error(`login failed: ${error.message}`);
+      toast.error(`login failed:: ${error.message}`);
     },
   });
+
 
   // 处理签名登录流程
   const handleSignLogin = useCallback(async (isAutoTrigger = false) => {
@@ -132,16 +130,10 @@ export function LoginModal() {
       
     } catch (error: unknown) {
       setIsLoading(false);
-      console.error("Sign login error:", error);
-
-      const errorMessage =
-        error instanceof Error ? error.message : String(error);
-      if (errorMessage?.includes("User rejected")) {
-        setHasRejectedSignature(true);
-        toast.error("User rejected the signature");
-      } else {
-        toast.error(`login failed: ${errorMessage ?? "unknown error"}`);
-      }
+      // 无论什么错误都断开连接并重置状态
+      disconnect();
+      setHasAttemptedAutoLogin(false);
+      setHasRejectedSignature(false);
     }
   }, [address, signTypedDataAsync, verifySignature]);
 

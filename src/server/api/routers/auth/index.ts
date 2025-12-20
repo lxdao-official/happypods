@@ -4,7 +4,7 @@ import { createTRPCRouter, publicProcedure } from "~/server/api/trpc";
 import { verifySignatureSchema, validateTokenSchema } from "./schemas";
 import { NotificationService } from "../notification/notification-service";
 import { NotificationType } from "@prisma/client";
-import { generateToken, verifyToken } from "~/lib/jwt";
+import { AUTH_COOKIE_NAME, generateToken, verifyToken } from "~/lib/jwt";
 
 // 定义TypedData结构
 const domain = {
@@ -125,15 +125,40 @@ export const authRouter = createTRPCRouter({
           address: input.address.toLowerCase(),
         });
 
+        if (ctx.response) {
+          ctx.response.cookies.set(AUTH_COOKIE_NAME, token, {
+            httpOnly: true,
+            secure: process.env.NODE_ENV === "production",
+            sameSite: "lax",
+            path: "/",
+            maxAge: 60 * 60 * 24 * 15,
+          });
+        }
+
+        // 返回普通的JavaScript对象，让tRPC处理响应
         return {
           success: true,
-          token,
+          address: input.address,
         };
       } catch (error) {
         console.error('Signature verification error:', error);
         throw new Error(error instanceof Error ? error.message : "Signature verification failed");
       }
     }),
+
+  logout: publicProcedure.mutation(({ ctx }) => {
+    if (ctx.response) {
+      ctx.response.cookies.set("happy_pods_jwt_token", "", {
+        httpOnly: true,
+        secure: process.env.NODE_ENV === "production",
+        sameSite: "lax",
+        path: "/",
+        maxAge: 0,
+      });
+    }
+    return { success: true };
+  }),
+
 
   // 验证JWT token（可选，用于检查登录状态）
   validateToken: publicProcedure

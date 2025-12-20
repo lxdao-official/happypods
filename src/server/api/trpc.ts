@@ -13,6 +13,7 @@ import { ZodError } from "zod";
 import { db } from "~/server/db";
 import { verifyToken, getTokenFromRequest } from "~/lib/jwt";
 import { PUBLIC_ROUTES } from "./config";
+import { NextResponse } from "next/server";
 
 /**
  * 1. CONTEXT
@@ -26,17 +27,22 @@ import { PUBLIC_ROUTES } from "./config";
  *
  * @see https://trpc.io/docs/server/context
  */
-export const createTRPCContext = async (opts: { headers: Headers }) => {
-  // 尝试从headers中获取JWT token
-  const authHeader = opts.headers.get('authorization');
-  const token = getTokenFromRequest(authHeader ?? undefined);
+type CreateContextOptions = {
+  headers: Headers;
+  response?: NextResponse;
+};
+
+export const createTRPCContext = async (opts: CreateContextOptions) => {
+  // 尝试从headers/cookies中获取JWT token
+  const token = getTokenFromRequest(opts.headers);
   const payload = token ? verifyToken(token) : null;
 
   return {
     db,
     user:{ id: payload?.userId },
     token,
-    ...opts,
+    headers: opts.headers,
+    response: opts.response,
   };
 };
 
